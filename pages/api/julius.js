@@ -26,15 +26,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Requires platform and handle." });
     }
     const cleanHandle = handle.replace(/^@/, "");
-    juliusPath  = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
-    fetchMethod = "GET";
+    juliusPath = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
 
   } else if (mode === "slug") {
     if (!slug) {
       return res.status(400).json({ error: "Requires slug." });
     }
-    juliusPath  = `/influencers/${encodeURIComponent(slug)}/export?ts=${ts}`;
-    fetchMethod = "GET";
+    juliusPath = `/influencers/${encodeURIComponent(slug)}/export?ts=${ts}`;
 
   } else {
     return res.status(400).json({ error: "Invalid mode." });
@@ -62,10 +60,3 @@ export default async function handler(req, res) {
   res.status(juliusRes.status);
   res.send(await juliusRes.text());
 }
-```
-
-Save with **Cmd + S**, then in terminal:
-```
-git add pages/api/julius.js
-git commit -m "clean up julius proxy"
-git push
