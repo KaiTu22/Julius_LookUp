@@ -1,4 +1,4 @@
-jsimport crypto from "crypto";
+import crypto from "crypto";
 
 const JULIUS_BASE_URL = "https://api.juliusworks.com";
 const JULIUS_UA       = "julius-api-client";
