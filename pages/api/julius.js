@@ -25,8 +25,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Requires platform and handle." });
     }
     const cleanHandle = handle.replace(/^@/, "");
-    // Handle goes in the URL path, platform as query param
-    juliusPath = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
+    juliusPath = `/influencers/export?ts=${ts}`;
+    
+    const fullUrl   = `${JULIUS_BASE_URL}${juliusPath}`;
+    const signature = generateSignature("POST", fullUrl, apiSecret);
+    
+    let juliusRes;
+    try {
+      juliusRes = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent":   JULIUS_UA,
+          "X-API-Key":    apiKey,
+          "X-Signature":  signature,
+        },
+        body: JSON.stringify({ platform, handle: cleanHandle }),
+      });
+    } catch (err) {
+      return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
+    }
+    
+    res.setHeader("Content-Type", "application/json");
+    res.status(juliusRes.status);
+    return res.send(await juliusRes.text());
 
   } else if (mode === "slug") {
     if (!slug) {
