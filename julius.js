@@ -63,14 +63,15 @@ export default async function handler(req, res) {
   const ts = Math.floor(Date.now() / 1000);
 
   let juliusPath;
-let fetchMethod = "GET";
-let fetchBody = null;
 
-  if if (mode === "handle") {
+  if (mode === "handle") {
+    // Lookup by social handle: GET /influencers/export?platform=...&handle=...
+    if (!platform || !handle) {
+      return res.status(400).json({ error: "Handle lookups require both platform and handle parameters." });
+    }
+    // Strip @ if the user included it
     const cleanHandle = handle.replace(/^@/, "");
-    juliusPath = `/influencers/export?ts=${ts}`;
-    fetchMethod = "POST";
-    fetchBody = { platform, handle: cleanHandle };
+    juliusPath = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
 
   } else if (mode === "slug") {
     // Lookup by Julius slug or ID: GET /influencers/:slug/export
@@ -87,16 +88,17 @@ let fetchBody = null;
   const signature = generateSignature("GET", fullUrl, apiSecret);
 
   // ── Forward request to Julius ─────────────────────────────────
-juliusRes = await fetch(fullUrl, {
-    method: fetchMethod,
-    headers: {
+  let juliusRes;
+  try {
+    juliusRes = await fetch(fullUrl, {
+      method: "GET",
+      headers: {
         "Content-Type": "application/json",
-        "User-Agent": JULIUS_UA,
-        "X-API-Key": apiKey,
-        "X-Signature": signature,
-    },
-    body: fetchBody ? JSON.stringify(fetchBody) : null,
-});
+        "User-Agent":   JULIUS_UA,   // ✓ settable server-side
+        "X-API-Key":    apiKey,
+        "X-Signature":  signature,
+      },
+    });
   } catch (err) {
     console.error("[julius-proxy] Network error:", err);
     return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
