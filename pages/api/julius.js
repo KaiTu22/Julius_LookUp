@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
     const cleanHandle = handle.replace(/^@/, "");
     // Handle goes in the URL path, platform as query param
-    juliusPath = `/influencers/${encodeURIComponent(cleanHandle)}/export?platform=${encodeURIComponent(platform)}&ts=${ts}`;
+    juliusPath = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
 
   } else if (mode === "slug") {
     if (!slug) {
