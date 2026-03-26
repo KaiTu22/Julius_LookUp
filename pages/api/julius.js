@@ -19,77 +19,34 @@ export default async function handler(req, res) {
   const { mode, platform, handle, slug } = req.query;
   const ts = Math.floor(Date.now() / 1000);
   let juliusPath;
+  let fetchMethod = "GET";
 
   if (mode === "handle") {
     if (!platform || !handle) {
       return res.status(400).json({ error: "Requires platform and handle." });
     }
     const cleanHandle = handle.replace(/^@/, "");
-    const cleanHandle = handle.replace(/^@/, "");
-juliusPath = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
-
-const fullUrl   = `${JULIUS_BASE_URL}${juliusPath}`;
-const signature = generateSignature("GET", fullUrl, apiSecret);
-
-let juliusRes;
-try {
-  juliusRes = await fetch(fullUrl, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent":   JULIUS_UA,
-      "X-API-Key":    apiKey,
-      "X-Signature":  signature,
-    },
-  });
-} catch (err) {
-  return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
-}
-
-res.setHeader("Content-Type", "application/json");
-res.status(juliusRes.status);
-return res.send(await juliusRes.text());
-    
-    const fullUrl   = `${JULIUS_BASE_URL}${juliusPath}`;
-    const signature = generateSignature("POST", fullUrl, apiSecret);
-    
-    let juliusRes;
-    try {
-      juliusRes = await fetch(fullUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent":   JULIUS_UA,
-          "X-API-Key":    apiKey,
-          "X-Signature":  signature,
-        },
-        body: JSON.stringify({ platform, handle: cleanHandle }),
-      });
-    } catch (err) {
-      return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
-    }
-    
-    res.setHeader("Content-Type", "application/json");
-    res.status(juliusRes.status);
-    return res.send(await juliusRes.text());
+    juliusPath  = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
+    fetchMethod = "GET";
 
   } else if (mode === "slug") {
     if (!slug) {
       return res.status(400).json({ error: "Requires slug." });
     }
-    juliusPath = `/influencers/${encodeURIComponent(slug)}/export?ts=${ts}`;
+    juliusPath  = `/influencers/${encodeURIComponent(slug)}/export?ts=${ts}`;
+    fetchMethod = "GET";
 
   } else {
     return res.status(400).json({ error: "Invalid mode." });
   }
 
   const fullUrl   = `${JULIUS_BASE_URL}${juliusPath}`;
-  const signature = generateSignature("GET", fullUrl, apiSecret);
+  const signature = generateSignature(fetchMethod, fullUrl, apiSecret);
 
   let juliusRes;
   try {
     juliusRes = await fetch(fullUrl, {
-      method: "GET",
+      method: fetchMethod,
       headers: {
         "Content-Type": "application/json",
         "User-Agent":   JULIUS_UA,
@@ -105,3 +62,10 @@ return res.send(await juliusRes.text());
   res.status(juliusRes.status);
   res.send(await juliusRes.text());
 }
+```
+
+Save with **Cmd + S**, then in terminal:
+```
+git add pages/api/julius.js
+git commit -m "clean up julius proxy"
+git push
