@@ -1,55 +1,57 @@
-import crypto from "crypto";
-
-const JULIUS_BASE_URL = "https://api.juliusworks.com";
-const JULIUS_UA       = "julius-api-client";
-
-function generateSignature(method, fullUrl, secret) {
-  const payload = `${method.toUpperCase()}|${fullUrl}|${JULIUS_UA}`;
-  return crypto.createHmac("sha256", secret).update(payload).digest("base64");
-}
-
-export default async function handler(req, res) {
-  const apiKey    = process.env.JULIUS_API_KEY;
-  const apiSecret = process.env.JULIUS_API_SECRET;
-
-  if (!apiKey || !apiSecret) {
-    return res.status(500).json({ error: "Julius credentials not configured." });
+if (mode === "handle") {
+  if (!platform || !handle) {
+    return res.status(400).json({ error: "Requires platform and handle." });
   }
+  const cleanHandle = handle.replace(/^@/, "");
 
-  const { mode, platform, handle, slug } = req.query;
-  const ts = Math.floor(Date.now() / 1000);
-  let juliusPath;
-  let fetchMethod = "GET";
+  // Step 1: look up by handle to get the slug
+  const handleTs   = Math.floor(Date.now() / 1000);
+  const handlePath = `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${handleTs}`;
+  const handleUrl  = `${JULIUS_BASE_URL}${handlePath}`;
+  const handleSig  = generateSignature("GET", handleUrl, apiSecret);
 
-  if (mode === "handle") {
-    if (!platform || !handle) {
-      return res.status(400).json({ error: "Requires platform and handle." });
-    }
-    const cleanHandle = handle.replace(/^@/, "");
-    juliusPath = `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
-
-  } else if (mode === "slug") {
-    if (!slug) {
-      return res.status(400).json({ error: "Requires slug." });
-    }
-    juliusPath = `/influencers/${encodeURIComponent(slug)}/export?ts=${ts}`;
-
-  } else {
-    return res.status(400).json({ error: "Invalid mode." });
-  }
-
-  const fullUrl   = `${JULIUS_BASE_URL}${juliusPath}`;
-  const signature = generateSignature(fetchMethod, fullUrl, apiSecret);
-
-  let juliusRes;
+  let handleRes;
   try {
-    juliusRes = await fetch(fullUrl, {
-      method: fetchMethod,
+    handleRes = await fetch(handleUrl, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         "User-Agent":   JULIUS_UA,
         "X-API-Key":    apiKey,
-        "X-Signature":  signature,
+        "X-Signature":  handleSig,
+      },
+    });
+  } catch (err) {
+    return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
+  }
+
+  if (!handleRes.ok) {
+    res.setHeader("Content-Type", "application/json");
+    res.status(handleRes.status);
+    return res.send(await handleRes.text());
+  }
+
+  const handleData = await handleRes.json();
+  const resolvedSlug = handleData?.slug ?? handleData?.id;
+
+  if (!resolvedSlug) {
+    return res.status(404).json({ error: "Influencer not found for that handle." });
+  }
+
+  // Step 2: fetch full export using the slug (includes demographics)
+  juliusPath  = `/influencers/${encodeURIComponent(resolvedSlug)}/export?ts=${Math.floor(Date.now() / 1000)}`;
+  const fullSlugUrl = `${JULIUS_BASE_URL}${juliusPath}`;
+  const slugSig     = generateSignature("GET", fullSlugUrl, apiSecret);
+
+  let slugRes;
+  try {
+    slugRes = await fetch(fullSlugUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent":   JULIUS_UA,
+        "X-API-Key":    apiKey,
+        "X-Signature":  slugSig,
       },
     });
   } catch (err) {
@@ -57,6 +59,5 @@ export default async function handler(req, res) {
   }
 
   res.setHeader("Content-Type", "application/json");
-  res.status(juliusRes.status);
-  res.send(await juliusRes.text());
-}
+  res.status(slugRes.status);
+  return res.send(await slugRes.text());
