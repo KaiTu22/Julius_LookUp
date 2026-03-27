@@ -1,473 +1,704 @@
 "use client";
-
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,v
+  PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid,
+  PolarAngleAxis
 } from "recharts";
 
-// ─────────────────────────────────────────────────────────────
-// API — all requests go through the Next.js proxy at /api/julius.
-// Credentials and signing are handled server-side; nothing secret
-// lives in this file.
-// ─────────────────────────────────────────────────────────────
-
-async function fetchByHandle(platform, handle) {
-  const params = new URLSearchParams({ mode: "handle", platform, handle });
-  const res = await fetch(`/api/julius?${params}`);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? `Request failed (${res.status}).`);
+// ─── Google Fonts ────────────────────────────────────────────────────────────
+const fontLink = typeof document !== "undefined" && (() => {
+  if (!document.getElementById("julius-fonts")) {
+    const l = document.createElement("link");
+    l.id = "julius-fonts";
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap";
+    document.head.appendChild(l);
   }
-  return res.json();
-}
+})();
 
-async function fetchBySlug(slug) {
-  const params = new URLSearchParams({ mode: "slug", slug });
-  const res = await fetch(`/api/julius?${params}`);
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? `Request failed (${res.status}).`);
-  }
-  return res.json();
-}
-
-// ─────────────────────────────────────────────────────────────
-// Data helpers — map Julius's response shape to what the UI needs
-// ─────────────────────────────────────────────────────────────
-
-// Pick the best available platform's stats (prefer the platform searched on)
-function getPlatformStats(socialCombined, preferredPlatform) {
-  if (!socialCombined?.length) return null;
-  const preferred = socialCombined.find(p => p.platform === preferredPlatform);
-  return preferred ?? socialCombined[0];
-}
-
-// Julius demographics live under demographics.instagram (or .twitter) and demographics.tiktok
-// Returns the first available platform's demographic data
-function getDemographics(raw, preferredPlatform) {
-  if (!raw) return null;
-  // Try preferred platform first, then instagram, then twitter, then tiktok
-  const order = [preferredPlatform, "instagram", "twitter", "tiktok"].filter(Boolean);
-  for (const p of order) {
-    if (raw[p]) return { platform: p, data: raw[p] };
-  }
-  return null;
-}
-
-// Normalise gender array: [{percentage, label}] → [{label, value}]
-function mapGender(arr) {
-  if (!arr?.length) return [];
-  return arr.map(g => ({ label: g.label, value: Math.round(g.percentage * 10) / 10 }));
-}
-
-// Normalise age array: [{label, percentage}] → [{bracket, value}]  sorted by min age
-function mapAge(arr) {
-  if (!arr?.length) return [];
-  return [...arr]
-    .sort((a, b) => (a.min ?? 0) - (b.min ?? 0))
-    .map(a => ({ bracket: a.label, value: Math.round(a.percentage * 10) / 10 }));
-}
-
-// ─────────────────────────────────────────────────────────────
-// Demo data (shown when demo mode is on)
-// Mirrors the real Julius response shape exactly.
-// ─────────────────────────────────────────────────────────────
-const DEMO_RAW = {
-  id: 28290,
-  slug: "taylor-swift",
+// ─── Demo Data ────────────────────────────────────────────────────────────────
+const DEMO = {
   display_name: "Taylor Swift",
+  tagline: "Musician",
+  dob: "1989-12-13",
   gender: "Female",
-  avatar: { url: null },
-  current_location: { display_name: "New York, NY" },
-  social_total_count: 511170411,
+  slug: "taylor-swift",
+  avatar: { url: "https://assets.julius.cloud/influencers/2020-06-25-184224-004-esnkzy2v.jpg" },
+  current_location: { display_name: "New York, New York" },
+  social_total_count: 574880766,
+  social_total_engagement: 7126430,
   social_combined: [
-    {
-      platform: "instagram",
-      statistics: { engagement: 4069167, count: 248069302 },
-      accounts: [{ remote_handle: "taylorswift", statistics: { engagement_rate: { reach: 0.0164 } } }],
-    },
+    { platform: "instagram", statistics: { count: 280484680, engagement: 3944181, engagement_rate: { reach: 0.01406 } } },
+    { platform: "tiktok",    statistics: { count: 33600000,  engagement: 1142250, engagement_rate: { reach: 0.03399 } } },
+    { platform: "youtube",   statistics: { count: 88300000,  engagement: 476469,  engagement_rate: { reach: 0.00392 } } },
+    { platform: "facebook",  statistics: { count: 78832248,  engagement: 314586,  engagement_rate: { reach: 0.00399 } } },
+    { platform: "twitter",   statistics: { count: 93663838,  engagement: 1248944, engagement_rate: { reach: 0.01333 } } },
   ],
   demographics: {
     instagram: {
-      gender: [
-        { label: "Female", percentage: 60.61 },
-        { label: "Male",   percentage: 39.39 },
-      ],
       age: [
-        { min: 18, label: "18 - 24", percentage: 18.5 },
-        { min: 25, label: "25 - 29", percentage: 25.32 },
-        { min: 30, label: "30 - 34", percentage: 25.74 },
-        { min: 35, label: "35 - 44", percentage: 18.9 },
-        { min: 45, label: "45+",     percentage: 11.54 },
+        { label: "< 16",  percentage: 0.7 },
+        { label: "17–19", percentage: 2.02 },
+        { label: "20–24", percentage: 9.79 },
+        { label: "25–29", percentage: 19.87 },
+        { label: "30–34", percentage: 26.33 },
+        { label: "35–39", percentage: 22.05 },
+        { label: "40–49", percentage: 9.8 },
+        { label: "50–59", percentage: 3.75 },
+        { label: "60+",   percentage: 5.7 },
+      ],
+      gender: [{ label: "Female", percentage: 61.13 }, { label: "Male", percentage: 38.87 }],
+      race: [
+        { label: "White",    percentage: 80.17 },
+        { label: "Hispanic", percentage: 12.42 },
+        { label: "Black",    percentage: 4.7 },
+        { label: "Asian",    percentage: 2.72 },
+      ],
+      income: [
+        { label: "$10k–$20k", percentage: 24.3 },
+        { label: "$20k–$30k", percentage: 10.96 },
+        { label: "$30k–$40k", percentage: 8.25 },
+        { label: "$40k–$50k", percentage: 9.39 },
+        { label: "$50k–$75k", percentage: 25.62 },
+        { label: "$75k–$100k", percentage: 7.98 },
+        { label: "$100k+",    percentage: 2.17 },
+      ],
+      interest: [
+        { label: "Pop",                percentage: 44.11 },
+        { label: "Dance-Pop",          percentage: 40.86 },
+        { label: "Rock",               percentage: 40.4 },
+        { label: "Teen Pop",           percentage: 38.2 },
+        { label: "Country",            percentage: 38.04 },
+        { label: "R&B",                percentage: 32.4 },
+        { label: "Club & Dance",       percentage: 31.73 },
+        { label: "Alt & Indie Rock",   percentage: 27.14 },
+        { label: "Rap & Hip Hop",      percentage: 22.03 },
+        { label: "Music",              percentage: 20.47 },
+        { label: "Electronic",         percentage: 19.97 },
+        { label: "Fashion",            percentage: 18.37 },
+        { label: "Dance",              percentage: 18.16 },
+        { label: "Drama",              percentage: 16.52 },
+        { label: "Underwear",          percentage: 16.14 },
+      ],
+      brand: [
+        { label: "Victoria's Secret", percentage: 28.66 },
+        { label: "Nike",              percentage: 26.71 },
+        { label: "NASA",              percentage: 20.8 },
+        { label: "Disney",            percentage: 20.73 },
+        { label: "Starbucks",         percentage: 17.62 },
+        { label: "Youtube",           percentage: 17.44 },
+        { label: "adidas",            percentage: 16.95 },
+        { label: "Marvel",            percentage: 16.01 },
+        { label: "H&M",               percentage: 14.99 },
+        { label: "Netflix",           percentage: 14.63 },
+        { label: "CHANEL",            percentage: 13.01 },
+        { label: "Louis Vuitton",     percentage: 11.76 },
+        { label: "Sephora",           percentage: 11.62 },
+        { label: "Forever 21",        percentage: 11.42 },
+        { label: "Gucci",             percentage: 10.82 },
+      ],
+      "location-by-country": [
+        { label: "United States",  percentage: 22.05 },
+        { label: "Indonesia",      percentage: 13.03 },
+        { label: "Brazil",         percentage: 10.77 },
+        { label: "Philippines",    percentage: 6.79 },
+        { label: "India",          percentage: 5.74 },
+        { label: "Nigeria",        percentage: 2.23 },
+        { label: "Mexico",         percentage: 2.2 },
+        { label: "United Kingdom", percentage: 2.17 },
+        { label: "Malaysia",       percentage: 2.08 },
+        { label: "Thailand",       percentage: 2.07 },
+      ],
+      "location-by-us-state": [
+        { label: "California",   percentage: 15.12 },
+        { label: "Texas",        percentage: 9.12 },
+        { label: "New York",     percentage: 7.02 },
+        { label: "Florida",      percentage: 5.2 },
+        { label: "Pennsylvania", percentage: 4.56 },
+        { label: "Ohio",         percentage: 3.83 },
+        { label: "Illinois",     percentage: 3.82 },
+        { label: "Georgia",      percentage: 3.4 },
+        { label: "Michigan",     percentage: 3.02 },
+        { label: "Tennessee",    percentage: 2.77 },
+      ],
+    },
+    tiktok: {
+      age: [
+        { label: "< 16",  percentage: 5.2 },
+        { label: "17–19", percentage: 14.11 },
+        { label: "20–24", percentage: 40.47 },
+        { label: "25–29", percentage: 22.75 },
+        { label: "30–34", percentage: 10.59 },
+        { label: "35–39", percentage: 4.33 },
+        { label: "40–49", percentage: 2.15 },
+        { label: "50–59", percentage: 0.16 },
+        { label: "60+",   percentage: 0.24 },
+      ],
+      gender: [{ label: "Female", percentage: 74.69 }, { label: "Male", percentage: 25.31 }],
+      race: [
+        { label: "White",    percentage: 86.72 },
+        { label: "Hispanic", percentage: 8.14 },
+        { label: "Black",    percentage: 4.2 },
+        { label: "Asian",    percentage: 0.94 },
+      ],
+      income: [
+        { label: "$10k–$20k",  percentage: 14.32 },
+        { label: "$20k–$30k",  percentage: 16.0 },
+        { label: "$30k–$40k",  percentage: 11.55 },
+        { label: "$40k–$50k",  percentage: 10.43 },
+        { label: "$50k–$75k",  percentage: 21.13 },
+        { label: "$75k–$100k", percentage: 3.7 },
+        { label: "$100k+",     percentage: 1.12 },
+      ],
+      interest: [
+        { label: "Pop",          percentage: 64.48 },
+        { label: "Dance",        percentage: 45.4 },
+        { label: "Rap & Hip Hop",percentage: 33.18 },
+        { label: "Music",        percentage: 26.13 },
+        { label: "Comedy",       percentage: 25.96 },
+        { label: "Makeup",       percentage: 24.73 },
+        { label: "Cooking",      percentage: 23.72 },
+        { label: "K-Pop",        percentage: 21.47 },
+        { label: "Fashion",      percentage: 19.41 },
+        { label: "Travel",       percentage: 19.35 },
+        { label: "Latin",        percentage: 19.22 },
+        { label: "Electronic",   percentage: 18.62 },
+        { label: "Pets",         percentage: 17.88 },
+        { label: "Dance-Pop",    percentage: 17.8 },
+        { label: "Country",      percentage: 16.61 },
+      ],
+      brand: [
+        { label: "Netflix",           percentage: 48.37 },
+        { label: "Disney",            percentage: 26.89 },
+        { label: "Marvel",            percentage: 26.29 },
+        { label: "Amazon",            percentage: 14.98 },
+        { label: "Victoria's Secret", percentage: 14.88 },
+        { label: "Gucci",             percentage: 14.23 },
+        { label: "Starbucks",         percentage: 14.0 },
+        { label: "Kylie Jenner",      percentage: 12.76 },
+        { label: "Shein",             percentage: 12.53 },
+        { label: "Nike",              percentage: 12.37 },
+        { label: "Duolingo",          percentage: 12.35 },
+        { label: "Christian Dior",    percentage: 11.66 },
+        { label: "Sephora",           percentage: 11.55 },
+        { label: "Lionsgate",         percentage: 10.88 },
+        { label: "Jiffpom",           percentage: 10.77 },
+      ],
+      "location-by-country": [
+        { label: "United States",  percentage: 45.47 },
+        { label: "United Kingdom", percentage: 6.46 },
+        { label: "Mexico",         percentage: 6.24 },
+        { label: "Philippines",    percentage: 6.15 },
+        { label: "Brazil",         percentage: 5.41 },
+        { label: "Canada",         percentage: 3.39 },
+        { label: "Australia",      percentage: 1.84 },
+        { label: "Argentina",      percentage: 1.84 },
+        { label: "Indonesia",      percentage: 1.59 },
+        { label: "Italy",          percentage: 1.5 },
+      ],
+      "location-by-us-state": [
+        { label: "California",   percentage: 14.36 },
+        { label: "Texas",        percentage: 8.86 },
+        { label: "Florida",      percentage: 6.04 },
+        { label: "New York",     percentage: 6.0 },
+        { label: "Pennsylvania", percentage: 4.73 },
+        { label: "Ohio",         percentage: 4.27 },
+        { label: "Michigan",     percentage: 4.1 },
+        { label: "Illinois",     percentage: 3.45 },
+        { label: "N. Carolina",  percentage: 3.13 },
+        { label: "Georgia",      percentage: 2.82 },
       ],
     },
   },
+  brands: {
+    current: ["Apple", "AT&T", "Glu Mobile", "Heritage 66", "JD.com", "Live Nation", "Stella McCartney", "Target", "UPS"],
+    mention: ["Amazon", "Billboard Music Awards", "Capital One", "Disney+", "Harper's Bazaar", "Hulu", "iHeartRadio", "Netflix", "Spotify", "Vevo", "Vogue", "YouTube"],
+    prior: ["Abercrombie & Fitch", "Band Hero", "Coca-Cola", "CoverGirl", "Keds", "Sony", "Toyota", "Verizon"],
+  },
+  interests: ["Acting", "Animals", "Cats", "Cooking", "Country Music", "Fashion", "Literature", "Music", "Poetry", "Politics", "Pop Music", "Singing", "Travel", "Writing"],
+  topics: ["Entertainment", "Music", "Food & Drink", "Cooking"],
+  prices: [
+    { type: { name: "Appearance" }, amount: 2500000 },
+    { type: { name: "Private Performance" }, amount: 5000000 },
+  ],
+  causes: ["Anti-Racism", "Black Lives Matter", "Breast Cancer", "LGBTQ+", "Education", "Voting", "Gender Equality", "Women's Issues", "COVID-19 Relief"],
 };
 
-// ─────────────────────────────────────────────────────────────
-// Colour palette
-// ─────────────────────────────────────────────────────────────
-const GENDER_COLORS = ["#5DCAA5", "#378ADD", "#D4537E", "#EF9F27"];
-const AGE_COLOR     = "#534AB7";
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const fmt = n => n >= 1e9 ? (n/1e9).toFixed(1)+"B" : n >= 1e6 ? (n/1e6).toFixed(1)+"M" : n >= 1e3 ? (n/1e3).toFixed(0)+"K" : n?.toString() ?? "–";
+const fmtPct = n => n != null ? n.toFixed(1)+"%" : "–";
+const fmtUSD = n => n >= 1e6 ? "$"+(n/1e6).toFixed(1)+"M" : "$"+n?.toLocaleString();
+const age = dob => dob ? Math.floor((Date.now() - new Date(dob)) / 3.15576e10) : null;
 
-function fmt(n) {
-  if (!n) return "—";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000)     return Math.round(n / 1_000) + "K";
-  return String(n);
-}
+const PLATFORM_META = {
+  instagram: { color: "#E1306C", label: "Instagram", icon: "📸" },
+  tiktok:    { color: "#fe2c55", label: "TikTok",    icon: "🎵" },
+  youtube:   { color: "#FF0000", label: "YouTube",   icon: "▶️" },
+  facebook:  { color: "#1877F2", label: "Facebook",  icon: "👥" },
+  twitter:   { color: "#1DA1F2", label: "Twitter/X", icon: "🐦" },
+  pinterest: { color: "#E60023", label: "Pinterest", icon: "📌" },
+  snapchat:  { color: "#FFFC00", label: "Snapchat",  icon: "👻" },
+};
 
-// ─────────────────────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────────────────────
-function StatPill({ label, value }) {
+const ACCENT  = "#a78bfa";
+const ACCENT2 = "#34d399";
+const PALETTE = ["#a78bfa","#60a5fa","#34d399","#f472b6","#fbbf24","#fb923c","#e879f9"];
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+const Card = ({ children, style }) => (
+  <div style={{ background:"#13131f", border:"1px solid #1e1e35", borderRadius:12, padding:"18px 20px", ...style }}>
+    {children}
+  </div>
+);
+
+const SectionTitle = ({ children }) => (
+  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:11, letterSpacing:3, textTransform:"uppercase", color:"#6b6b9a", marginBottom:14 }}>
+    {children}
+  </div>
+);
+
+const StatPill = ({ label, value, color="#a78bfa" }) => (
+  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid #1a1a2e" }}>
+    <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#9090b8" }}>{label}</span>
+    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color, fontWeight:500 }}>{value}</span>
+  </div>
+);
+
+const Tag = ({ children, color="#a78bfa22", textColor="#a78bfa" }) => (
+  <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:20, background:color, color:textColor, fontSize:11, fontFamily:"'DM Sans',sans-serif", fontWeight:500, margin:"3px 3px 3px 0", border:`1px solid ${textColor}33` }}>
+    {children}
+  </span>
+);
+
+const HBar = ({ data, color=ACCENT, max }) => {
+  const m = max || Math.max(...data.map(d => d.percentage));
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", gap: 2,
-      background: "var(--color-background-secondary)",
-      borderRadius: 8, padding: "10px 16px",
-    }}>
-      <span style={{ fontSize: 11, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{label}</span>
-      <span style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)" }}>{value}</span>
+    <div>
+      {data.map((d,i) => (
+        <div key={i} style={{ marginBottom:6 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+            <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#9090b8" }}>{d.label}</span>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:PALETTE[i%PALETTE.length] }}>{fmtPct(d.percentage)}</span>
+          </div>
+          <div style={{ height:5, background:"#1a1a2e", borderRadius:3, overflow:"hidden" }}>
+            <div style={{ height:"100%", width:`${(d.percentage/m)*100}%`, background:PALETTE[i%PALETTE.length], borderRadius:3, transition:"width .6s ease" }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const TabBar = ({ tabs, active, onChange }) => (
+  <div style={{ display:"flex", gap:4, borderBottom:"1px solid #1e1e35", marginBottom:24, overflowX:"auto", paddingBottom:1 }}>
+    {tabs.map(t => (
+      <button key={t.id} onClick={() => onChange(t.id)} style={{
+        padding:"8px 16px", fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:600,
+        letterSpacing:1, textTransform:"uppercase", background:"none", border:"none",
+        borderBottom: active===t.id ? `2px solid ${ACCENT}` : "2px solid transparent",
+        color: active===t.id ? ACCENT : "#6b6b9a", cursor:"pointer", whiteSpace:"nowrap",
+        transition:"all .2s"
+      }}>{t.label}</button>
+    ))}
+  </div>
+);
+
+const PlatformPicker = ({ platforms, active, onChange }) => (
+  <div style={{ display:"flex", gap:6, marginBottom:20, flexWrap:"wrap" }}>
+    {platforms.map(p => {
+      const meta = PLATFORM_META[p] || { color:"#fff", label:p };
+      return (
+        <button key={p} onClick={() => onChange(p)} style={{
+          padding:"5px 12px", borderRadius:20, fontSize:11, fontFamily:"'DM Sans',sans-serif", fontWeight:500,
+          border:`1px solid ${active===p ? meta.color : "#2a2a45"}`,
+          background: active===p ? meta.color+"22" : "transparent",
+          color: active===p ? meta.color : "#6b6b9a", cursor:"pointer", transition:"all .2s"
+        }}>{meta.icon} {meta.label}</button>
+      );
+    })}
+  </div>
+);
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+function OverviewTab({ d }) {
+  const a = age(d.dob);
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px,1fr))", gap:16 }}>
+      {/* Profile */}
+      <Card>
+        <SectionTitle>Profile</SectionTitle>
+        <StatPill label="Full Name"   value={d.display_name} />
+        <StatPill label="Tagline"     value={d.tagline || "–"} />
+        <StatPill label="Gender"      value={d.gender || "–"} />
+        {a && <StatPill label="Age"   value={`${a} years old`} />}
+        <StatPill label="Born"        value={d.dob || "–"} />
+        <StatPill label="Location"    value={d.current_location?.display_name || "–"} />
+        <StatPill label="Julius Slug" value={d.slug} color="#6b6b9a" />
+      </Card>
+
+      {/* Totals */}
+      <Card>
+        <SectionTitle>Combined Reach</SectionTitle>
+        <div style={{ textAlign:"center", padding:"12px 0" }}>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:36, fontWeight:500, color:ACCENT, letterSpacing:-1 }}>{fmt(d.social_total_count)}</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b6b9a", marginTop:4 }}>Total Followers</div>
+        </div>
+        <div style={{ height:1, background:"#1e1e35", margin:"12px 0" }} />
+        <div style={{ textAlign:"center", padding:"8px 0" }}>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:500, color:ACCENT2 }}>{fmt(d.social_total_engagement)}</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b6b9a", marginTop:4 }}>Total Avg. Engagement</div>
+        </div>
+      </Card>
+
+      {/* Per-platform */}
+      {(d.social_combined || []).map(s => {
+        const meta = PLATFORM_META[s.platform] || { color:"#fff", label:s.platform, icon:"🌐" };
+        return (
+          <Card key={s.platform}>
+            <SectionTitle>{meta.icon} {meta.label}</SectionTitle>
+            <StatPill label="Followers"      value={fmt(s.statistics?.count)}      color={meta.color} />
+            <StatPill label="Avg Engagement" value={fmt(s.statistics?.engagement)} color={meta.color} />
+            <StatPill label="Eng. Rate"      value={fmtPct((s.statistics?.engagement_rate?.reach||0)*100)} color={meta.color} />
+          </Card>
+        );
+      })}
     </div>
   );
 }
 
-function InfluencerCard({ raw, preferredPlatform }) {
-  const platformStats = getPlatformStats(raw.social_combined, preferredPlatform);
-  const account       = platformStats?.accounts?.[0];
-  const engRate       = account?.statistics?.engagement_rate?.reach;
-  const demoResult    = getDemographics(raw.demographics, preferredPlatform);
-  const genderData    = mapGender(demoResult?.data?.gender);
-  const ageData       = mapAge(demoResult?.data?.age);
-
-  const initials = raw.display_name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() ?? "?";
-  const handle   = account?.remote_handle ? `@${account.remote_handle}` : null;
+function DemographicsTab({ d }) {
+  const platforms = Object.keys(d.demographics || {});
+  const [plat, setPlat] = useState(platforms[0] || "instagram");
+  const dem = d.demographics?.[plat];
+  if (!dem) return <div style={{ color:"#6b6b9a" }}>No demographic data available.</div>;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div>
+      <PlatformPicker platforms={platforms} active={plat} onChange={setPlat} />
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px,1fr))", gap:16 }}>
 
-      {/* Profile header */}
-      <div style={{
-        display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap",
-        background: "var(--color-background-primary)",
-        border: "0.5px solid var(--color-border-tertiary)",
-        borderRadius: 12, padding: "20px 24px",
-      }}>
-        {/* Avatar */}
-        <div style={{
-          width: 56, height: 56, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
-          background: "var(--color-background-info)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 20, fontWeight: 500, color: "var(--color-text-info)",
-        }}>
-          {raw.avatar?.url
-            ? <img src={raw.avatar.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
-            : initials}
-        </div>
+        {/* Age */}
+        <Card>
+          <SectionTitle>Age Distribution</SectionTitle>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={dem.age} margin={{top:0,right:0,bottom:0,left:-20}}>
+              <XAxis dataKey="label" tick={{ fill:"#6b6b9a", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill:"#6b6b9a", fontSize:10, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
+              <Tooltip contentStyle={{ background:"#13131f", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
+              <Bar dataKey="percentage" radius={[4,4,0,0]}>
+                {dem.age.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
 
-        {/* Name / handle / location */}
-        <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)" }}>{raw.display_name}</span>
-            {platformStats && (
-              <span style={{ fontSize: 12, background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", borderRadius: 6, padding: "2px 8px", textTransform: "capitalize" }}>
-                {platformStats.platform}
-              </span>
-            )}
-          </div>
-          {handle && (
-            <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginTop: 2 }}>{handle}</div>
-          )}
-          {raw.current_location?.display_name && (
-            <div style={{ fontSize: 12, color: "var(--color-text-tertiary)", marginTop: 3 }}>{raw.current_location.display_name}</div>
-          )}
-        </div>
+        {/* Gender */}
+        <Card>
+          <SectionTitle>Gender Split</SectionTitle>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie data={dem.gender} dataKey="percentage" nameKey="label" cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3}>
+                {dem.gender.map((_,i) => <Cell key={i} fill={i===0 ? "#f472b6" : "#60a5fa"} />)}
+              </Pie>
+              <Tooltip contentStyle={{ background:"#13131f", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v)]} />
+              <Legend formatter={(v,e) => <span style={{ fontFamily:"DM Sans", fontSize:12, color:"#9090b8" }}>{v}: {fmtPct(e.payload.percentage)}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
 
-        {/* Stats */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <StatPill label="Followers"  value={fmt(platformStats?.statistics?.count ?? raw.social_total_count)} />
-          {engRate != null && (
-            <StatPill label="Eng. rate" value={(engRate * 100).toFixed(2) + "%"} />
-          )}
-        </div>
+        {/* Race */}
+        <Card>
+          <SectionTitle>Race / Ethnicity</SectionTitle>
+          <HBar data={dem.race} />
+        </Card>
+
+        {/* Income */}
+        <Card>
+          <SectionTitle>Household Income</SectionTitle>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={dem.income} layout="vertical" margin={{top:0,right:10,bottom:0,left:10}}>
+              <XAxis type="number" tick={{ fill:"#6b6b9a", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
+              <YAxis type="category" dataKey="label" width={75} tick={{ fill:"#6b6b9a", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background:"#13131f", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
+              <Bar dataKey="percentage" radius={[0,4,4,0]}>
+                {dem.income.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
       </div>
+    </div>
+  );
+}
 
-      {/* Demographics */}
-      {demoResult ? (
-        <>
-          {/* Platform label */}
-          <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-tertiary)" }}>
-            Audience demographics · <span style={{ textTransform: "capitalize" }}>{demoResult.platform}</span>
-          </p>
+function InterestsTab({ d }) {
+  const platforms = Object.keys(d.demographics || {});
+  const [plat, setPlat] = useState(platforms[0] || "instagram");
+  const list = d.demographics?.[plat]?.interest?.slice(0,20) || [];
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+  return (
+    <div>
+      <PlatformPicker platforms={platforms} active={plat} onChange={setPlat} />
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px,1fr))", gap:16 }}>
+        <Card style={{ gridColumn:"1 / -1" }}>
+          <SectionTitle>Top Audience Interests</SectionTitle>
+          <ResponsiveContainer width="100%" height={420}>
+            <BarChart data={list} layout="vertical" margin={{top:0,right:30,bottom:0,left:10}}>
+              <XAxis type="number" tick={{ fill:"#6b6b9a", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
+              <YAxis type="category" dataKey="label" width={145} tick={{ fill:"#9090b8", fontSize:11, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background:"#13131f", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
+              <Bar dataKey="percentage" radius={[0,4,4,0]}>
+                {list.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
+    </div>
+  );
+}
 
-            {/* Gender donut */}
-            {genderData.length > 0 && (
-              <div style={{
-                background: "var(--color-background-primary)",
-                border: "0.5px solid var(--color-border-tertiary)",
-                borderRadius: 12, padding: "20px 24px",
-              }}>
-                <p style={{ fontSize: 12, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 16px" }}>Audience gender</p>
-                <div style={{ height: 180 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={genderData} dataKey="value" nameKey="label"
-                           cx="50%" cy="50%" innerRadius={50} outerRadius={78} paddingAngle={2}>
-                        {genderData.map((_, i) => (
-                          <Cell key={i} fill={GENDER_COLORS[i % GENDER_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={v => `${v}%`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-                  {genderData.map((g, i) => (
-                    <span key={g.label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--color-text-secondary)" }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: GENDER_COLORS[i % GENDER_COLORS.length], display: "inline-block", flexShrink: 0 }} />
-                      {g.label} {g.value}%
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+function BrandsAudienceTab({ d }) {
+  const platforms = Object.keys(d.demographics || {});
+  const [plat, setPlat] = useState(platforms[0] || "instagram");
+  const list = d.demographics?.[plat]?.brand?.slice(0,20) || [];
 
-            {/* Age bar chart */}
-            {ageData.length > 0 && (
-              <div style={{
-                background: "var(--color-background-primary)",
-                border: "0.5px solid var(--color-border-tertiary)",
-                borderRadius: 12, padding: "20px 24px",
-              }}>
-                <p style={{ fontSize: 12, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 16px" }}>Audience age</p>
-                <div style={{ height: 200 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={ageData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-                      <XAxis dataKey="bracket" tick={{ fontSize: 10, fill: "var(--color-text-tertiary)" }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: "var(--color-text-tertiary)" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-                      <Tooltip formatter={v => `${v}%`} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
-                      <Bar dataKey="value" fill={AGE_COLOR} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
+  return (
+    <div>
+      <PlatformPicker platforms={platforms} active={plat} onChange={setPlat} />
+      <Card>
+        <SectionTitle>Top Audience Brand Affinity</SectionTitle>
+        <ResponsiveContainer width="100%" height={440}>
+          <BarChart data={list} layout="vertical" margin={{top:0,right:30,bottom:0,left:10}}>
+            <XAxis type="number" tick={{ fill:"#6b6b9a", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
+            <YAxis type="category" dataKey="label" width={145} tick={{ fill:"#9090b8", fontSize:11, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ background:"#13131f", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
+            <Bar dataKey="percentage" radius={[0,4,4,0]}>
+              {list.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+  );
+}
 
-          </div>
-        </>
-      ) : (
-        <div style={{
-          padding: "20px 24px", borderRadius: 10,
-          background: "var(--color-background-secondary)",
-          border: "0.5px solid var(--color-border-tertiary)",
-          fontSize: 13, color: "var(--color-text-secondary)",
-        }}>
-          Influencer found, but no audience demographics are available for this account. This may depend on your Julius service agreement.
-        </div>
+function LocationsTab({ d }) {
+  const platforms = Object.keys(d.demographics || {});
+  const [plat, setPlat] = useState(platforms[0] || "instagram");
+  const dem = d.demographics?.[plat];
+  const countries = dem?.["location-by-country"]?.slice(0,12) || [];
+  const states    = dem?.["location-by-us-state"]?.slice(0,12) || [];
+
+  return (
+    <div>
+      <PlatformPicker platforms={platforms} active={plat} onChange={setPlat} />
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px,1fr))", gap:16 }}>
+        <Card>
+          <SectionTitle>Top Countries</SectionTitle>
+          <HBar data={countries} />
+        </Card>
+        <Card>
+          <SectionTitle>Top US States</SectionTitle>
+          <HBar data={states} />
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function ProfileTab({ d }) {
+  const causes = d.causes || (d.tags||[]).filter(t=>t.tag?.startsWith("cause.")).map(t=>t.display_name);
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px,1fr))", gap:16 }}>
+
+      {d.brands?.current?.length > 0 && (
+        <Card>
+          <SectionTitle>Current Brand Deals</SectionTitle>
+          <div>{(d.brands.current).map(b => <Tag key={b} color="#34d39922" textColor="#34d399">{b}</Tag>)}</div>
+        </Card>
       )}
-
+      {d.brands?.mention?.length > 0 && (
+        <Card>
+          <SectionTitle>Brand Mentions</SectionTitle>
+          <div>{(d.brands.mention).map(b => <Tag key={b} color="#60a5fa22" textColor="#60a5fa">{b}</Tag>)}</div>
+        </Card>
+      )}
+      {d.brands?.prior?.length > 0 && (
+        <Card>
+          <SectionTitle>Prior Brand Deals</SectionTitle>
+          <div>{(d.brands.prior).map(b => <Tag key={b} color="#6b6b9a22" textColor="#6b6b9a">{b}</Tag>)}</div>
+        </Card>
+      )}
+      {d.interests?.length > 0 && (
+        <Card>
+          <SectionTitle>Personal Interests</SectionTitle>
+          <div>{d.interests.map(i => <Tag key={i}>{i}</Tag>)}</div>
+        </Card>
+      )}
+      {d.topics?.length > 0 && (
+        <Card>
+          <SectionTitle>Topics</SectionTitle>
+          <div>{d.topics.map(t => <Tag key={t} color="#fbbf2422" textColor="#fbbf24">{t}</Tag>)}</div>
+        </Card>
+      )}
+      {causes?.length > 0 && (
+        <Card>
+          <SectionTitle>Causes</SectionTitle>
+          <div>{causes.map(c => <Tag key={c} color="#f472b622" textColor="#f472b6">{c}</Tag>)}</div>
+        </Card>
+      )}
+      {d.prices?.length > 0 && (
+        <Card>
+          <SectionTitle>Estimated Pricing</SectionTitle>
+          {d.prices.map((p,i) => <StatPill key={i} label={p.type?.name} value={fmtUSD(p.amount)} color={ACCENT2} />)}
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a4a6a", marginTop:10 }}>Pricing is estimated and may not reflect current rates.</div>
+        </Card>
+      )}
     </div>
   );
 }
 
-function NotFoundCard({ query }) {
-  return (
-    <div style={{
-      textAlign: "center", padding: "48px 24px",
-      background: "var(--color-background-primary)",
-      border: "0.5px solid var(--color-border-tertiary)",
-      borderRadius: 12,
-    }}>
-      <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-      <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)", margin: "0 0 6px" }}>No influencer found</p>
-      <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
-        "{query}" wasn't found in the Julius database. Check the spelling or try a different platform.
-      </p>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// Main component
-// ─────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function JuliusInfluencerLookup() {
-  const [demoMode,   setDemoMode]   = useState(true);
-  const [searchType, setSearchType] = useState("handle");  // "handle" | "slug"
-  const [platform,   setPlatform]   = useState("instagram");
-  const [query,      setQuery]      = useState("");
-  const [status,     setStatus]     = useState("idle");    // idle | loading | found | not_found | error
-  const [rawResult,  setRawResult]  = useState(null);
-  const [usedPlatform, setUsedPlatform] = useState("instagram");
-  const [errorMsg,   setErrorMsg]   = useState("");
+  const [mode,      setMode]      = useState("handle");
+  const [platform,  setPlatform]  = useState("instagram");
+  const [query,     setQuery]     = useState("");
+  const [loading,   setLoading]   = useState(false);
+  const [data,      setData]      = useState(null);
+  const [error,     setError]     = useState(null);
+  const [demoMode,  setDemoMode]  = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  const handleSearch = useCallback(async () => {
+  const displayData = demoMode ? DEMO : data;
+
+  const search = async () => {
     if (!query.trim()) return;
-    setStatus("loading");
-    setRawResult(null);
-    setErrorMsg("");
-
-    // Demo mode — return the built-in sample
-    if (demoMode) {
-      await new Promise(r => setTimeout(r, 800));
-      setRawResult(DEMO_RAW);
-      setUsedPlatform("instagram");
-      setStatus("found");
-      return;
-    }
-
+    setLoading(true); setError(null); setData(null);
     try {
-      let data;
-      if (searchType === "handle") {
-        data = await fetchByHandle(platform, query.trim());
-        setUsedPlatform(platform);
-      } else {
-        // Slug: convert spaces to hyphens and lowercase, e.g. "Taylor Swift" → "taylor-swift"
-        const slug = query.trim().toLowerCase().replace(/\s+/g, "-");
-        data = await fetchBySlug(slug);
-        setUsedPlatform("instagram");
-      }
+      const params = mode === "handle"
+        ? `mode=handle&platform=${platform}&handle=${encodeURIComponent(query.trim())}`
+        : `mode=slug&slug=${encodeURIComponent(query.trim())}`;
+      const res  = await fetch(`/api/julius?${params}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Lookup failed");
+      setData(json);
+      setDemoMode(false);
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
 
-      if (data) { setRawResult(data); setStatus("found"); }
-      else        setStatus("not_found");
-    } catch (e) {
-      setErrorMsg(e.message || "Something went wrong.");
-      setStatus("error");
-    }
-  }, [query, searchType, platform, demoMode]);
+  const TABS = [
+    { id:"overview",   label:"Overview" },
+    { id:"demographics", label:"Demographics" },
+    { id:"interests",  label:"Interests" },
+    { id:"brands",     label:"Audience Brands" },
+    { id:"locations",  label:"Locations" },
+    { id:"profile",    label:"Profile" },
+  ];
 
   return (
-    <div style={{ fontFamily: "var(--font-sans, sans-serif)", maxWidth: 860, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20, padding: "0 0 32px" }}>
+    <div style={{ minHeight:"100vh", background:"#0a0a12", color:"#e2e2f0", fontFamily:"'DM Sans',sans-serif", padding:"32px 24px" }}>
+      <style>{`* { box-sizing:border-box; } ::-webkit-scrollbar { width:4px; height:4px; background:#0a0a12; } ::-webkit-scrollbar-thumb { background:#2a2a45; border-radius:4px; }`}</style>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "var(--color-text-primary)" }}>Julius influencer lookup</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-text-secondary)" }}>Search the Julius database · audience demographics</p>
-        </div>
-        {/* Demo mode toggle */}
-        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "var(--color-text-secondary)", userSelect: "none" }}>
-          <div onClick={() => { setDemoMode(d => !d); setStatus("idle"); setRawResult(null); }} style={{
-            width: 36, height: 20, borderRadius: 10, position: "relative",
-            background: demoMode ? "#534AB7" : "var(--color-border-secondary)",
-            transition: "background .2s", cursor: "pointer", flexShrink: 0,
-          }}>
-            <div style={{
-              position: "absolute", top: 3, left: demoMode ? 18 : 3,
-              width: 14, height: 14, borderRadius: "50%", background: "#fff",
-              transition: "left .2s", pointerEvents: "none",
-            }} />
+      <div style={{ maxWidth:1200, margin:"0 auto" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:32, flexWrap:"wrap", gap:12 }}>
+          <div>
+            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, fontWeight:800, margin:0, letterSpacing:-0.5, color:"#fff" }}>
+              Julius <span style={{ color:ACCENT }}>Intelligence</span>
+            </h1>
+            <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b6b9a", margin:"4px 0 0" }}>Influencer data & audience analytics</p>
           </div>
-          Demo mode
-        </label>
-      </div>
-
-      {/* Live mode reminder */}
-      {!demoMode && (
-        <div style={{
-          background: "var(--color-background-secondary)",
-          border: "0.5px solid var(--color-border-tertiary)",
-          borderRadius: 10, padding: "12px 16px",
-          fontSize: 13, color: "var(--color-text-secondary)", lineHeight: 1.6,
-        }}>
-          Requests route through <code>/api/julius</code>. Make sure <code>JULIUS_API_KEY</code> and <code>JULIUS_API_SECRET</code> are set in <code>.env.local</code>.
+          <button onClick={() => setDemoMode(v => !v)} style={{
+            padding:"7px 16px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:600,
+            letterSpacing:1, textTransform:"uppercase", border:`1px solid ${demoMode ? ACCENT+"66" : "#2a2a45"}`,
+            background: demoMode ? ACCENT+"22" : "transparent", color: demoMode ? ACCENT : "#6b6b9a", cursor:"pointer"
+          }}>{demoMode ? "◆ Demo" : "○ Live"}</button>
         </div>
-      )}
 
-      {/* Search controls */}
-      <div style={{
-        background: "var(--color-background-primary)",
-        border: "0.5px solid var(--color-border-tertiary)",
-        borderRadius: 12, padding: "18px 20px",
-        display: "flex", flexDirection: "column", gap: 12,
-      }}>
-
-        {/* Search type toggle */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <div style={{ display: "flex", borderRadius: 8, border: "0.5px solid var(--color-border-secondary)", overflow: "hidden" }}>
-            {[
-              { key: "handle", label: "@ Handle" },
-              { key: "slug",   label: "Slug / ID" },
-            ].map(opt => (
-              <button key={opt.key} onClick={() => { setSearchType(opt.key); setStatus("idle"); setRawResult(null); }} style={{
-                padding: "7px 14px", fontSize: 13, border: "none",
-                background: searchType === opt.key ? "var(--color-background-info)" : "transparent",
-                color: searchType === opt.key ? "var(--color-text-info)" : "var(--color-text-secondary)",
-                cursor: "pointer", transition: "background .15s",
-              }}>
-                {opt.label}
-              </button>
+        {/* Search */}
+        <div style={{ display:"flex", gap:10, marginBottom:32, flexWrap:"wrap" }}>
+          <div style={{ display:"flex", gap:6 }}>
+            {["handle","slug"].map(m => (
+              <button key={m} onClick={() => setMode(m)} style={{
+                padding:"8px 16px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:600,
+                letterSpacing:1, textTransform:"uppercase", border:`1px solid ${mode===m ? ACCENT : "#2a2a45"}`,
+                background: mode===m ? ACCENT+"22" : "transparent", color: mode===m ? ACCENT : "#6b6b9a", cursor:"pointer"
+              }}>{m === "handle" ? "@ Handle" : "Slug / ID"}</button>
             ))}
           </div>
-
-          {/* Platform selector — only relevant for handle lookups */}
-          {searchType === "handle" && (
-            <select value={platform} onChange={e => setPlatform(e.target.value)}
-              style={{ fontSize: 13, padding: "7px 12px", borderRadius: 8 }}>
-              <option value="instagram">Instagram</option>
-              <option value="tiktok">TikTok</option>
-              <option value="youtube">YouTube</option>
-              <option value="facebook">Facebook</option>
-              <option value="twitter">Twitter / X</option>
-              <option value="pinterest">Pinterest</option>
-              <option value="snapchat">Snapchat</option>
+          {mode === "handle" && (
+            <select value={platform} onChange={e => setPlatform(e.target.value)} style={{
+              padding:"8px 14px", borderRadius:20, fontSize:12, fontFamily:"'DM Sans',sans-serif",
+              background:"#13131f", border:"1px solid #2a2a45", color:"#9090b8", cursor:"pointer", outline:"none"
+            }}>
+              {["instagram","tiktok","youtube","facebook","twitter","pinterest","snapchat"].map(p => (
+                <option key={p} value={p}>{p.charAt(0).toUpperCase()+p.slice(1)}</option>
+              ))}
             </select>
           )}
-        </div>
-
-        {/* Query input + search button */}
-        <div style={{ display: "flex", gap: 8 }}>
           <input
-            type="text"
-            placeholder={
-              searchType === "handle"
-                ? `${platform.charAt(0).toUpperCase() + platform.slice(1)} handle, e.g. taylorswift`
-                : "Julius slug or ID, e.g. taylor-swift"
-            }
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleSearch()}
-            style={{ flex: 1, fontSize: 14 }}
-          />
-          <button onClick={handleSearch} disabled={status === "loading" || !query.trim()}
+            value={query} onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && search()}
+            placeholder={mode === "handle" ? "e.g. taylorswift" : "e.g. taylor-swift"}
             style={{
-              padding: "0 24px", fontSize: 14, fontWeight: 500,
-              background: "#534AB7", color: "#fff", border: "none",
-              borderRadius: 8, cursor: "pointer",
-              opacity: (status === "loading" || !query.trim()) ? 0.5 : 1,
-              transition: "opacity .15s",
-            }}>
-            {status === "loading" ? "Searching…" : "Search"}
-          </button>
+              flex:1, minWidth:200, padding:"8px 16px", borderRadius:20, fontSize:13,
+              fontFamily:"'DM Sans',sans-serif", background:"#13131f", border:"1px solid #2a2a45",
+              color:"#e2e2f0", outline:"none"
+            }}
+          />
+          <button onClick={search} disabled={loading} style={{
+            padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
+            letterSpacing:1, textTransform:"uppercase", background: loading ? "#2a2a45" : ACCENT,
+            border:"none", color:"#fff", cursor: loading ? "default" : "pointer"
+          }}>{loading ? "…" : "Search"}</button>
         </div>
 
-        {/* Helper text */}
-        <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-tertiary)" }}>
-          {searchType === "handle"
-            ? "Enter the handle without @ — results include demographics if available in Julius."
-            : "Enter the Julius slug (e.g. taylor-swift) or numeric ID for a direct lookup."}
-        </p>
+        {error && (
+          <div style={{ padding:"12px 16px", borderRadius:10, background:"#2d0a0a", border:"1px solid #5c1a1a", color:"#f87171", fontSize:13, marginBottom:20 }}>
+            {error}
+          </div>
+        )}
+
+        {/* Profile Header */}
+        {displayData && (
+          <div style={{ display:"flex", alignItems:"center", gap:20, marginBottom:32, padding:"20px 24px", background:"#13131f", borderRadius:14, border:"1px solid #1e1e35" }}>
+            {displayData.avatar?.url && (
+              <img src={displayData.avatar.url} alt={displayData.display_name}
+                style={{ width:72, height:72, borderRadius:"50%", objectFit:"cover", border:"2px solid #2a2a45" }} />
+            )}
+            <div style={{ flex:1 }}>
+              <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, margin:0, color:"#fff" }}>{displayData.display_name}</h2>
+              <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#6b6b9a", marginTop:2 }}>
+                {displayData.tagline} {displayData.current_location?.display_name && `· ${displayData.current_location.display_name}`}
+              </div>
+            </div>
+            <div style={{ textAlign:"right" }}>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:500, color:ACCENT }}>{fmt(displayData.social_total_count)}</div>
+              <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b6b9a" }}>total followers</div>
+            </div>
+            {demoMode && (
+              <span style={{ padding:"4px 12px", borderRadius:20, background:"#a78bfa22", color:ACCENT, fontSize:10, fontFamily:"'Syne',sans-serif", fontWeight:700, letterSpacing:2, border:"1px solid #a78bfa44" }}>DEMO</span>
+            )}
+          </div>
+        )}
+
+        {/* Tabs */}
+        {displayData && (
+          <>
+            <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
+            {activeTab === "overview"      && <OverviewTab d={displayData} />}
+            {activeTab === "demographics"  && <DemographicsTab d={displayData} />}
+            {activeTab === "interests"     && <InterestsTab d={displayData} />}
+            {activeTab === "brands"        && <BrandsAudienceTab d={displayData} />}
+            {activeTab === "locations"     && <LocationsTab d={displayData} />}
+            {activeTab === "profile"       && <ProfileTab d={displayData} />}
+          </>
+        )}
       </div>
-
-      {/* Results */}
-      {status === "found"     && rawResult && <InfluencerCard raw={rawResult} preferredPlatform={usedPlatform} />}
-      {status === "not_found"               && <NotFoundCard query={query} />}
-      {status === "error"                   && (
-        <div style={{
-          padding: "14px 18px", borderRadius: 10,
-          background: "var(--color-background-danger)",
-          border: "0.5px solid var(--color-border-danger)",
-          fontSize: 13, color: "var(--color-text-danger)", lineHeight: 1.5,
-        }}>
-          {errorMsg}
-        </div>
-      )}
-
     </div>
   );
 }
