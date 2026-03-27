@@ -61,3 +61,4 @@ if (mode === "handle") {
   res.setHeader("Content-Type", "application/json");
   res.status(slugRes.status);
   return res.send(await slugRes.text());
+}
