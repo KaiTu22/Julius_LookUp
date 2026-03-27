@@ -385,7 +385,12 @@ function DemographicsTab({ d }) {
             <BarChart data={dem.age} margin={{top:0,right:0,bottom:0,left:-20}}>
               <XAxis dataKey="label" tick={{ fill:"#4a7ab5", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill:"#4a7ab5", fontSize:10, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
-              <Tooltip contentStyle={{ background:"#060f1e", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
+              <Tooltip
+                contentStyle={{ background:"#060f1e", border:"1px solid #1a3358", borderRadius:8, fontFamily:"DM Mono", fontSize:12, color:"#e2e2f0" }}
+                labelStyle={{ color:"#7eb3d8", fontWeight:600, marginBottom:4 }}
+                formatter={v=>[<span style={{color:"#e2e2f0"}}>{fmtPct(v)}</span>, "Audience"]}
+                cursor={{ fill:"#1a335822" }}
+              />
               <Bar dataKey="percentage" radius={[4,4,0,0]}>
                 {dem.age.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
               </Bar>
@@ -419,8 +424,13 @@ function DemographicsTab({ d }) {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={dem.income} layout="vertical" margin={{top:0,right:10,bottom:0,left:10}}>
               <XAxis type="number" tick={{ fill:"#4a7ab5", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
-              <YAxis type="category" dataKey="label" width={75} tick={{ fill:"#4a7ab5", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background:"#060f1e", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
+              <YAxis type="category" dataKey="label" width={75} tick={{ fill:"#e2e2f0", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background:"#060f1e", border:"1px solid #1a3358", borderRadius:8, fontFamily:"DM Mono", fontSize:12, color:"#e2e2f0" }}
+                labelStyle={{ color:"#7eb3d8", fontWeight:600, marginBottom:4 }}
+                formatter={v=>[<span style={{color:"#e2e2f0"}}>{fmtPct(v)}</span>, "Audience"]}
+                cursor={{ fill:"#1a335822" }}
+              />
               <Bar dataKey="percentage" radius={[0,4,4,0]}>
                 {dem.income.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
               </Bar>
