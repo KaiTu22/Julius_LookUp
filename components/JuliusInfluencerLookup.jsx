@@ -510,38 +510,41 @@ function LocationsTab({ d }) {
 }
 
 function ProfileTab({ d }) {
-  const causes = d.causes || (d.tags||[]).filter(t=>t.tag?.startsWith("cause.")).map(t=>t.display_name);
+  // Real API returns objects {tag, display_name}; demo uses plain strings — handle both
+  const getName = x => (typeof x === "string" ? x : x?.display_name ?? "");
+  const causes = d.causes
+    || (d.tags||[]).filter(t=>t.tag?.startsWith("cause.")).map(t=>t.display_name);
   return (
     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px,1fr))", gap:16 }}>
 
       {d.brands?.current?.length > 0 && (
         <Card>
           <SectionTitle>Current Brand Deals</SectionTitle>
-          <div>{(d.brands.current).map(b => <Tag key={b} color="#34d39922" textColor="#34d399">{b}</Tag>)}</div>
+          <div>{d.brands.current.map((b,i) => <Tag key={i} color="#1d4ed822" textColor="#38bdf8">{getName(b)}</Tag>)}</div>
         </Card>
       )}
       {d.brands?.mention?.length > 0 && (
         <Card>
           <SectionTitle>Brand Mentions</SectionTitle>
-          <div>{(d.brands.mention).map(b => <Tag key={b} color="#60a5fa22" textColor="#60a5fa">{b}</Tag>)}</div>
+          <div>{d.brands.mention.map((b,i) => <Tag key={i} color="#1e3a5f22" textColor="#93c5fd">{getName(b)}</Tag>)}</div>
         </Card>
       )}
       {d.brands?.prior?.length > 0 && (
         <Card>
           <SectionTitle>Prior Brand Deals</SectionTitle>
-          <div>{(d.brands.prior).map(b => <Tag key={b} color="#6b6b9a22" textColor="#4a7ab5">{b}</Tag>)}</div>
+          <div>{d.brands.prior.map((b,i) => <Tag key={i} color="#1a3358aa" textColor="#4a7ab5">{getName(b)}</Tag>)}</div>
         </Card>
       )}
       {d.interests?.length > 0 && (
         <Card>
           <SectionTitle>Personal Interests</SectionTitle>
-          <div>{d.interests.map(i => <Tag key={i}>{i}</Tag>)}</div>
+          <div>{d.interests.map((item,i) => <Tag key={i}>{getName(item)}</Tag>)}</div>
         </Card>
       )}
       {d.topics?.length > 0 && (
         <Card>
           <SectionTitle>Topics</SectionTitle>
-          <div>{d.topics.map(t => <Tag key={t} color="#fbbf2422" textColor="#fbbf24">{t}</Tag>)}</div>
+          <div>{d.topics.map((t,i) => <Tag key={i} color="#1e3a8a22" textColor="#60a5fa">{getName(t)}</Tag>)}</div>
         </Card>
       )}
       {causes?.length > 0 && (
