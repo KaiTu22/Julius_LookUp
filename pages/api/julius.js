@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Requires platform and handle." });
     }
     const cleanHandle = handle.replace(/^@/, "");
-    juliusPath = `/influencers/export?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
+    juliusPath = `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
 
   } else if (mode === "slug") {
     if (!slug) {
