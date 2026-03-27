@@ -436,7 +436,15 @@ function DemographicsTab({ d }) {
 function InterestsTab({ d }) {
   const platforms = Object.keys(d.demographics || {});
   const [plat, setPlat] = useState(platforms[0] || "instagram");
-  const list = d.demographics?.[plat]?.interest?.slice(0,20) || [];
+  // Deduplicate by label (API returns same interest under multiple parent categories),
+  // keep highest percentage, sort descending, take top 20
+  const raw = d.demographics?.[plat]?.interest || [];
+  const seen = new Map();
+  raw.forEach(item => {
+    const key = item.label;
+    if (!seen.has(key) || item.percentage > seen.get(key).percentage) seen.set(key, item);
+  });
+  const list = [...seen.values()].sort((a,b) => b.percentage - a.percentage).slice(0,20);
 
   return (
     <div>
@@ -444,12 +452,12 @@ function InterestsTab({ d }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px,1fr))", gap:16 }}>
         <Card style={{ gridColumn:"1 / -1" }}>
           <SectionTitle>Top Audience Interests</SectionTitle>
-          <ResponsiveContainer width="100%" height={420}>
-            <BarChart data={list} layout="vertical" margin={{top:0,right:30,bottom:0,left:10}}>
-              <XAxis type="number" tick={{ fill:"#4a7ab5", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
-              <YAxis type="category" dataKey="label" width={145} tick={{ fill:"#7eb3d8", fontSize:11, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background:"#060f1e", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
-              <Bar dataKey="percentage" radius={[0,4,4,0]}>
+          <ResponsiveContainer width="100%" height={560}>
+            <BarChart data={list} layout="vertical" margin={{top:8,right:55,bottom:8,left:0}}>
+              <XAxis type="number" tick={{ fill:"#7eb3d8", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
+              <YAxis type="category" dataKey="label" width={185} tick={{ fill:"#e2e2f0", fontSize:11, fontFamily:"DM Sans", fontWeight:400 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background:"#060f1e", border:"1px solid #1a3358", borderRadius:8, fontFamily:"DM Mono", fontSize:11, color:"#e2e2f0" }} formatter={v=>[fmtPct(v),"Audience"]} />
+              <Bar dataKey="percentage" radius={[0,4,4,0]} barSize={16}>
                 {list.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
               </Bar>
             </BarChart>
@@ -463,19 +471,26 @@ function InterestsTab({ d }) {
 function BrandsAudienceTab({ d }) {
   const platforms = Object.keys(d.demographics || {});
   const [plat, setPlat] = useState(platforms[0] || "instagram");
-  const list = d.demographics?.[plat]?.brand?.slice(0,20) || [];
+  // Deduplicate by label, keep highest percentage, sort descending
+  const raw = d.demographics?.[plat]?.brand || [];
+  const seen = new Map();
+  raw.forEach(item => {
+    const key = item.label;
+    if (!seen.has(key) || item.percentage > seen.get(key).percentage) seen.set(key, item);
+  });
+  const list = [...seen.values()].sort((a,b) => b.percentage - a.percentage).slice(0,20);
 
   return (
     <div>
       <PlatformPicker platforms={platforms} active={plat} onChange={setPlat} />
       <Card>
         <SectionTitle>Top Audience Brand Affinity</SectionTitle>
-        <ResponsiveContainer width="100%" height={440}>
-          <BarChart data={list} layout="vertical" margin={{top:0,right:30,bottom:0,left:10}}>
-            <XAxis type="number" tick={{ fill:"#4a7ab5", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
-            <YAxis type="category" dataKey="label" width={145} tick={{ fill:"#7eb3d8", fontSize:11, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ background:"#060f1e", border:"1px solid #2a2a45", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v),"Audience"]} />
-            <Bar dataKey="percentage" radius={[0,4,4,0]}>
+        <ResponsiveContainer width="100%" height={560}>
+          <BarChart data={list} layout="vertical" margin={{top:8,right:55,bottom:8,left:0}}>
+            <XAxis type="number" tick={{ fill:"#7eb3d8", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
+            <YAxis type="category" dataKey="label" width={185} tick={{ fill:"#e2e2f0", fontSize:11, fontFamily:"DM Sans", fontWeight:400 }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ background:"#060f1e", border:"1px solid #1a3358", borderRadius:8, fontFamily:"DM Mono", fontSize:11, color:"#e2e2f0" }} formatter={v=>[fmtPct(v),"Audience"]} />
+            <Bar dataKey="percentage" radius={[0,4,4,0]} barSize={16}>
               {list.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
             </Bar>
           </BarChart>
