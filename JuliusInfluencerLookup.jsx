@@ -37,10 +37,14 @@ async function fetchBySlug(slug) {
 // ─────────────────────────────────────────────────────────────
 
 // Pick the best available platform's stats (prefer the platform searched on)
+
 function getPlatformStats(socialCombined, preferredPlatform) {
   if (!socialCombined?.length) return null;
   const preferred = socialCombined.find(p => p.platform === preferredPlatform);
-  return preferred ?? socialCombined[0];
+  const result = preferred ?? socialCombined[0];
+  return result;
+}
+
 }
 
 // Julius demographics live under demographics.instagram (or .twitter) and demographics.tiktok
