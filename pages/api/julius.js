@@ -58,7 +58,17 @@ export default async function handler(req, res) {
     }
 
     const handleData = await handleRes.json();
-    const resolvedSlug = handleData?.slug ?? handleData?.id;
+
+    // Response is { results: [...] } — find the best match
+    const results = handleData?.results ?? [];
+    let match = results.find(r =>
+      r.social_combined?.some(s =>
+        s.accounts?.some(a => a.remote_handle?.toLowerCase() === cleanHandle.toLowerCase())
+      )
+    );
+    if (!match) match = results[0];
+
+    const resolvedSlug = match?.slug ?? match?.id;
 
     if (!resolvedSlug) {
       return res.status(404).json({ error: "Influencer not found for that handle." });
