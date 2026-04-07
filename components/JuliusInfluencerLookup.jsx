@@ -842,7 +842,7 @@ export default function JuliusInfluencerLookup() {
           </div>
           </div>
 
-        {/* ── Influencer Search Mode ─────────────────────────────────────────── */}
+        {/* Influencer Search Mode */}
         {appMode === "influencer" && (<>
           <div style={{ display:"flex", gap:10, marginBottom:32, flexWrap:"wrap" }}>
             <div style={{ display:"flex", gap:6 }}>
@@ -919,7 +919,7 @@ export default function JuliusInfluencerLookup() {
           )}
         </>)}
 
-        {/* ── Brand Search Mode ──────────────────────────────────────────────── */}
+        {/* Brand Search Mode */}
         {appMode === "brand" && (
           <BrandSearchPanel onViewProfile={viewProfile} />
         )}
