@@ -60,7 +60,7 @@ export default async function handler(req, res) {
   let searchRes;
   try {
     searchRes = await juliusFetch(
-      `/search?ts=${ts1}&limit=${limit}`,
+      `/influencers/search?ts=${ts1}&limit=${limit}`,
       "POST",
       {
         query: [{ type: "tag", specificity: "any", values: [brandSlug] }],
