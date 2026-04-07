@@ -535,8 +535,28 @@ function LocationsTab({ d }) {
 }
 
 function ProfileTab({ d }) {
-  // Real API returns objects {tag, display_name}; demo uses plain strings -- handle both
+  // Real API returns objects {tag, display_name, source_url}; demo uses plain strings -- handle both
   const getName = x => (typeof x === "string" ? x : x?.display_name ?? "");
+  const getUrl  = x => (typeof x === "string" ? null : x?.source_url || null);
+
+  const BrandRow = ({ item, color, bg }) => {
+    const name = getName(item);
+    const url  = getUrl(item);
+    return (
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid #081628" }}>
+        <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#e2e2f0" }}>{name}</span>
+        {url
+          ? <a href={url} target="_blank" rel="noopener noreferrer" style={{
+              fontFamily:"'DM Mono',monospace", fontSize:10, color, background:bg,
+              border:`1px solid ${color}44`, borderRadius:12, padding:"2px 10px",
+              textDecoration:"none", whiteSpace:"nowrap", flexShrink:0, marginLeft:8
+            }}>View Post</a>
+          : <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:"#1a3358" }}>no link</span>
+        }
+      </div>
+    );
+  };
+
   const causes = d.causes
     || (d.tags||[]).filter(t=>t.tag?.startsWith("cause.")).map(t=>t.display_name);
   return (
@@ -544,20 +564,26 @@ function ProfileTab({ d }) {
 
       {d.brands?.current?.length > 0 && (
         <Card>
-          <SectionTitle>Current Brand Deals</SectionTitle>
-          <div>{d.brands.current.map((b,i) => <Tag key={i} color="#1d4ed822" textColor="#38bdf8">{getName(b)}</Tag>)}</div>
+          <SectionTitle>Current Brand Deals ({d.brands.current.length})</SectionTitle>
+          {d.brands.current.map((b,i) => <BrandRow key={i} item={b} color="#34d399" bg="#05281922" />)}
         </Card>
       )}
       {d.brands?.mention?.length > 0 && (
         <Card>
-          <SectionTitle>Brand Mentions</SectionTitle>
-          <div>{d.brands.mention.map((b,i) => <Tag key={i} color="#1e3a5f22" textColor="#93c5fd">{getName(b)}</Tag>)}</div>
+          <SectionTitle>Brand Mentions ({d.brands.mention.length})</SectionTitle>
+          {d.brands.mention.map((b,i) => <BrandRow key={i} item={b} color="#60a5fa" bg="#0c1f3a22" />)}
         </Card>
       )}
       {d.brands?.prior?.length > 0 && (
         <Card>
-          <SectionTitle>Prior Brand Deals</SectionTitle>
-          <div>{d.brands.prior.map((b,i) => <Tag key={i} color="#1a3358aa" textColor="#4a7ab5">{getName(b)}</Tag>)}</div>
+          <SectionTitle>Prior Brand Deals ({d.brands.prior.length})</SectionTitle>
+          {d.brands.prior.map((b,i) => <BrandRow key={i} item={b} color="#94a3b8" bg="#1a243522" />)}
+        </Card>
+      )}
+      {d.brands?.supported?.length > 0 && (
+        <Card>
+          <SectionTitle>Brand Supporter ({d.brands.supported.length})</SectionTitle>
+          {d.brands.supported.map((b,i) => <BrandRow key={i} item={b} color="#f472b6" bg="#2d0a2022" />)}
         </Card>
       )}
       {d.interests?.length > 0 && (
