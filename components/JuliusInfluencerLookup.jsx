@@ -909,6 +909,10 @@ export default function JuliusInfluencerLookup() {
       const res  = await fetch(`/api/julius?${params}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Lookup failed");
+      // Debug: log brands structure to see if source_url exists
+      console.log("brands.current sample:", json.brands?.current?.slice(0,2));
+      console.log("brands.mention sample:", json.brands?.mention?.slice(0,2));
+      console.log("brands.prior sample:",   json.brands?.prior?.slice(0,2));
       setData(json);
       setDemoMode(false);
     } catch (e) { setError(e.message); }
