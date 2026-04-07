@@ -589,8 +589,181 @@ function ProfileTab({ d }) {
   );
 }
 
+
+// ─── Relationship Badge ───────────────────────────────────────────────────────
+const REL_META = {
+  current:   { label:"Active Partnership", color:"#34d399", bg:"#05281922", icon:"🤝" },
+  mention:   { label:"Brand Mention",      color:"#60a5fa", bg:"#0c1f3a22", icon:"💬" },
+  prior:     { label:"Past Partnership",   color:"#94a3b8", bg:"#1a243522", icon:"📁" },
+  supported: { label:"Brand Supporter",    color:"#f472b6", bg:"#2d0a2022", icon:"❤️" },
+  associated:{ label:"Associated",         color:"#7eb3d8", bg:"#0d1f3c22", icon:"🔗" },
+};
+
+function BrandResultCard({ inf, onViewProfile }) {
+  const rel  = REL_META[inf.relationship] || REL_META.associated;
+  const plat = inf.topPlatform ? (PLATFORM_META[inf.topPlatform] || { label: inf.topPlatform, icon:"🌐" }) : null;
+  return (
+    <div style={{
+      background:"#060f1e", border:`1px solid #0d1f3c`,
+      borderRadius:12, padding:"18px 20px", display:"flex", flexDirection:"column", gap:12,
+      transition:"border-color .2s",
+    }}
+    onMouseEnter={e => e.currentTarget.style.borderColor = rel.color + "66"}
+    onMouseLeave={e => e.currentTarget.style.borderColor = "#0d1f3c"}
+    >
+      {/* Top row: avatar + name + badge */}
+      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+        {inf.avatar?.url
+          ? <img src={inf.avatar.url} alt={inf.display_name} style={{ width:48, height:48, borderRadius:"50%", objectFit:"cover", border:`2px solid ${rel.color}44`, flexShrink:0 }} />
+          : <div style={{ width:48, height:48, borderRadius:"50%", background:"#0d1f3c", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>👤</div>
+        }
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#fff", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{inf.display_name}</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5", marginTop:2 }}>{inf.tagline || inf.current_location?.display_name || "–"}</div>
+        </div>
+      </div>
+
+      {/* Relationship badge */}
+      <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:20, background:rel.bg, border:`1px solid ${rel.color}44`, alignSelf:"flex-start" }}>
+        <span style={{ fontSize:13 }}>{rel.icon}</span>
+        <span style={{ fontFamily:"'Syne',sans-serif", fontSize:10, fontWeight:700, letterSpacing:1, color:rel.color, textTransform:"uppercase" }}>{rel.label}</span>
+      </div>
+
+      {/* Stats row */}
+      <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
+        <div>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:15, fontWeight:500, color:ACCENT }}>{fmt(inf.social_total_count)}</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:10, color:"#4a7ab5" }}>Total Followers</div>
+        </div>
+        {plat && (
+          <div>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:15, fontWeight:500, color:plat.color || "#7eb3d8" }}>{fmt(inf.topPlatformCount)}</div>
+            <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:10, color:"#4a7ab5" }}>{plat.icon} {plat.label}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Source link if available */}
+      {inf.sourceUrl && (
+        <a href={inf.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#3b82f6", textDecoration:"none", wordBreak:"break-all" }}>
+          🔗 Source post
+        </a>
+      )}
+
+      {/* View profile button */}
+      <button onClick={() => onViewProfile(inf.slug)} style={{
+        marginTop:4, padding:"7px 0", borderRadius:8, fontSize:11, fontFamily:"'Syne',sans-serif",
+        fontWeight:600, letterSpacing:1, textTransform:"uppercase", border:`1px solid #1a3358`,
+        background:"transparent", color:"#7eb3d8", cursor:"pointer", transition:"all .2s",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = "#0d1f3c"; e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#1a3358"; e.currentTarget.style.color = "#7eb3d8"; }}
+      >View Full Profile →</button>
+    </div>
+  );
+}
+
+function BrandSearchPanel({ onViewProfile }) {
+  const [brandQuery,    setBrandQuery]    = useState("");
+  const [brandLoading,  setBrandLoading]  = useState(false);
+  const [brandResults,  setBrandResults]  = useState(null);
+  const [brandError,    setBrandError]    = useState(null);
+
+  const searchBrand = async () => {
+    if (!brandQuery.trim()) return;
+    setBrandLoading(true); setBrandError(null); setBrandResults(null);
+    try {
+      const res  = await fetch(`/api/julius-brand?brand=${encodeURIComponent(brandQuery.trim())}&limit=20`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Brand search failed");
+      setBrandResults(json);
+    } catch (e) { setBrandError(e.message); }
+    finally { setBrandLoading(false); }
+  };
+
+  const relCounts = brandResults ? {
+    current:   brandResults.results.filter(r => r.relationship === "current").length,
+    mention:   brandResults.results.filter(r => r.relationship === "mention").length,
+    prior:     brandResults.results.filter(r => r.relationship === "prior").length,
+    supported: brandResults.results.filter(r => r.relationship === "supported").length,
+  } : null;
+
+  return (
+    <div>
+      {/* Search bar */}
+      <div style={{ display:"flex", gap:10, marginBottom:24, flexWrap:"wrap" }}>
+        <input
+          value={brandQuery}
+          onChange={e => setBrandQuery(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && searchBrand()}
+          placeholder="e.g. Nike, Coca-Cola, Victoria's Secret"
+          style={{
+            flex:1, minWidth:200, padding:"8px 16px", borderRadius:20, fontSize:13,
+            fontFamily:"'DM Sans',sans-serif", background:"#060f1e", border:"1px solid #1a3358",
+            color:"#e2e2f0", outline:"none"
+          }}
+        />
+        <button onClick={searchBrand} disabled={brandLoading} style={{
+          padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
+          letterSpacing:1, textTransform:"uppercase", background: brandLoading ? "#1a3358" : ACCENT,
+          border:"none", color:"#fff", cursor: brandLoading ? "default" : "pointer"
+        }}>{brandLoading ? "Searching…" : "Search Brand"}</button>
+      </div>
+
+      {brandError && (
+        <div style={{ padding:"12px 16px", borderRadius:10, background:"#2d0a0a", border:"1px solid #5c1a1a", color:"#f87171", fontSize:13, marginBottom:20 }}>
+          {brandError}
+        </div>
+      )}
+
+      {/* Summary bar */}
+      {brandResults && (
+        <>
+          <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:24, padding:"14px 20px", background:"#060f1e", borderRadius:12, border:"1px solid #0d1f3c", flexWrap:"wrap" }}>
+            <div style={{ flex:1 }}>
+              <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:16, color:"#fff" }}>{brandResults.brand}</span>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#4a7ab5", marginLeft:10 }}>{brandResults.brandSlug}</span>
+            </div>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:"#4a7ab5" }}>
+              Showing {brandResults.results.length} of {brandResults.total?.toLocaleString() || "?"} influencers
+            </div>
+            {/* Breakdown pills */}
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {relCounts.current   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#05281922", border:"1px solid #34d39944", color:"#34d399", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>🤝 {relCounts.current} Active</span>}
+              {relCounts.mention   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#0c1f3a22", border:"1px solid #60a5fa44", color:"#60a5fa", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>💬 {relCounts.mention} Mentions</span>}
+              {relCounts.prior     > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#1a243522", border:"1px solid #94a3b844", color:"#94a3b8", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>📁 {relCounts.prior} Past</span>}
+              {relCounts.supported > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#2d0a2022", border:"1px solid #f472b644", color:"#f472b6", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>❤️ {relCounts.supported} Supporter</span>}
+            </div>
+          </div>
+
+          {brandResults.results.length === 0 ? (
+            <div style={{ textAlign:"center", padding:"48px 24px", color:"#4a7ab5", fontFamily:"'DM Sans',sans-serif" }}>
+              No influencers found for <strong style={{ color:"#7eb3d8" }}>{brandResults.brand}</strong>. Try a different spelling or brand name.
+            </div>
+          ) : (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(260px, 1fr))", gap:16 }}>
+              {brandResults.results.map(inf => (
+                <BrandResultCard key={inf.slug || inf.id} inf={inf} onViewProfile={onViewProfile} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {!brandResults && !brandLoading && (
+        <div style={{ textAlign:"center", padding:"64px 24px", color:"#4a7ab5" }}>
+          <div style={{ fontSize:40, marginBottom:16 }}>🔍</div>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:600, color:"#7eb3d8", marginBottom:8 }}>Search by Brand</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13 }}>Enter a brand name to find influencers who have active partnerships, mentions, or past deals.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function JuliusInfluencerLookup() {
+  const [appMode,   setAppMode]   = useState("influencer"); // "influencer" | "brand"
   const [mode,      setMode]      = useState("handle");
   const [platform,  setPlatform]  = useState("instagram");
   const [query,     setQuery]     = useState("");
@@ -618,6 +791,21 @@ export default function JuliusInfluencerLookup() {
     finally { setLoading(false); }
   };
 
+  // Called from brand search cards to jump to influencer lookup
+  const viewProfile = (slug) => {
+    setAppMode("influencer");
+    setMode("slug");
+    setQuery(slug);
+    setData(null);
+    // auto-search after state settles
+    setTimeout(() => {
+      fetch(`/api/julius?mode=slug&slug=${encodeURIComponent(slug)}`)
+        .then(r => r.json())
+        .then(json => { setData(json); setDemoMode(false); })
+        .catch(e => setError(e.message));
+    }, 50);
+  };
+
   const TABS = [
     { id:"overview",   label:"Overview" },
     { id:"demographics", label:"Demographics" },
@@ -640,83 +828,100 @@ export default function JuliusInfluencerLookup() {
             </h1>
             <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#4a7ab5", margin:"4px 0 0" }}>Influencer data & audience analytics</p>
           </div>
-          </div>
-
-        {/* Search */}
-        <div style={{ display:"flex", gap:10, marginBottom:32, flexWrap:"wrap" }}>
-          <div style={{ display:"flex", gap:6 }}>
-            {["handle","slug"].map(m => (
-              <button key={m} onClick={() => setMode(m)} style={{
-                padding:"8px 16px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:600,
-                letterSpacing:1, textTransform:"uppercase", border:`1px solid ${mode===m ? ACCENT : "#1a3358"}`,
-                background: mode===m ? ACCENT+"22" : "transparent", color: mode===m ? ACCENT : "#4a7ab5", cursor:"pointer"
-              }}>{m === "handle" ? "@ Handle" : "Slug / ID"}</button>
+          {/* App mode switcher */}
+          <div style={{ display:"flex", gap:6, background:"#060f1e", border:"1px solid #0d1f3c", borderRadius:24, padding:4 }}>
+            {[["influencer","👤 Influencer"],["brand","🏷️ Brand"]].map(([id,label]) => (
+              <button key={id} onClick={() => setAppMode(id)} style={{
+                padding:"7px 18px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:700,
+                letterSpacing:1, textTransform:"uppercase", border:"none",
+                background: appMode===id ? ACCENT : "transparent",
+                color: appMode===id ? "#fff" : "#4a7ab5", cursor:"pointer", transition:"all .2s"
+              }}>{label}</button>
             ))}
           </div>
-          {mode === "handle" && (
-            <select value={platform} onChange={e => setPlatform(e.target.value)} style={{
-              padding:"8px 14px", borderRadius:20, fontSize:12, fontFamily:"'DM Sans',sans-serif",
-              background:"#060f1e", border:"1px solid #2a2a45", color:"#7eb3d8", cursor:"pointer", outline:"none"
-            }}>
-              {["instagram","tiktok","youtube","facebook","twitter","pinterest","snapchat"].map(p => (
-                <option key={p} value={p}>{p.charAt(0).toUpperCase()+p.slice(1)}</option>
-              ))}
-            </select>
-          )}
-          <input
-            value={query} onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && search()}
-            placeholder={mode === "handle" ? "e.g. taylorswift" : "e.g. taylor-swift"}
-            style={{
-              flex:1, minWidth:200, padding:"8px 16px", borderRadius:20, fontSize:13,
-              fontFamily:"'DM Sans',sans-serif", background:"#060f1e", border:"1px solid #2a2a45",
-              color:"#e2e2f0", outline:"none"
-            }}
-          />
-          <button onClick={search} disabled={loading} style={{
-            padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
-            letterSpacing:1, textTransform:"uppercase", background: loading ? "#1a3358" : ACCENT,
-            border:"none", color:"#fff", cursor: loading ? "default" : "pointer"
-          }}>{loading ? "…" : "Search"}</button>
-        </div>
-
-        {error && (
-          <div style={{ padding:"12px 16px", borderRadius:10, background:"#2d0a0a", border:"1px solid #5c1a1a", color:"#f87171", fontSize:13, marginBottom:20 }}>
-            {error}
           </div>
-        )}
+          </div>
 
-        {/* Profile Header */}
-        {displayData && (
-          <div style={{ display:"flex", alignItems:"center", gap:20, marginBottom:32, padding:"20px 24px", background:"#060f1e", borderRadius:14, border:"1px solid #1e1e35" }}>
-            {displayData.avatar?.url && (
-              <img src={displayData.avatar.url} alt={displayData.display_name}
-                style={{ width:72, height:72, borderRadius:"50%", objectFit:"cover", border:"2px solid #2a2a45" }} />
+        {/* ── Influencer Search Mode ─────────────────────────────────────────── */}
+        {appMode === "influencer" && (<>
+          <div style={{ display:"flex", gap:10, marginBottom:32, flexWrap:"wrap" }}>
+            <div style={{ display:"flex", gap:6 }}>
+              {["handle","slug"].map(m => (
+                <button key={m} onClick={() => setMode(m)} style={{
+                  padding:"8px 16px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:600,
+                  letterSpacing:1, textTransform:"uppercase", border:`1px solid ${mode===m ? ACCENT : "#1a3358"}`,
+                  background: mode===m ? ACCENT+"22" : "transparent", color: mode===m ? ACCENT : "#4a7ab5", cursor:"pointer"
+                }}>{m === "handle" ? "@ Handle" : "Slug / ID"}</button>
+              ))}
+            </div>
+            {mode === "handle" && (
+              <select value={platform} onChange={e => setPlatform(e.target.value)} style={{
+                padding:"8px 14px", borderRadius:20, fontSize:12, fontFamily:"'DM Sans',sans-serif",
+                background:"#060f1e", border:"1px solid #1a3358", color:"#7eb3d8", cursor:"pointer", outline:"none"
+              }}>
+                {["instagram","tiktok","youtube","facebook","twitter","pinterest","snapchat"].map(p => (
+                  <option key={p} value={p}>{p.charAt(0).toUpperCase()+p.slice(1)}</option>
+                ))}
+              </select>
             )}
-            <div style={{ flex:1 }}>
-              <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, margin:0, color:"#fff" }}>{displayData.display_name}</h2>
-              <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#4a7ab5", marginTop:2 }}>
-                {displayData.tagline} {displayData.current_location?.display_name && `· ${displayData.current_location.display_name}`}
+            <input
+              value={query} onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && search()}
+              placeholder={mode === "handle" ? "e.g. taylorswift" : "e.g. taylor-swift"}
+              style={{
+                flex:1, minWidth:200, padding:"8px 16px", borderRadius:20, fontSize:13,
+                fontFamily:"'DM Sans',sans-serif", background:"#060f1e", border:"1px solid #1a3358",
+                color:"#e2e2f0", outline:"none"
+              }}
+            />
+            <button onClick={search} disabled={loading} style={{
+              padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
+              letterSpacing:1, textTransform:"uppercase", background: loading ? "#1a3358" : ACCENT,
+              border:"none", color:"#fff", cursor: loading ? "default" : "pointer"
+            }}>{loading ? "…" : "Search"}</button>
+          </div>
+
+          {error && (
+            <div style={{ padding:"12px 16px", borderRadius:10, background:"#2d0a0a", border:"1px solid #5c1a1a", color:"#f87171", fontSize:13, marginBottom:20 }}>
+              {error}
+            </div>
+          )}
+
+          {displayData && (
+            <div style={{ display:"flex", alignItems:"center", gap:20, marginBottom:32, padding:"20px 24px", background:"#060f1e", borderRadius:14, border:"1px solid #0d1f3c" }}>
+              {displayData.avatar?.url && (
+                <img src={displayData.avatar.url} alt={displayData.display_name}
+                  style={{ width:72, height:72, borderRadius:"50%", objectFit:"cover", border:"2px solid #1a3358" }} />
+              )}
+              <div style={{ flex:1 }}>
+                <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, margin:0, color:"#fff" }}>{displayData.display_name}</h2>
+                <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#4a7ab5", marginTop:2 }}>
+                  {displayData.tagline} {displayData.current_location?.display_name && `· ${displayData.current_location.display_name}`}
+                </div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:500, color:ACCENT }}>{fmt(displayData.social_total_count)}</div>
+                <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5" }}>total followers</div>
               </div>
             </div>
-            <div style={{ textAlign:"right" }}>
-              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:500, color:ACCENT }}>{fmt(displayData.social_total_count)}</div>
-              <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5" }}>total followers</div>
-            </div>
-            </div>
-        )}
+          )}
 
-        {/* Tabs */}
-        {displayData && (
-          <>
-            <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
-            {activeTab === "overview"      && <OverviewTab d={displayData} />}
-            {activeTab === "demographics"  && <DemographicsTab d={displayData} />}
-            {activeTab === "interests"     && <InterestsTab d={displayData} />}
-            {activeTab === "brands"        && <BrandsAudienceTab d={displayData} />}
-            {activeTab === "locations"     && <LocationsTab d={displayData} />}
-            {activeTab === "profile"       && <ProfileTab d={displayData} />}
-          </>
+          {displayData && (
+            <>
+              <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
+              {activeTab === "overview"      && <OverviewTab d={displayData} />}
+              {activeTab === "demographics"  && <DemographicsTab d={displayData} />}
+              {activeTab === "interests"     && <InterestsTab d={displayData} />}
+              {activeTab === "brands"        && <BrandsAudienceTab d={displayData} />}
+              {activeTab === "locations"     && <LocationsTab d={displayData} />}
+              {activeTab === "profile"       && <ProfileTab d={displayData} />}
+            </>
+          )}
+        </>)}
+
+        {/* ── Brand Search Mode ──────────────────────────────────────────────── */}
+        {appMode === "brand" && (
+          <BrandSearchPanel onViewProfile={viewProfile} />
         )}
       </div>
     </div>
