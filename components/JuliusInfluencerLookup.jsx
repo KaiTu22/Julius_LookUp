@@ -671,7 +671,6 @@ function BrandSearchPanel({ onViewProfile }) {
   const [brandResults, setBrandResults] = useState(null);
   const [allResults,   setAllResults]   = useState([]);
   const [brandError,   setBrandError]   = useState(null);
-  const [cursors,      setCursors]      = useState([]); // stack of cursors for back nav
   const [currentPage,  setCurrentPage]  = useState(1);
   const [sortField,    setSortField]    = useState("reach-instagram");
   const PAGE_SIZE = 20;
@@ -683,16 +682,17 @@ function BrandSearchPanel({ onViewProfile }) {
     { value:"engagement",      label:"Engagement" },
   ];
 
-  const fetchPage = async (cursor = null, isNewSearch = false) => {
+  const fetchPage = async (page = 1, isNewSearch = false) => {
     const loadSetter = isNewSearch ? setBrandLoading : setPageLoading;
     loadSetter(true);
     setBrandError(null);
     try {
+      const offset = (page - 1) * PAGE_SIZE;
       const params = new URLSearchParams({
-        brand: brandQuery.trim(),
-        limit: PAGE_SIZE,
-        sort:  sortField,
-        ...(cursor ? { cursor } : {}),
+        brand:  brandQuery.trim(),
+        limit:  PAGE_SIZE,
+        offset,
+        sort:   sortField,
       });
       const res  = await fetch(`/api/julius-brand?${params}`);
       const json = await res.json();
@@ -705,28 +705,23 @@ function BrandSearchPanel({ onViewProfile }) {
 
   const searchBrand = async () => {
     if (!brandQuery.trim()) return;
-    setCursors([]);
     setCurrentPage(1);
     setBrandResults(null);
-    await fetchPage(null, true);
+    await fetchPage(1, true);
   };
 
   const goNextPage = async () => {
-    if (!brandResults?.nextCursor) return;
-    setCursors(prev => [...prev, brandResults.nextCursor]);
-    setCurrentPage(p => p + 1);
-    await fetchPage(brandResults.nextCursor);
+    const next = currentPage + 1;
+    setCurrentPage(next);
+    await fetchPage(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const goPrevPage = async () => {
     if (currentPage <= 1) return;
-    const newCursors = [...cursors];
-    newCursors.pop(); // remove current
-    const prevCursor = newCursors[newCursors.length - 1] || null;
-    setCursors(newCursors);
-    setCurrentPage(p => p - 1);
-    await fetchPage(prevCursor);
+    const prev = currentPage - 1;
+    setCurrentPage(prev);
+    await fetchPage(prev);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

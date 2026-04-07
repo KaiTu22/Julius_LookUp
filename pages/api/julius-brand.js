@@ -41,28 +41,23 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Julius credentials not configured." });
   }
 
-  const url        = new URL(req.url, `http://${req.headers.host}`);
-  const brandName  = url.searchParams.get("brand");
-  const cursor     = url.searchParams.get("cursor") || null; // pagination cursor
-  const limitParam = parseInt(url.searchParams.get("limit") || "20", 10);
-  const limit      = Math.min(limitParam, 50);
-  const sortField  = url.searchParams.get("sort") || "reach-instagram";
+  const url       = new URL(req.url, `http://${req.headers.host}`);
+  const brandName = url.searchParams.get("brand");
+  const offset    = parseInt(url.searchParams.get("offset") || "0", 10);
+  const limit     = Math.min(parseInt(url.searchParams.get("limit") || "20", 10), 50);
+  const sortField = url.searchParams.get("sort") || "reach-instagram";
 
   if (!brandName?.trim()) {
     return res.status(400).json({ error: "Requires brand parameter." });
   }
 
   const brandSlug = toBrandSlug(brandName.trim());
-
-  // Build search URL — append cursor if paginating
   const ts1       = Math.floor(Date.now() / 1000);
-  const cursorQS  = cursor ? `&next=${encodeURIComponent(cursor)}` : "";
-  const searchUrl = `/influencers/search?ts=${ts1}&limit=${limit}${cursorQS}`;
 
   let searchRes;
   try {
     searchRes = await juliusFetch(
-      searchUrl,
+      `/influencers/search?ts=${ts1}&limit=${limit}&offset=${offset}`,
       "POST",
       {
         query: [{ type: "tag", specificity: "any", values: [brandSlug] }],
@@ -85,25 +80,14 @@ export default async function handler(req, res) {
 
   const searchData = await searchRes.json();
   const results    = searchData.results || [];
-  // Julius returns a next cursor when more pages exist
-  const nextCursor = searchData.next || searchData.cursor || searchData.next_cursor || null;
-
-  // Debug: log the top-level keys so we can see pagination field name
-  console.log("Julius search response keys:", Object.keys(searchData));
-  console.log("Julius pagination fields:", {
-    next: searchData.next,
-    cursor: searchData.cursor,
-    next_cursor: searchData.next_cursor,
-    total: searchData.total,
-    count: searchData.count,
-    results_count: results.length,
-  });
+  const total      = searchData.total || 0;
+  const hasMore    = offset + results.length < total;
 
   if (results.length === 0) {
     return res.status(200).json({
       brand: brandName, brandSlug,
-      total: 0, results: [],
-      nextCursor: null, page: 1,
+      total, offset, limit,
+      results: [], hasMore: false,
     });
   }
 
@@ -166,11 +150,9 @@ export default async function handler(req, res) {
 
   res.setHeader("Content-Type", "application/json");
   return res.status(200).json({
-    brand:      brandName,
-    brandSlug,
-    total:      searchData.total || results.length,
-    results:    enriched,
-    nextCursor,           // pass back to client for next page
-    hasMore:    !!nextCursor,
+    brand: brandName, brandSlug,
+    total, offset, limit,
+    results: enriched,
+    hasMore,
   });
 }
