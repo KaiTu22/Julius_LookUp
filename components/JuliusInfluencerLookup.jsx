@@ -658,7 +658,8 @@ function BrandResultCard({ inf, onViewProfile }) {
       }}
       onMouseEnter={e => { e.currentTarget.style.background = "#0d1f3c"; e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; }}
       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#1a3358"; e.currentTarget.style.color = "#7eb3d8"; }}
-      >View Full Profile -></button>
+      >View Full Profile {"->"}
+      </button>
     </div>
   );
 }
@@ -838,7 +839,6 @@ export default function JuliusInfluencerLookup() {
                 color: appMode===id ? "#fff" : "#4a7ab5", cursor:"pointer", transition:"all .2s"
               }}>{label}</button>
             ))}
-          </div>
           </div>
           </div>
 
