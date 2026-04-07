@@ -60,12 +60,11 @@ export default async function handler(req, res) {
   let searchRes;
   try {
     searchRes = await juliusFetch(
-      `/search?ts=${ts1}`,
+      `/search?ts=${ts1}&limit=${limit}`,
       "POST",
       {
         query: [{ type: "tag", specificity: "any", values: [brandSlug] }],
-        sort:  ["reach", "desc"],
-        limit,
+        sort:  ["reach-instagram", "desc"],
       },
       apiKey, apiSecret
     );
@@ -75,7 +74,11 @@ export default async function handler(req, res) {
 
   if (!searchRes.ok) {
     const text = await searchRes.text();
-    return res.status(searchRes.status).json({ error: "Julius search failed.", detail: text });
+    return res.status(searchRes.status).json({
+      error: `Julius search failed (HTTP ${searchRes.status})`,
+      brandSlug,
+      detail: text
+    });
   }
 
   const searchData = await searchRes.json();
