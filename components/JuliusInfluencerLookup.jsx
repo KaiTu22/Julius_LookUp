@@ -6,7 +6,7 @@ import {
   PolarAngleAxis
 } from "recharts";
 
-// ─── Google Fonts ────────────────────────────────────────────────────────────
+// --- Google Fonts ------------------------------------------------------------
 const fontLink = typeof document !== "undefined" && (() => {
   if (!document.getElementById("julius-fonts")) {
     const l = document.createElement("link");
@@ -17,7 +17,7 @@ const fontLink = typeof document !== "undefined" && (() => {
   }
 })();
 
-// ─── Demo Data ────────────────────────────────────────────────────────────────
+// --- Demo Data ----------------------------------------------------------------
 const DEMO = {
   display_name: "Taylor Swift",
   tagline: "Musician",
@@ -39,13 +39,13 @@ const DEMO = {
     instagram: {
       age: [
         { label: "< 16",  percentage: 0.7 },
-        { label: "17–19", percentage: 2.02 },
-        { label: "20–24", percentage: 9.79 },
-        { label: "25–29", percentage: 19.87 },
-        { label: "30–34", percentage: 26.33 },
-        { label: "35–39", percentage: 22.05 },
-        { label: "40–49", percentage: 9.8 },
-        { label: "50–59", percentage: 3.75 },
+        { label: "17-19", percentage: 2.02 },
+        { label: "20-24", percentage: 9.79 },
+        { label: "25-29", percentage: 19.87 },
+        { label: "30-34", percentage: 26.33 },
+        { label: "35-39", percentage: 22.05 },
+        { label: "40-49", percentage: 9.8 },
+        { label: "50-59", percentage: 3.75 },
         { label: "60+",   percentage: 5.7 },
       ],
       gender: [{ label: "Female", percentage: 61.13 }, { label: "Male", percentage: 38.87 }],
@@ -56,12 +56,12 @@ const DEMO = {
         { label: "Asian",    percentage: 2.72 },
       ],
       income: [
-        { label: "$10k–$20k", percentage: 24.3 },
-        { label: "$20k–$30k", percentage: 10.96 },
-        { label: "$30k–$40k", percentage: 8.25 },
-        { label: "$40k–$50k", percentage: 9.39 },
-        { label: "$50k–$75k", percentage: 25.62 },
-        { label: "$75k–$100k", percentage: 7.98 },
+        { label: "$10k-$20k", percentage: 24.3 },
+        { label: "$20k-$30k", percentage: 10.96 },
+        { label: "$30k-$40k", percentage: 8.25 },
+        { label: "$40k-$50k", percentage: 9.39 },
+        { label: "$50k-$75k", percentage: 25.62 },
+        { label: "$75k-$100k", percentage: 7.98 },
         { label: "$100k+",    percentage: 2.17 },
       ],
       interest: [
@@ -126,13 +126,13 @@ const DEMO = {
     tiktok: {
       age: [
         { label: "< 16",  percentage: 5.2 },
-        { label: "17–19", percentage: 14.11 },
-        { label: "20–24", percentage: 40.47 },
-        { label: "25–29", percentage: 22.75 },
-        { label: "30–34", percentage: 10.59 },
-        { label: "35–39", percentage: 4.33 },
-        { label: "40–49", percentage: 2.15 },
-        { label: "50–59", percentage: 0.16 },
+        { label: "17-19", percentage: 14.11 },
+        { label: "20-24", percentage: 40.47 },
+        { label: "25-29", percentage: 22.75 },
+        { label: "30-34", percentage: 10.59 },
+        { label: "35-39", percentage: 4.33 },
+        { label: "40-49", percentage: 2.15 },
+        { label: "50-59", percentage: 0.16 },
         { label: "60+",   percentage: 0.24 },
       ],
       gender: [{ label: "Female", percentage: 74.69 }, { label: "Male", percentage: 25.31 }],
@@ -143,12 +143,12 @@ const DEMO = {
         { label: "Asian",    percentage: 0.94 },
       ],
       income: [
-        { label: "$10k–$20k",  percentage: 14.32 },
-        { label: "$20k–$30k",  percentage: 16.0 },
-        { label: "$30k–$40k",  percentage: 11.55 },
-        { label: "$40k–$50k",  percentage: 10.43 },
-        { label: "$50k–$75k",  percentage: 21.13 },
-        { label: "$75k–$100k", percentage: 3.7 },
+        { label: "$10k-$20k",  percentage: 14.32 },
+        { label: "$20k-$30k",  percentage: 16.0 },
+        { label: "$30k-$40k",  percentage: 11.55 },
+        { label: "$40k-$50k",  percentage: 10.43 },
+        { label: "$50k-$75k",  percentage: 21.13 },
+        { label: "$75k-$100k", percentage: 3.7 },
         { label: "$100k+",     percentage: 1.12 },
       ],
       interest: [
@@ -225,27 +225,27 @@ const DEMO = {
   causes: ["Anti-Racism", "Black Lives Matter", "Breast Cancer", "LGBTQ+", "Education", "Voting", "Gender Equality", "Women's Issues", "COVID-19 Relief"],
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-const fmt = n => n >= 1e9 ? (n/1e9).toFixed(1)+"B" : n >= 1e6 ? (n/1e6).toFixed(1)+"M" : n >= 1e3 ? (n/1e3).toFixed(0)+"K" : n?.toString() ?? "–";
-const fmtPct = n => n != null ? n.toFixed(1)+"%" : "–";
+// --- Helpers -----------------------------------------------------------------
+const fmt = n => n >= 1e9 ? (n/1e9).toFixed(1)+"B" : n >= 1e6 ? (n/1e6).toFixed(1)+"M" : n >= 1e3 ? (n/1e3).toFixed(0)+"K" : n?.toString() ?? "-";
+const fmtPct = n => n != null ? n.toFixed(1)+"%" : "-";
 const fmtUSD = n => n >= 1e6 ? "$"+(n/1e6).toFixed(1)+"M" : "$"+n?.toLocaleString();
 const age = dob => dob ? Math.floor((Date.now() - new Date(dob)) / 3.15576e10) : null;
 
 const PLATFORM_META = {
-  instagram: { color: "#E1306C", label: "Instagram", icon: "📸" },
-  tiktok:    { color: "#fe2c55", label: "TikTok",    icon: "🎵" },
-  youtube:   { color: "#FF0000", label: "YouTube",   icon: "▶️" },
-  facebook:  { color: "#1877F2", label: "Facebook",  icon: "👥" },
-  twitter:   { color: "#1DA1F2", label: "Twitter/X", icon: "🐦" },
-  pinterest: { color: "#E60023", label: "Pinterest", icon: "📌" },
-  snapchat:  { color: "#FFFC00", label: "Snapchat",  icon: "👻" },
+  instagram: { color: "#E1306C", label: "Instagram", icon: "IG" },
+  tiktok:    { color: "#fe2c55", label: "TikTok",    icon: "TT" },
+  youtube:   { color: "#FF0000", label: "YouTube",   icon: "YT" },
+  facebook:  { color: "#1877F2", label: "Facebook",  icon: "FB" },
+  twitter:   { color: "#1DA1F2", label: "Twitter/X", icon: "TW" },
+  pinterest: { color: "#E60023", label: "Pinterest", icon: "PIN" },
+  snapchat:  { color: "#FFFC00", label: "Snapchat",  icon: "SNAP" },
 };
 
 const ACCENT  = "#3b82f6";
 const ACCENT2 = "#38bdf8";
 const PALETTE = ["#3b82f6","#0ea5e9","#38bdf8","#6366f1","#818cf8","#2563eb","#7dd3fc"];
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// --- Sub-components ----------------------------------------------------------
 const Card = ({ children, style }) => (
   <div style={{ background:"#060f1e", border:"1px solid #1e1e35", borderRadius:12, padding:"18px 20px", ...style }}>
     {children}
@@ -320,7 +320,7 @@ const PlatformPicker = ({ platforms, active, onChange }) => (
   </div>
 );
 
-// ─── Tabs ─────────────────────────────────────────────────────────────────────
+// --- Tabs ---------------------------------------------------------------------
 function OverviewTab({ d }) {
   const a = age(d.dob);
   return (
@@ -329,11 +329,11 @@ function OverviewTab({ d }) {
       <Card>
         <SectionTitle>Profile</SectionTitle>
         <StatPill label="Full Name"   value={d.display_name} />
-        <StatPill label="Tagline"     value={d.tagline || "–"} />
-        <StatPill label="Gender"      value={d.gender || "–"} />
+        <StatPill label="Tagline"     value={d.tagline || "-"} />
+        <StatPill label="Gender"      value={d.gender || "-"} />
         {a && <StatPill label="Age"   value={`${a} years old`} />}
-        <StatPill label="Born"        value={d.dob || "–"} />
-        <StatPill label="Location"    value={d.current_location?.display_name || "–"} />
+        <StatPill label="Born"        value={d.dob || "-"} />
+        <StatPill label="Location"    value={d.current_location?.display_name || "-"} />
         <StatPill label="Julius Slug" value={d.slug} color="#4a7ab5" />
       </Card>
 
@@ -353,7 +353,7 @@ function OverviewTab({ d }) {
 
       {/* Per-platform */}
       {(d.social_combined || []).map(s => {
-        const meta = PLATFORM_META[s.platform] || { color:"#fff", label:s.platform, icon:"🌐" };
+        const meta = PLATFORM_META[s.platform] || { color:"#fff", label:s.platform, icon:"WEB" };
         return (
           <Card key={s.platform}>
             <SectionTitle>{meta.icon} {meta.label}</SectionTitle>
@@ -535,7 +535,7 @@ function LocationsTab({ d }) {
 }
 
 function ProfileTab({ d }) {
-  // Real API returns objects {tag, display_name}; demo uses plain strings — handle both
+  // Real API returns objects {tag, display_name}; demo uses plain strings -- handle both
   const getName = x => (typeof x === "string" ? x : x?.display_name ?? "");
   const causes = d.causes
     || (d.tags||[]).filter(t=>t.tag?.startsWith("cause.")).map(t=>t.display_name);
@@ -590,18 +590,18 @@ function ProfileTab({ d }) {
 }
 
 
-// ─── Relationship Badge ───────────────────────────────────────────────────────
+// --- Relationship Badge -------------------------------------------------------
 const REL_META = {
-  current:   { label:"Active Partnership", color:"#34d399", bg:"#05281922", icon:"🤝" },
-  mention:   { label:"Brand Mention",      color:"#60a5fa", bg:"#0c1f3a22", icon:"💬" },
-  prior:     { label:"Past Partnership",   color:"#94a3b8", bg:"#1a243522", icon:"📁" },
-  supported: { label:"Brand Supporter",    color:"#f472b6", bg:"#2d0a2022", icon:"❤️" },
-  associated:{ label:"Associated",         color:"#7eb3d8", bg:"#0d1f3c22", icon:"🔗" },
+  current:   { label:"Active Partnership", color:"#34d399", bg:"#05281922", icon:"[*]" },
+  mention:   { label:"Brand Mention",      color:"#60a5fa", bg:"#0c1f3a22", icon:"[c]" },
+  prior:     { label:"Past Partnership",   color:"#94a3b8", bg:"#1a243522", icon:"[f]" },
+  supported: { label:"Brand Supporter",    color:"#f472b6", bg:"#2d0a2022", icon:"[h]" },
+  associated:{ label:"Associated",         color:"#7eb3d8", bg:"#0d1f3c22", icon:"[->]" },
 };
 
 function BrandResultCard({ inf, onViewProfile }) {
   const rel  = REL_META[inf.relationship] || REL_META.associated;
-  const plat = inf.topPlatform ? (PLATFORM_META[inf.topPlatform] || { label: inf.topPlatform, icon:"🌐" }) : null;
+  const plat = inf.topPlatform ? (PLATFORM_META[inf.topPlatform] || { label: inf.topPlatform, icon:"WEB" }) : null;
   return (
     <div style={{
       background:"#060f1e", border:`1px solid #0d1f3c`,
@@ -615,11 +615,11 @@ function BrandResultCard({ inf, onViewProfile }) {
       <div style={{ display:"flex", alignItems:"center", gap:12 }}>
         {inf.avatar?.url
           ? <img src={inf.avatar.url} alt={inf.display_name} style={{ width:48, height:48, borderRadius:"50%", objectFit:"cover", border:`2px solid ${rel.color}44`, flexShrink:0 }} />
-          : <div style={{ width:48, height:48, borderRadius:"50%", background:"#0d1f3c", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>👤</div>
+          : <div style={{ width:48, height:48, borderRadius:"50%", background:"#0d1f3c", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}></div>
         }
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#fff", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{inf.display_name}</div>
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5", marginTop:2 }}>{inf.tagline || inf.current_location?.display_name || "–"}</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5", marginTop:2 }}>{inf.tagline || inf.current_location?.display_name || "-"}</div>
         </div>
       </div>
 
@@ -646,7 +646,7 @@ function BrandResultCard({ inf, onViewProfile }) {
       {/* Source link if available */}
       {inf.sourceUrl && (
         <a href={inf.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#3b82f6", textDecoration:"none", wordBreak:"break-all" }}>
-          🔗 Source post
+           Source post
         </a>
       )}
 
@@ -658,7 +658,7 @@ function BrandResultCard({ inf, onViewProfile }) {
       }}
       onMouseEnter={e => { e.currentTarget.style.background = "#0d1f3c"; e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; }}
       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#1a3358"; e.currentTarget.style.color = "#7eb3d8"; }}
-      >View Full Profile →</button>
+      >View Full Profile -></button>
     </div>
   );
 }
@@ -707,7 +707,7 @@ function BrandSearchPanel({ onViewProfile }) {
           padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
           letterSpacing:1, textTransform:"uppercase", background: brandLoading ? "#1a3358" : ACCENT,
           border:"none", color:"#fff", cursor: brandLoading ? "default" : "pointer"
-        }}>{brandLoading ? "Searching…" : "Search Brand"}</button>
+        }}>{brandLoading ? "Searching..." : "Search Brand"}</button>
       </div>
 
       {brandError && (
@@ -729,10 +729,10 @@ function BrandSearchPanel({ onViewProfile }) {
             </div>
             {/* Breakdown pills */}
             <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-              {relCounts.current   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#05281922", border:"1px solid #34d39944", color:"#34d399", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>🤝 {relCounts.current} Active</span>}
-              {relCounts.mention   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#0c1f3a22", border:"1px solid #60a5fa44", color:"#60a5fa", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>💬 {relCounts.mention} Mentions</span>}
-              {relCounts.prior     > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#1a243522", border:"1px solid #94a3b844", color:"#94a3b8", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>📁 {relCounts.prior} Past</span>}
-              {relCounts.supported > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#2d0a2022", border:"1px solid #f472b644", color:"#f472b6", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>❤️ {relCounts.supported} Supporter</span>}
+              {relCounts.current   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#05281922", border:"1px solid #34d39944", color:"#34d399", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.current} Active</span>}
+              {relCounts.mention   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#0c1f3a22", border:"1px solid #60a5fa44", color:"#60a5fa", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.mention} Mentions</span>}
+              {relCounts.prior     > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#1a243522", border:"1px solid #94a3b844", color:"#94a3b8", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.prior} Past</span>}
+              {relCounts.supported > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#2d0a2022", border:"1px solid #f472b644", color:"#f472b6", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.supported} Supporter</span>}
             </div>
           </div>
 
@@ -752,7 +752,7 @@ function BrandSearchPanel({ onViewProfile }) {
 
       {!brandResults && !brandLoading && (
         <div style={{ textAlign:"center", padding:"64px 24px", color:"#4a7ab5" }}>
-          <div style={{ fontSize:40, marginBottom:16 }}>🔍</div>
+          <div style={{ fontSize:40, marginBottom:16 }}></div>
           <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:600, color:"#7eb3d8", marginBottom:8 }}>Search by Brand</div>
           <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13 }}>Enter a brand name to find influencers who have active partnerships, mentions, or past deals.</div>
         </div>
@@ -761,7 +761,7 @@ function BrandSearchPanel({ onViewProfile }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// --- Main Component -----------------------------------------------------------
 export default function JuliusInfluencerLookup() {
   const [appMode,   setAppMode]   = useState("influencer"); // "influencer" | "brand"
   const [mode,      setMode]      = useState("handle");
@@ -830,7 +830,7 @@ export default function JuliusInfluencerLookup() {
           </div>
           {/* App mode switcher */}
           <div style={{ display:"flex", gap:6, background:"#060f1e", border:"1px solid #0d1f3c", borderRadius:24, padding:4 }}>
-            {[["influencer","👤 Influencer"],["brand","🏷️ Brand"]].map(([id,label]) => (
+            {[["influencer"," Influencer"],["brand"," Brand"]].map(([id,label]) => (
               <button key={id} onClick={() => setAppMode(id)} style={{
                 padding:"7px 18px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:700,
                 letterSpacing:1, textTransform:"uppercase", border:"none",
@@ -878,7 +878,7 @@ export default function JuliusInfluencerLookup() {
               padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
               letterSpacing:1, textTransform:"uppercase", background: loading ? "#1a3358" : ACCENT,
               border:"none", color:"#fff", cursor: loading ? "default" : "pointer"
-            }}>{loading ? "…" : "Search"}</button>
+            }}>{loading ? "..." : "Search"}</button>
           </div>
 
           {error && (
@@ -896,7 +896,7 @@ export default function JuliusInfluencerLookup() {
               <div style={{ flex:1 }}>
                 <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, margin:0, color:"#fff" }}>{displayData.display_name}</h2>
                 <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#4a7ab5", marginTop:2 }}>
-                  {displayData.tagline} {displayData.current_location?.display_name && `· ${displayData.current_location.display_name}`}
+                  {displayData.tagline} {displayData.current_location?.display_name && `. ${displayData.current_location.display_name}`}
                 </div>
               </div>
               <div style={{ textAlign:"right" }}>
