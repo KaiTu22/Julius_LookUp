@@ -86,7 +86,18 @@ export default async function handler(req, res) {
   const searchData = await searchRes.json();
   const results    = searchData.results || [];
   // Julius returns a next cursor when more pages exist
-  const nextCursor = searchData.next || null;
+  const nextCursor = searchData.next || searchData.cursor || searchData.next_cursor || null;
+
+  // Debug: log the top-level keys so we can see pagination field name
+  console.log("Julius search response keys:", Object.keys(searchData));
+  console.log("Julius pagination fields:", {
+    next: searchData.next,
+    cursor: searchData.cursor,
+    next_cursor: searchData.next_cursor,
+    total: searchData.total,
+    count: searchData.count,
+    results_count: results.length,
+  });
 
   if (results.length === 0) {
     return res.status(200).json({
