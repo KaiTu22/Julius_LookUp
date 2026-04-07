@@ -665,33 +665,83 @@ function BrandResultCard({ inf, onViewProfile }) {
 }
 
 function BrandSearchPanel({ onViewProfile }) {
-  const [brandQuery,    setBrandQuery]    = useState("");
-  const [brandLoading,  setBrandLoading]  = useState(false);
-  const [brandResults,  setBrandResults]  = useState(null);
-  const [brandError,    setBrandError]    = useState(null);
+  const [brandQuery,   setBrandQuery]   = useState("");
+  const [brandLoading, setBrandLoading] = useState(false);
+  const [pageLoading,  setPageLoading]  = useState(false);
+  const [brandResults, setBrandResults] = useState(null);
+  const [allResults,   setAllResults]   = useState([]);
+  const [brandError,   setBrandError]   = useState(null);
+  const [cursors,      setCursors]      = useState([]); // stack of cursors for back nav
+  const [currentPage,  setCurrentPage]  = useState(1);
+  const [sortField,    setSortField]    = useState("reach-instagram");
+  const PAGE_SIZE = 20;
 
-  const searchBrand = async () => {
-    if (!brandQuery.trim()) return;
-    setBrandLoading(true); setBrandError(null); setBrandResults(null);
+  const SORT_OPTIONS = [
+    { value:"reach-instagram", label:"Instagram Reach" },
+    { value:"reach-tiktok",    label:"TikTok Reach" },
+    { value:"reach",           label:"Total Reach" },
+    { value:"engagement",      label:"Engagement" },
+  ];
+
+  const fetchPage = async (cursor = null, isNewSearch = false) => {
+    const loadSetter = isNewSearch ? setBrandLoading : setPageLoading;
+    loadSetter(true);
+    setBrandError(null);
     try {
-      const res  = await fetch(`/api/julius-brand?brand=${encodeURIComponent(brandQuery.trim())}&limit=20`);
+      const params = new URLSearchParams({
+        brand: brandQuery.trim(),
+        limit: PAGE_SIZE,
+        sort:  sortField,
+        ...(cursor ? { cursor } : {}),
+      });
+      const res  = await fetch(`/api/julius-brand?${params}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Brand search failed");
       setBrandResults(json);
+      setAllResults(json.results || []);
     } catch (e) { setBrandError(e.message); }
-    finally { setBrandLoading(false); }
+    finally { loadSetter(false); }
   };
 
-  const relCounts = brandResults ? {
-    current:   brandResults.results.filter(r => r.relationship === "current").length,
-    mention:   brandResults.results.filter(r => r.relationship === "mention").length,
-    prior:     brandResults.results.filter(r => r.relationship === "prior").length,
-    supported: brandResults.results.filter(r => r.relationship === "supported").length,
+  const searchBrand = async () => {
+    if (!brandQuery.trim()) return;
+    setCursors([]);
+    setCurrentPage(1);
+    setBrandResults(null);
+    await fetchPage(null, true);
+  };
+
+  const goNextPage = async () => {
+    if (!brandResults?.nextCursor) return;
+    setCursors(prev => [...prev, brandResults.nextCursor]);
+    setCurrentPage(p => p + 1);
+    await fetchPage(brandResults.nextCursor);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const goPrevPage = async () => {
+    if (currentPage <= 1) return;
+    const newCursors = [...cursors];
+    newCursors.pop(); // remove current
+    const prevCursor = newCursors[newCursors.length - 1] || null;
+    setCursors(newCursors);
+    setCurrentPage(p => p - 1);
+    await fetchPage(prevCursor);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const relCounts = allResults.length ? {
+    current:   allResults.filter(r => r.relationship === "current").length,
+    mention:   allResults.filter(r => r.relationship === "mention").length,
+    prior:     allResults.filter(r => r.relationship === "prior").length,
+    supported: allResults.filter(r => r.relationship === "supported").length,
   } : null;
+
+  const isLoading = brandLoading || pageLoading;
 
   return (
     <div>
-      {/* Search bar */}
+      {/* Search bar + sort */}
       <div style={{ display:"flex", gap:10, marginBottom:24, flexWrap:"wrap" }}>
         <input
           value={brandQuery}
@@ -704,11 +754,17 @@ function BrandSearchPanel({ onViewProfile }) {
             color:"#e2e2f0", outline:"none"
           }}
         />
-        <button onClick={searchBrand} disabled={brandLoading} style={{
+        <select value={sortField} onChange={e => setSortField(e.target.value)} style={{
+          padding:"8px 14px", borderRadius:20, fontSize:12, fontFamily:"'DM Sans',sans-serif",
+          background:"#060f1e", border:"1px solid #1a3358", color:"#7eb3d8", cursor:"pointer", outline:"none"
+        }}>
+          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <button onClick={searchBrand} disabled={isLoading} style={{
           padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
-          letterSpacing:1, textTransform:"uppercase", background: brandLoading ? "#1a3358" : ACCENT,
-          border:"none", color:"#fff", cursor: brandLoading ? "default" : "pointer"
-        }}>{brandLoading ? "Searching..." : "Search Brand"}</button>
+          letterSpacing:1, textTransform:"uppercase", background: isLoading ? "#1a3358" : ACCENT,
+          border:"none", color:"#fff", cursor: isLoading ? "default" : "pointer"
+        }}>{brandLoading ? "Searching..." : "Search"}</button>
       </div>
 
       {brandError && (
@@ -717,35 +773,81 @@ function BrandSearchPanel({ onViewProfile }) {
         </div>
       )}
 
-      {/* Summary bar */}
       {brandResults && (
         <>
+          {/* Summary bar */}
           <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:24, padding:"14px 20px", background:"#060f1e", borderRadius:12, border:"1px solid #0d1f3c", flexWrap:"wrap" }}>
             <div style={{ flex:1 }}>
               <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:16, color:"#fff" }}>{brandResults.brand}</span>
               <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#4a7ab5", marginLeft:10 }}>{brandResults.brandSlug}</span>
             </div>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:"#4a7ab5" }}>
-              Showing {brandResults.results.length} of {brandResults.total?.toLocaleString() || "?"} influencers
+              {brandResults.total?.toLocaleString() || "?"} total results
             </div>
-            {/* Breakdown pills */}
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-              {relCounts.current   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#05281922", border:"1px solid #34d39944", color:"#34d399", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.current} Active</span>}
-              {relCounts.mention   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#0c1f3a22", border:"1px solid #60a5fa44", color:"#60a5fa", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.mention} Mentions</span>}
-              {relCounts.prior     > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#1a243522", border:"1px solid #94a3b844", color:"#94a3b8", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.prior} Past</span>}
-              {relCounts.supported > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#2d0a2022", border:"1px solid #f472b644", color:"#f472b6", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}> {relCounts.supported} Supporter</span>}
-            </div>
+            {relCounts && (
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                {relCounts.current   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#05281922", border:"1px solid #34d39944", color:"#34d399", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Active {relCounts.current}</span>}
+                {relCounts.mention   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#0c1f3a22", border:"1px solid #60a5fa44", color:"#60a5fa", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Mentions {relCounts.mention}</span>}
+                {relCounts.prior     > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#1a243522", border:"1px solid #94a3b844", color:"#94a3b8", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Past {relCounts.prior}</span>}
+                {relCounts.supported > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#2d0a2022", border:"1px solid #f472b644", color:"#f472b6", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Supporter {relCounts.supported}</span>}
+              </div>
+            )}
           </div>
 
-          {brandResults.results.length === 0 ? (
-            <div style={{ textAlign:"center", padding:"48px 24px", color:"#4a7ab5", fontFamily:"'DM Sans',sans-serif" }}>
-              No influencers found for <strong style={{ color:"#7eb3d8" }}>{brandResults.brand}</strong>. Try a different spelling or brand name.
+          {/* Loading overlay for page turns */}
+          {pageLoading && (
+            <div style={{ textAlign:"center", padding:"48px", color:"#4a7ab5", fontFamily:"'DM Sans',sans-serif" }}>
+              Loading page {currentPage}...
             </div>
-          ) : (
+          )}
+
+          {!pageLoading && allResults.length === 0 && (
+            <div style={{ textAlign:"center", padding:"48px 24px", color:"#4a7ab5", fontFamily:"'DM Sans',sans-serif" }}>
+              No influencers found for <strong style={{ color:"#7eb3d8" }}>{brandResults.brand}</strong>.
+            </div>
+          )}
+
+          {!pageLoading && allResults.length > 0 && (
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(260px, 1fr))", gap:16 }}>
-              {brandResults.results.map(inf => (
+              {allResults.map(inf => (
                 <BrandResultCard key={inf.slug || inf.id} inf={inf} onViewProfile={onViewProfile} />
               ))}
+            </div>
+          )}
+
+          {/* Pagination controls */}
+          {!pageLoading && (
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginTop:32, paddingTop:24, borderTop:"1px solid #0d1f3c" }}>
+              <button
+                onClick={goPrevPage}
+                disabled={currentPage <= 1 || isLoading}
+                style={{
+                  padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif",
+                  fontWeight:600, letterSpacing:1, textTransform:"uppercase",
+                  border:`1px solid ${currentPage <= 1 ? "#0d1f3c" : "#1a3358"}`,
+                  background:"transparent",
+                  color: currentPage <= 1 ? "#1a3358" : "#7eb3d8",
+                  cursor: currentPage <= 1 ? "default" : "pointer"
+                }}
+              >{"<"} Prev</button>
+
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:"#4a7ab5" }}>
+                Page {currentPage}
+                {brandResults.total && ` of ~${Math.ceil(brandResults.total / PAGE_SIZE)}`}
+              </span>
+
+              <button
+                onClick={goNextPage}
+                disabled={!brandResults.hasMore || isLoading}
+                style={{
+                  padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif",
+                  fontWeight:600, letterSpacing:1, textTransform:"uppercase",
+                  border:`1px solid ${!brandResults.hasMore ? "#0d1f3c" : ACCENT}`,
+                  background: !brandResults.hasMore ? "transparent" : ACCENT+"22",
+                  color: !brandResults.hasMore ? "#1a3358" : ACCENT,
+                  cursor: !brandResults.hasMore ? "default" : "pointer"
+                }}
+              >Next {">"}</button>
             </div>
           )}
         </>
@@ -753,7 +855,7 @@ function BrandSearchPanel({ onViewProfile }) {
 
       {!brandResults && !brandLoading && (
         <div style={{ textAlign:"center", padding:"64px 24px", color:"#4a7ab5" }}>
-          <div style={{ fontSize:40, marginBottom:16 }}></div>
+          <div style={{ fontSize:40, marginBottom:16 }}>[ ]</div>
           <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:600, color:"#7eb3d8", marginBottom:8 }}>Search by Brand</div>
           <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13 }}>Enter a brand name to find influencers who have active partnerships, mentions, or past deals.</div>
         </div>
