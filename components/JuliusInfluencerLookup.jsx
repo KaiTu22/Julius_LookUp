@@ -537,23 +537,22 @@ function LocationsTab({ d }) {
 function ProfileTab({ d }) {
   // Real API returns objects {tag, display_name, source_url}; demo uses plain strings -- handle both
   const getName = x => (typeof x === "string" ? x : x?.display_name ?? "");
-  const getUrl  = x => (typeof x === "string" ? null : x?.source_url || null);
 
-  const BrandRow = ({ item, color, bg }) => {
-    const name = getName(item);
-    const url  = getUrl(item);
+  const BrandSection = ({ title, items, color, bg }) => {
+    if (!items?.length) return null;
     return (
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid #081628" }}>
-        <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#e2e2f0" }}>{name}</span>
-        {url
-          ? <a href={url} target="_blank" rel="noopener noreferrer" style={{
-              fontFamily:"'DM Mono',monospace", fontSize:10, color, background:bg,
-              border:`1px solid ${color}44`, borderRadius:12, padding:"2px 10px",
-              textDecoration:"none", whiteSpace:"nowrap", flexShrink:0, marginLeft:8
-            }}>View Post</a>
-          : <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:"#1a3358" }}>no link</span>
-        }
-      </div>
+      <Card>
+        <SectionTitle>{title} ({items.length})</SectionTitle>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:4, marginTop:4 }}>
+          {items.map((b,i) => (
+            <span key={i} style={{
+              padding:"4px 12px", borderRadius:20, fontSize:12,
+              fontFamily:"'DM Sans',sans-serif", fontWeight:500,
+              background:bg, color, border:`1px solid ${color}33`
+            }}>{getName(b)}</span>
+          ))}
+        </div>
+      </Card>
     );
   };
 
@@ -561,31 +560,11 @@ function ProfileTab({ d }) {
     || (d.tags||[]).filter(t=>t.tag?.startsWith("cause.")).map(t=>t.display_name);
   return (
     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px,1fr))", gap:16 }}>
-
-      {d.brands?.current?.length > 0 && (
-        <Card>
-          <SectionTitle>Current Brand Deals ({d.brands.current.length})</SectionTitle>
-          {d.brands.current.map((b,i) => <BrandRow key={i} item={b} color="#34d399" bg="#05281922" />)}
-        </Card>
-      )}
-      {d.brands?.mention?.length > 0 && (
-        <Card>
-          <SectionTitle>Brand Mentions ({d.brands.mention.length})</SectionTitle>
-          {d.brands.mention.map((b,i) => <BrandRow key={i} item={b} color="#60a5fa" bg="#0c1f3a22" />)}
-        </Card>
-      )}
-      {d.brands?.prior?.length > 0 && (
-        <Card>
-          <SectionTitle>Prior Brand Deals ({d.brands.prior.length})</SectionTitle>
-          {d.brands.prior.map((b,i) => <BrandRow key={i} item={b} color="#94a3b8" bg="#1a243522" />)}
-        </Card>
-      )}
-      {d.brands?.supported?.length > 0 && (
-        <Card>
-          <SectionTitle>Brand Supporter ({d.brands.supported.length})</SectionTitle>
-          {d.brands.supported.map((b,i) => <BrandRow key={i} item={b} color="#f472b6" bg="#2d0a2022" />)}
-        </Card>
-      )}
+      <BrandSection title="Current Brand Deals" items={d.brands?.current}   color="#34d399" bg="#05281922" />
+      <BrandSection title="Brand Mentions"      items={d.brands?.mention}   color="#60a5fa" bg="#0c1f3a22" />
+      <BrandSection title="Sponsor"             items={d.brands?.sponsor}   color="#fbbf24" bg="#2d1f0022" />
+      <BrandSection title="Prior Brand Deals"   items={d.brands?.prior}     color="#94a3b8" bg="#1a243522" />
+      <BrandSection title="Brand Supporter"     items={d.brands?.supported} color="#f472b6" bg="#2d0a2022" />
       {d.interests?.length > 0 && (
         <Card>
           <SectionTitle>Personal Interests</SectionTitle>
@@ -885,6 +864,166 @@ function BrandSearchPanel({ onViewProfile }) {
   );
 }
 
+
+// --- Posts Tab ----------------------------------------------------------------
+function PostsTab({ slug }) {
+  const [platform,  setPlatform]  = useState("instagram");
+  const [posts,     setPosts]     = useState({});  // keyed by platform
+  const [loading,   setLoading]   = useState({});
+  const [errors,    setErrors]    = useState({});
+
+  const fetchPosts = async (plat) => {
+    if (posts[plat]) return; // already loaded
+    setLoading(prev => ({ ...prev, [plat]: true }));
+    setErrors(prev => ({ ...prev, [plat]: null }));
+    try {
+      const res  = await fetch(`/api/julius-posts?slug=${encodeURIComponent(slug)}&platform=${plat}&limit=10`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to load posts");
+      setPosts(prev => ({ ...prev, [plat]: json.posts || [] }));
+    } catch (e) {
+      setErrors(prev => ({ ...prev, [plat]: e.message }));
+    } finally {
+      setLoading(prev => ({ ...prev, [plat]: false }));
+    }
+  };
+
+  // Auto-fetch when platform changes
+  useState(() => { fetchPosts("instagram"); }, []);
+  const handlePlatform = (plat) => { setPlatform(plat); fetchPosts(plat); };
+
+  const fmtDate = d => {
+    if (!d) return "Unknown date";
+    const dt = new Date(d);
+    return dt.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+  };
+
+  const truncate = (str, n) => {
+    if (!str) return "";
+    return str.length > n ? str.slice(0, n) + "..." : str;
+  };
+
+  const PLATS = ["instagram", "tiktok"];
+  const currentPosts = posts[platform];
+  const isLoading    = loading[platform];
+  const error        = errors[platform];
+
+  return (
+    <div>
+      {/* Platform switcher */}
+      <div style={{ display:"flex", gap:6, marginBottom:24 }}>
+        {PLATS.map(p => {
+          const meta = PLATFORM_META[p] || { color:"#fff", label:p };
+          return (
+            <button key={p} onClick={() => handlePlatform(p)} style={{
+              padding:"6px 16px", borderRadius:20, fontSize:11, fontFamily:"'DM Sans',sans-serif", fontWeight:500,
+              border:`1px solid ${platform===p ? meta.color : "#1a3358"}`,
+              background: platform===p ? meta.color+"22" : "transparent",
+              color: platform===p ? meta.color : "#4a7ab5", cursor:"pointer", transition:"all .2s"
+            }}>{meta.label}</button>
+          );
+        })}
+      </div>
+
+      {isLoading && (
+        <div style={{ textAlign:"center", padding:"48px", color:"#4a7ab5", fontFamily:"'DM Sans',sans-serif" }}>
+          Loading {platform} posts...
+        </div>
+      )}
+
+      {error && (
+        <div style={{ padding:"12px 16px", borderRadius:10, background:"#2d0a0a", border:"1px solid #5c1a1a", color:"#f87171", fontSize:13, marginBottom:20 }}>
+          {error}
+        </div>
+      )}
+
+      {!isLoading && !error && currentPosts?.length === 0 && (
+        <div style={{ textAlign:"center", padding:"48px", color:"#4a7ab5", fontFamily:"'DM Sans',sans-serif" }}>
+          No {platform} posts found for this influencer.
+        </div>
+      )}
+
+      {!isLoading && !error && currentPosts?.length > 0 && (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {currentPosts.map((post, i) => (
+            <div key={post.id || i} style={{
+              background:"#060f1e", border:"1px solid #0d1f3c", borderRadius:12,
+              padding:"16px 20px", display:"flex", gap:16, alignItems:"flex-start"
+            }}>
+              {/* Thumbnail */}
+              <div style={{ flexShrink:0 }}>
+                {post.thumbnail
+                  ? <img src={post.thumbnail} alt="post" style={{ width:72, height:72, objectFit:"cover", borderRadius:8, border:"1px solid #1a3358" }} />
+                  : <div style={{ width:72, height:72, background:"#0d1f3c", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24 }}>
+                      {platform === "instagram" ? "[IG]" : "[TT]"}
+                    </div>
+                }
+              </div>
+
+              {/* Content */}
+              <div style={{ flex:1, minWidth:0 }}>
+                {/* Meta row */}
+                <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:8, alignItems:"center" }}>
+                  <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#4a7ab5" }}>{fmtDate(post.posted_at)}</span>
+                  {post.is_ad && (
+                    <span style={{ padding:"2px 8px", borderRadius:10, background:"#2d1f0022", border:"1px solid #fbbf2444", color:"#fbbf24", fontSize:10, fontFamily:"'DM Sans',sans-serif" }}>Sponsored</span>
+                  )}
+                  {post.url && (
+                    <a href={post.url} target="_blank" rel="noopener noreferrer" style={{
+                      fontFamily:"'DM Mono',monospace", fontSize:10, color:ACCENT,
+                      textDecoration:"none", border:`1px solid ${ACCENT}44`,
+                      background:ACCENT+"11", borderRadius:10, padding:"2px 10px"
+                    }}>View Post</a>
+                  )}
+                </div>
+
+                {/* Caption */}
+                {post.caption && (
+                  <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#9090b8", margin:"0 0 10px", lineHeight:1.5 }}>
+                    {truncate(post.caption, 200)}
+                  </p>
+                )}
+
+                {/* Stats row */}
+                <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
+                  <div>
+                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:ACCENT, fontWeight:500 }}>{fmt(post.engagement)}</span>
+                    <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5", marginLeft:4 }}>engagement</span>
+                  </div>
+                  {post.likes > 0 && (
+                    <div>
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:"#f472b6", fontWeight:500 }}>{fmt(post.likes)}</span>
+                      <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5", marginLeft:4 }}>likes</span>
+                    </div>
+                  )}
+                  {post.comments > 0 && (
+                    <div>
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:"#60a5fa", fontWeight:500 }}>{fmt(post.comments)}</span>
+                      <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#4a7ab5", marginLeft:4 }}>comments</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Hashtags */}
+                {post.hashtags?.length > 0 && (
+                  <div style={{ marginTop:8, display:"flex", flexWrap:"wrap", gap:4 }}>
+                    {post.hashtags.slice(0,8).map((h,j) => (
+                      <span key={j} style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:"#3b82f6", background:"#0d1f3c", borderRadius:10, padding:"2px 8px" }}>#{h}</span>
+                    ))}
+                    {post.hashtags.length > 8 && (
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:"#4a7ab5" }}>+{post.hashtags.length - 8} more</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- Main Component -----------------------------------------------------------
 export default function JuliusInfluencerLookup() {
   const [appMode,   setAppMode]   = useState("influencer"); // "influencer" | "brand"
@@ -909,12 +1048,6 @@ export default function JuliusInfluencerLookup() {
       const res  = await fetch(`/api/julius?${params}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Lookup failed");
-      // Debug: log full brands structure
-      console.log("brands keys:", Object.keys(json.brands || {}));
-      console.log("brands.current sample:", json.brands?.current?.slice(0,2));
-      console.log("brands.mention sample:", json.brands?.mention?.slice(0,2));
-      console.log("brands.prior sample:",   json.brands?.prior?.slice(0,2));
-      console.log("full brands object:",    JSON.stringify(json.brands, null, 2));
       setData(json);
       setDemoMode(false);
     } catch (e) { setError(e.message); }
@@ -943,6 +1076,7 @@ export default function JuliusInfluencerLookup() {
     { id:"brands",     label:"Audience Brands" },
     { id:"locations",  label:"Locations" },
     { id:"profile",    label:"Profile" },
+    { id:"posts",      label:"Posts" },
   ];
 
   return (
@@ -1044,6 +1178,7 @@ export default function JuliusInfluencerLookup() {
               {activeTab === "brands"        && <BrandsAudienceTab d={displayData} />}
               {activeTab === "locations"     && <LocationsTab d={displayData} />}
               {activeTab === "profile"       && <ProfileTab d={displayData} />}
+              {activeTab === "posts"         && <PostsTab slug={displayData.slug} />}
             </>
           )}
         </>)}
