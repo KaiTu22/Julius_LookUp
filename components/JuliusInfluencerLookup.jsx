@@ -1161,6 +1161,18 @@ export default function JuliusInfluencerLookup() {
                 <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#6b7280", marginTop:2 }}>
                   {displayData.tagline} {displayData.current_location?.display_name && `. ${displayData.current_location.display_name}`}
                 </div>
+                {displayData.lda && (
+                  <span
+                    title="Legal Drinking Age — Julius indicates this influencer's audience is appropriate for 21+ brand work."
+                    style={{
+                      display:"inline-flex", alignItems:"center",
+                      marginTop:8, padding:"3px 10px", borderRadius:20,
+                      background:"#fef3c7", border:"1px solid #fde68a",
+                      fontFamily:"'Syne',sans-serif", fontSize:10, fontWeight:700,
+                      letterSpacing:1, color:"#92400e", textTransform:"uppercase"
+                    }}
+                  >LDA Audience</span>
+                )}
               </div>
               <div style={{ textAlign:"right" }}>
                 <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:500, color:ACCENT }}>{fmt(displayData.social_total_count)}</div>
