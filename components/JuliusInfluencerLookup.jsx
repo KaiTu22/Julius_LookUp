@@ -334,6 +334,9 @@ function OverviewTab({ d }) {
         {a && <StatPill label="Age"   value={`${a} years old`} />}
         <StatPill label="Born"        value={d.dob || "-"} />
         <StatPill label="Location"    value={d.current_location?.display_name || "-"} />
+        {d.original_location?.display_name && d.original_location.display_name !== d.current_location?.display_name && (
+          <StatPill label="From"      value={d.original_location.display_name} />
+        )}
         <StatPill label="Julius Slug" value={d.slug} color="#6b7280" />
       </Card>
 
@@ -438,6 +441,14 @@ function DemographicsTab({ d }) {
           </ResponsiveContainer>
         </Card>
 
+        {/* Education */}
+        {dem.education?.length > 0 && (
+          <Card>
+            <SectionTitle>Education</SectionTitle>
+            <HBar data={dem.education.slice(0,8)} />
+          </Card>
+        )}
+
       </div>
     </div>
   );
@@ -516,6 +527,7 @@ function LocationsTab({ d }) {
   const dem = d.demographics?.[plat];
   const countries = dem?.["location-by-country"]?.slice(0,12) || [];
   const states    = dem?.["location-by-us-state"]?.slice(0,12) || [];
+  const cities    = dem?.location?.slice(0,12) || [];
 
   return (
     <div>
@@ -529,6 +541,12 @@ function LocationsTab({ d }) {
           <SectionTitle>Top US States</SectionTitle>
           <HBar data={states} />
         </Card>
+        {cities.length > 0 && (
+          <Card>
+            <SectionTitle>Top Cities</SectionTitle>
+            <HBar data={cities} />
+          </Card>
+        )}
       </div>
     </div>
   );
@@ -1161,6 +1179,12 @@ export default function JuliusInfluencerLookup() {
                 <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#6b7280", marginTop:2 }}>
                   {displayData.tagline} {displayData.current_location?.display_name && `. ${displayData.current_location.display_name}`}
                 </div>
+                {displayData.original_location?.display_name &&
+                  displayData.original_location.display_name !== displayData.current_location?.display_name && (
+                  <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#9ca3af", marginTop:2 }}>
+                    From: {displayData.original_location.display_name}
+                  </div>
+                )}
                 {displayData.lda && (
                   <span
                     title="Legal Drinking Age — Julius indicates this influencer's audience is appropriate for 21+ brand work."
