@@ -1047,12 +1047,13 @@ export default function JuliusInfluencerLookup() {
   const [appMode,   setAppMode]   = useState("influencer"); // "influencer" | "brand"
   const [mode,      setMode]      = useState("handle");
   const [platform,  setPlatform]  = useState("instagram");
-  const [query,     setQuery]     = useState("");
-  const [loading,   setLoading]   = useState(false);
-  const [data,      setData]      = useState(null);
-  const [error,     setError]     = useState(null);
-  const [demoMode,  setDemoMode]  = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [query,      setQuery]      = useState("");
+  const [loading,    setLoading]    = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [data,       setData]       = useState(null);
+  const [error,      setError]      = useState(null);
+  const [demoMode,   setDemoMode]   = useState(false);
+  const [activeTab,  setActiveTab]  = useState("overview");
 
   const displayData = demoMode ? DEMO : data;// demo hidden by default
 
@@ -1070,6 +1071,18 @@ export default function JuliusInfluencerLookup() {
       setDemoMode(false);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
+  };
+
+  const refresh = async () => {
+    if (!data?.slug) return;
+    setRefreshing(true);
+    try {
+      const res = await fetch(`/api/julius?mode=slug&slug=${encodeURIComponent(data.slug)}&bypass=1`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Refresh failed");
+      setData(json);
+    } catch (e) { setError(e.message); }
+    finally { setRefreshing(false); }
   };
 
   // Called from brand search cards to jump to influencer lookup
@@ -1198,7 +1211,33 @@ export default function JuliusInfluencerLookup() {
                   >LDA Audience</span>
                 )}
               </div>
-              <div style={{ textAlign:"right" }}>
+              <div style={{ textAlign:"right", display:"flex", flexDirection:"column", alignItems:"flex-end", gap:12 }}>
+                <button
+                  onClick={refresh}
+                  disabled={refreshing}
+                  style={{
+                    padding:"6px 12px", borderRadius:6, fontSize:11, fontFamily:"'Syne',sans-serif",
+                    fontWeight:600, letterSpacing:0.5, border:`1px solid #d1d5db`,
+                    background:refreshing ? "#f3f4f6" : "#ffffff", color:refreshing ? "#9ca3af" : "#6b7280",
+                    cursor:refreshing ? "not-allowed" : "pointer", transition:"all .2s",
+                  }}
+                  onMouseEnter={e => {
+                    if (!refreshing) {
+                      e.currentTarget.style.background = "#e5e7eb";
+                      e.currentTarget.style.borderColor = ACCENT;
+                      e.currentTarget.style.color = ACCENT;
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!refreshing) {
+                      e.currentTarget.style.background = "#ffffff";
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                      e.currentTarget.style.color = "#6b7280";
+                    }
+                  }}
+                >
+                  {refreshing ? "Refreshing..." : "🔄 Refresh"}
+                </button>
                 <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:500, color:ACCENT }}>{fmt(displayData.social_total_count)}</div>
                 <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280" }}>total followers</div>
               </div>

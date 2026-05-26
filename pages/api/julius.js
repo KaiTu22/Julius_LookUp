@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { getCached, invalidateCache } from "@/lib/cache";
 
 const JULIUS_BASE_URL = "https://api.juliusworks.com";
 const JULIUS_UA       = "julius-api-client";
@@ -21,6 +22,7 @@ export default async function handler(req, res) {
   const platform = url.searchParams.get("platform");
   const handle   = url.searchParams.get("handle");
   const slug     = url.searchParams.get("slug");
+  const bypass   = url.searchParams.get("bypass") === "1";
 
   async function juliusFetch(path) {
     const fullUrl = `${JULIUS_BASE_URL}${path}`;
@@ -42,67 +44,97 @@ export default async function handler(req, res) {
     }
     const cleanHandle = handle.replace(/^@/, "");
 
-    // Step 1: resolve handle to slug
-    const handlePath = `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${Math.floor(Date.now() / 1000)}`;
-    let handleRes;
-    try {
-      handleRes = await juliusFetch(handlePath);
-    } catch (err) {
-      return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
+    // Step 1: resolve handle to slug (cached indefinitely)
+    const handleCacheKey = `julius:handle:${platform}:${cleanHandle.toLowerCase()}`;
+
+    let resolvedSlug;
+    if (bypass) {
+      await invalidateCache(handleCacheKey);
     }
 
-    if (!handleRes.ok) {
+    try {
+      resolvedSlug = await getCached(handleCacheKey, async () => {
+        const handlePath = `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${Math.floor(Date.now() / 1000)}`;
+        const handleRes = await juliusFetch(handlePath);
+
+        if (!handleRes.ok) {
+          throw new Error(`Julius API error: ${handleRes.status}`);
+        }
+
+        const handleData = await handleRes.json();
+        const results = handleData?.results ?? [];
+        let match = results.find(r =>
+          r.social_combined?.some(s =>
+            s.accounts?.some(a => a.remote_handle?.toLowerCase() === cleanHandle.toLowerCase())
+          )
+        );
+        if (!match) match = results[0];
+
+        const slug = match?.slug ?? match?.id;
+        if (!slug) {
+          throw new Error("Influencer not found for that handle.");
+        }
+        return slug;
+      });
+    } catch (err) {
+      return res.status(404).json({ error: err.message });
+    }
+
+    // Step 2: fetch full export with demographics (cached 24h)
+    const exportCacheKey = `julius:export:${resolvedSlug}`;
+
+    if (bypass) {
+      await invalidateCache(exportCacheKey);
+    }
+
+    try {
+      const exportData = await getCached(exportCacheKey, async () => {
+        const slugPath = `/influencers/${encodeURIComponent(resolvedSlug)}/export?ts=${Math.floor(Date.now() / 1000)}`;
+        const res = await juliusFetch(slugPath);
+
+        if (!res.ok) {
+          throw new Error(`Julius API error: ${res.status}`);
+        }
+
+        return res.json();
+      }, 86400); // 24h TTL
+
       res.setHeader("Content-Type", "application/json");
-      res.status(handleRes.status);
-      return res.send(await handleRes.text());
-    }
-
-    const handleData = await handleRes.json();
-
-    // Response is { results: [...] } — find the best match
-    const results = handleData?.results ?? [];
-    let match = results.find(r =>
-      r.social_combined?.some(s =>
-        s.accounts?.some(a => a.remote_handle?.toLowerCase() === cleanHandle.toLowerCase())
-      )
-    );
-    if (!match) match = results[0];
-
-    const resolvedSlug = match?.slug ?? match?.id;
-
-    if (!resolvedSlug) {
-      return res.status(404).json({ error: "Influencer not found for that handle." });
-    }
-
-    // Step 2: fetch full export with demographics
-    const slugPath = `/influencers/${encodeURIComponent(resolvedSlug)}/export?ts=${Math.floor(Date.now() / 1000)}`;
-    let slugRes;
-    try {
-      slugRes = await juliusFetch(slugPath);
+      res.status(200);
+      return res.send(JSON.stringify(exportData));
     } catch (err) {
-      return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
+      return res.status(502).json({ error: "Failed to fetch influencer data.", detail: err.message });
     }
-
-    res.setHeader("Content-Type", "application/json");
-    res.status(slugRes.status);
-    return res.send(await slugRes.text());
 
   } else if (mode === "slug") {
     if (!slug) {
       return res.status(400).json({ error: "Requires slug." });
     }
 
-    const slugPath = `/influencers/${encodeURIComponent(slug)}/export?ts=${Math.floor(Date.now() / 1000)}`;
-    let slugRes;
-    try {
-      slugRes = await juliusFetch(slugPath);
-    } catch (err) {
-      return res.status(502).json({ error: "Failed to reach Julius API.", detail: err.message });
+    const exportCacheKey = `julius:export:${slug}`;
+
+    if (bypass) {
+      await invalidateCache(exportCacheKey);
     }
 
-    res.setHeader("Content-Type", "application/json");
-    res.status(slugRes.status);
-    return res.send(await slugRes.text());
+    try {
+      const exportData = await getCached(exportCacheKey, async () => {
+        const slugPath = `/influencers/${encodeURIComponent(slug)}/export?ts=${Math.floor(Date.now() / 1000)}`;
+        const res = await juliusFetch(slugPath);
+
+        if (!res.ok) {
+          throw new Error(`Julius API error: ${res.status}`);
+        }
+
+        return res.json();
+      }, 86400); // 24h TTL
+
+      res.setHeader("Content-Type", "application/json");
+      res.status(200);
+      return res.send(JSON.stringify(exportData));
+    } catch (err) {
+      return res.status(502).json({ error: "Failed to fetch influencer data.", detail: err.message });
+    }
 
   } else {
     return res.status(400).json({ error: "Invalid mode." });
