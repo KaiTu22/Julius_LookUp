@@ -352,6 +352,15 @@ function OverviewTab({ d }) {
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:500, color:ACCENT2 }}>{fmt(d.social_total_engagement)}</div>
           <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Total Avg. Engagement</div>
         </div>
+        <div style={{ height:1, background:"#e5e7eb", margin:"12px 0" }} />
+        <div style={{ textAlign:"center", padding:"8px 0" }}>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:500, color:ACCENT2 }}>
+            {d.social_total_count > 0
+              ? fmtPct((d.social_total_engagement / d.social_total_count) * 100)
+              : "—"}
+          </div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Overall Engagement Rate</div>
+        </div>
       </Card>
 
       {/* Per-platform */}
@@ -362,7 +371,7 @@ function OverviewTab({ d }) {
             <SectionTitle>{meta.icon} {meta.label}</SectionTitle>
             <StatPill label="Followers"      value={fmt(s.statistics?.count)}      color={meta.color} />
             <StatPill label="Avg Engagement" value={fmt(s.statistics?.engagement)} color={meta.color} />
-            <StatPill label="Eng. Rate"      value={fmtPct((s.statistics?.engagement_rate?.reach||0)*100)} color={meta.color} />
+            <StatPill label="Eng. Rate"      value={fmtPct(((s.statistics?.engagement_rate?.reach != null ? s.statistics.engagement_rate.reach : (s.statistics?.count > 0 ? (s.statistics?.engagement || 0) / s.statistics.count : 0)) * 100))} color={meta.color} />
           </Card>
         );
       })}
