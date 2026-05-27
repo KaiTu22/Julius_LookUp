@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { getCached, invalidateCache } from "@/lib/cache";
+import { archiveInfluencer } from "@/lib/db";
 
 const JULIUS_BASE_URL = "https://api.juliusworks.com";
 const JULIUS_UA       = "julius-api-client";
@@ -96,7 +97,9 @@ export default async function handler(req, res) {
           throw new Error(`Julius API error: ${res.status}`);
         }
 
-        return res.json();
+        const data = await res.json();
+        await archiveInfluencer(resolvedSlug, data);
+        return data;
       }, 86400); // 24h TTL
 
       res.setHeader("Content-Type", "application/json");
@@ -126,7 +129,9 @@ export default async function handler(req, res) {
           throw new Error(`Julius API error: ${res.status}`);
         }
 
-        return res.json();
+        const data = await res.json();
+        await archiveInfluencer(slug, data);
+        return data;
       }, 86400); // 24h TTL
 
       res.setHeader("Content-Type", "application/json");
