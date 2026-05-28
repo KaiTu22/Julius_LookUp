@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid,
@@ -1063,11 +1063,34 @@ export default function JuliusInfluencerLookup() {
   const [error,      setError]      = useState(null);
   const [demoMode,   setDemoMode]   = useState(false);
   const [activeTab,  setActiveTab]  = useState("overview");
+  const [nameResults,   setNameResults]   = useState([]);
+  const [searchingName, setSearchingName] = useState(false);
 
   const displayData = demoMode ? DEMO : data;// demo hidden by default
 
+  // Debounced name search against the Postgres archive
+  useEffect(() => {
+    if (mode !== "name") { setNameResults([]); return; }
+    const q = query.trim();
+    if (q.length < 2) { setNameResults([]); return; }
+    setSearchingName(true);
+    const t = setTimeout(() => {
+      fetch(`/api/search-archive?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(j => setNameResults(j.results || []))
+        .catch(() => setNameResults([]))
+        .finally(() => setSearchingName(false));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [mode, query]);
+
   const search = async () => {
     if (!query.trim()) return;
+    // Name mode: Enter selects the top archive match.
+    if (mode === "name") {
+      if (nameResults.length > 0) viewProfile(nameResults[0].slug);
+      return;
+    }
     setLoading(true); setError(null); setData(null);
     try {
       const params = mode === "handle"
@@ -1149,12 +1172,16 @@ export default function JuliusInfluencerLookup() {
         {appMode === "influencer" && (<>
           <div style={{ display:"flex", gap:10, marginBottom:32, flexWrap:"wrap" }}>
             <div style={{ display:"flex", gap:6 }}>
-              {["handle","slug"].map(m => (
-                <button key={m} onClick={() => setMode(m)} style={{
+              {[
+                { id:"handle", label:"@ Handle" },
+                { id:"slug",   label:"Slug / ID" },
+                { id:"name",   label:"Name" },
+              ].map(m => (
+                <button key={m.id} onClick={() => setMode(m.id)} style={{
                   padding:"8px 16px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:600,
-                  letterSpacing:1, textTransform:"uppercase", border:`1px solid ${mode===m ? ACCENT : "#d1d5db"}`,
-                  background: mode===m ? ACCENT+"22" : "transparent", color: mode===m ? ACCENT : "#6b7280", cursor:"pointer"
-                }}>{m === "handle" ? "@ Handle" : "Slug / ID"}</button>
+                  letterSpacing:1, textTransform:"uppercase", border:`1px solid ${mode===m.id ? ACCENT : "#d1d5db"}`,
+                  background: mode===m.id ? ACCENT+"22" : "transparent", color: mode===m.id ? ACCENT : "#6b7280", cursor:"pointer"
+                }}>{m.label}</button>
               ))}
             </div>
             {mode === "handle" && (
@@ -1170,7 +1197,11 @@ export default function JuliusInfluencerLookup() {
             <input
               value={query} onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === "Enter" && search()}
-              placeholder={mode === "handle" ? "e.g. taylorswift" : "e.g. taylor-swift"}
+              placeholder={
+                mode === "handle" ? "e.g. taylorswift" :
+                mode === "name"   ? "Search name in archive (e.g. taylor)" :
+                "e.g. taylor-swift"
+              }
               style={{
                 flex:1, minWidth:200, padding:"8px 16px", borderRadius:20, fontSize:13,
                 fontFamily:"'DM Sans',sans-serif", background:"#ffffff", border:"1px solid #d1d5db",
@@ -1183,6 +1214,64 @@ export default function JuliusInfluencerLookup() {
               border:"none", color:"#fff", cursor: loading ? "default" : "pointer"
             }}>{loading ? "..." : "Search"}</button>
           </div>
+
+          {/* Name-mode archive results */}
+          {mode === "name" && query.trim().length >= 2 && (
+            <div style={{
+              background:"#ffffff", border:"1px solid #e5e7eb", borderRadius:14,
+              marginBottom:20, overflow:"hidden",
+            }}>
+              <div style={{
+                padding:"10px 16px", borderBottom:"1px solid #f3f4f6",
+                fontFamily:"'Syne',sans-serif", fontSize:10, fontWeight:700,
+                letterSpacing:2, textTransform:"uppercase", color:"#6b7280",
+                display:"flex", justifyContent:"space-between",
+              }}>
+                <span>Matches in archive</span>
+                <span style={{ color:"#9ca3af" }}>
+                  {searchingName ? "Searching…" : `${nameResults.length} found`}
+                </span>
+              </div>
+              {nameResults.length === 0 && !searchingName ? (
+                <div style={{ padding:"16px", fontSize:13, color:"#9ca3af" }}>
+                  No matches in archive yet. Try @ Handle to fetch from Julius — anyone searched gets added to the archive automatically.
+                </div>
+              ) : (
+                nameResults.map(r => (
+                  <button
+                    key={r.slug}
+                    onClick={() => viewProfile(r.slug)}
+                    style={{
+                      width:"100%", display:"flex", alignItems:"center", gap:12,
+                      padding:"12px 16px", border:"none", borderTop:"1px solid #f3f4f6",
+                      background:"transparent", cursor:"pointer", textAlign:"left",
+                      transition:"background .15s",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    {r.avatar_url ? (
+                      <img src={r.avatar_url} alt={r.display_name}
+                        style={{ width:36, height:36, borderRadius:"50%", objectFit:"cover", border:"1px solid #e5e7eb", flexShrink:0 }} />
+                    ) : (
+                      <div style={{ width:36, height:36, borderRadius:"50%", background:"#f3f4f6", flexShrink:0 }} />
+                    )}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:14, fontWeight:500, color:"#111827" }}>
+                        {r.display_name}
+                      </div>
+                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#9ca3af", marginTop:2 }}>
+                        {r.slug}{r.tagline ? ` · ${r.tagline}` : ""}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:"#6b7280", flexShrink:0 }}>
+                      {fmt(r.total_followers)}
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
 
           {error && (
             <div style={{ padding:"12px 16px", borderRadius:10, background:"#fef2f2", border:"1px solid #fecaca", color:"#f87171", fontSize:13, marginBottom:20 }}>
