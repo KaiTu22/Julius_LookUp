@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 const ACCENT = "#3b82f6";
 
@@ -43,6 +44,12 @@ export default function CacheDashboard() {
       fontFamily: "'DM Sans',sans-serif", padding: "40px 24px",
     }}>
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
+
+        <div style={{ marginBottom: 12 }}>
+          <Link href="/" style={{ color: ACCENT, textDecoration: "none", fontSize: 13 }}>
+            ← Back to Search
+          </Link>
+        </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
           <div>

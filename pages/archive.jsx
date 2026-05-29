@@ -59,6 +59,12 @@ export default function ArchiveDashboard() {
     }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
+        <div style={{ marginBottom: 12 }}>
+          <Link href="/" style={{ color: ACCENT, textDecoration: "none", fontSize: 13 }}>
+            ← Back to Search
+          </Link>
+        </div>
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
           <div>
             <h1 style={{
