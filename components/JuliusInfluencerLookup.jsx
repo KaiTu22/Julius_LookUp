@@ -1079,8 +1079,91 @@ export default function JuliusInfluencerLookup() {
   const [activeTab,  setActiveTab]  = useState("overview");
   const [nameResults,   setNameResults]   = useState([]);
   const [searchingName, setSearchingName] = useState(false);
+  const [allLists,      setAllLists]      = useState([]);
+  const [memberOf,      setMemberOf]      = useState(new Set());
+  const [showSaveTo,    setShowSaveTo]    = useState(false);
+  const [newListName,   setNewListName]   = useState("");
 
   const displayData = demoMode ? DEMO : data;// demo hidden by default
+
+  // Auto-load profile when navigating with ?slug=... (e.g. from /lists/[id])
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const slugFromUrl = params.get("slug");
+    if (slugFromUrl && !data) {
+      setMode("slug");
+      setQuery(slugFromUrl);
+      fetch(`/api/julius?mode=slug&slug=${encodeURIComponent(slugFromUrl)}`)
+        .then(r => r.json())
+        .then(json => { setData(json); setDemoMode(false); })
+        .catch(e => setError(e.message));
+    }
+  }, []);
+
+  // Load all lists + which ones contain the current profile, when profile loads
+  useEffect(() => {
+    if (!data?.slug) { setAllLists([]); setMemberOf(new Set()); return; }
+    fetch("/api/lists")
+      .then(r => r.json())
+      .then(j => setAllLists(j.lists || []))
+      .catch(() => setAllLists([]));
+  }, [data?.slug]);
+
+  // Check which of the loaded lists currently contain this profile
+  useEffect(() => {
+    if (!data?.slug || allLists.length === 0) { setMemberOf(new Set()); return; }
+    Promise.all(
+      allLists.map(l =>
+        fetch(`/api/lists/${l.id}`)
+          .then(r => r.json())
+          .then(j => ({ id: l.id, has: (j.members || []).some(m => m.slug === data.slug) }))
+          .catch(() => ({ id: l.id, has: false }))
+      )
+    ).then(results => {
+      setMemberOf(new Set(results.filter(r => r.has).map(r => r.id)));
+    });
+  }, [data?.slug, allLists]);
+
+  const toggleListMembership = async (listId) => {
+    if (!data?.slug) return;
+    const isMember = memberOf.has(listId);
+    try {
+      if (isMember) {
+        await fetch(`/api/lists/${listId}/members/${encodeURIComponent(data.slug)}`, { method: "DELETE" });
+        setMemberOf(prev => { const s = new Set(prev); s.delete(listId); return s; });
+      } else {
+        await fetch(`/api/lists/${listId}/members`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ influencer_slug: data.slug }),
+        });
+        setMemberOf(prev => new Set(prev).add(listId));
+      }
+    } catch (e) { setError(e.message); }
+  };
+
+  const createListAndAdd = async () => {
+    if (!newListName.trim() || !data?.slug) return;
+    try {
+      const res = await fetch("/api/lists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newListName.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      const newList = json.list;
+      await fetch(`/api/lists/${newList.id}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ influencer_slug: data.slug }),
+      });
+      setAllLists(prev => [{ ...newList }, ...prev]);
+      setMemberOf(prev => new Set(prev).add(newList.id));
+      setNewListName("");
+    } catch (e) { setError(e.message); }
+  };
 
   // Debounced name search against the Postgres archive
   useEffect(() => {
@@ -1167,7 +1250,15 @@ export default function JuliusInfluencerLookup() {
             <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, fontWeight:800, margin:0, letterSpacing:-0.5, color:"#111827" }}>
               Influencer Intelligence <span style={{ color:ACCENT, fontSize:16, fontWeight:600 }}>powered by Julius</span>
             </h1>
-            <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", margin:"4px 0 0" }}>Influencer data & audience analytics</p>
+            <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", margin:"4px 0 0" }}>
+              Influencer data & audience analytics
+              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
+              <a href="/lists" style={{ color:ACCENT, textDecoration:"none" }}>Lists</a>
+              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
+              <a href="/archive" style={{ color:ACCENT, textDecoration:"none" }}>Archive</a>
+              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
+              <a href="/cache" style={{ color:ACCENT, textDecoration:"none" }}>Cache</a>
+            </p>
           </div>
           {/* App mode switcher */}
           <div style={{ display:"flex", gap:6, background:"#ffffff", border:"1px solid #e5e7eb", borderRadius:24, padding:4 }}>
@@ -1350,6 +1441,108 @@ export default function JuliusInfluencerLookup() {
                 >
                   {refreshing ? "Refreshing..." : "🔄 Refresh"}
                 </button>
+                {!demoMode && data?.slug && (
+                  <div style={{ position:"relative" }}>
+                    <button
+                      onClick={() => setShowSaveTo(v => !v)}
+                      style={{
+                        padding:"6px 12px", borderRadius:6, fontSize:11, fontFamily:"'Syne',sans-serif",
+                        fontWeight:600, letterSpacing:0.5, border:`1px solid ${memberOf.size > 0 ? ACCENT : "#d1d5db"}`,
+                        background: memberOf.size > 0 ? ACCENT + "11" : "#ffffff",
+                        color: memberOf.size > 0 ? ACCENT : "#6b7280",
+                        cursor:"pointer", transition:"all .2s",
+                      }}
+                    >
+                      {memberOf.size > 0 ? `★ In ${memberOf.size} list${memberOf.size === 1 ? "" : "s"}` : "+ Save to List"}
+                    </button>
+                    {showSaveTo && (
+                      <div style={{
+                        position:"absolute", top:"100%", right:0, marginTop:6,
+                        width:300, background:"#ffffff",
+                        border:"1px solid #e5e7eb", borderRadius:12,
+                        boxShadow:"0 8px 24px rgba(0,0,0,0.08)", zIndex:10,
+                        textAlign:"left",
+                      }}>
+                        <div style={{
+                          padding:"12px 16px", borderBottom:"1px solid #f3f4f6",
+                          display:"flex", justifyContent:"space-between", alignItems:"center",
+                        }}>
+                          <div style={{
+                            fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:11,
+                            letterSpacing:2, textTransform:"uppercase", color:"#6b7280",
+                          }}>Save to list</div>
+                          <button onClick={() => setShowSaveTo(false)} style={{
+                            background:"none", border:"none", color:"#9ca3af",
+                            cursor:"pointer", fontSize:16, lineHeight:1, padding:0,
+                          }}>×</button>
+                        </div>
+                        <div style={{ maxHeight:240, overflowY:"auto" }}>
+                          {allLists.length === 0 ? (
+                            <div style={{ padding:"16px", fontSize:12, color:"#9ca3af" }}>
+                              No lists yet. Create one below.
+                            </div>
+                          ) : (
+                            allLists.map(l => {
+                              const isMember = memberOf.has(l.id);
+                              return (
+                                <button
+                                  key={l.id}
+                                  onClick={() => toggleListMembership(l.id)}
+                                  style={{
+                                    width:"100%", display:"flex", alignItems:"center", gap:10,
+                                    padding:"10px 16px", border:"none", background:"transparent",
+                                    cursor:"pointer", textAlign:"left",
+                                    transition:"background .15s",
+                                  }}
+                                  onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                >
+                                  <div style={{
+                                    width:16, height:16, borderRadius:4,
+                                    border:`1.5px solid ${isMember ? ACCENT : "#d1d5db"}`,
+                                    background: isMember ? ACCENT : "transparent",
+                                    display:"flex", alignItems:"center", justifyContent:"center",
+                                    color:"#ffffff", fontSize:11, fontWeight:700, flexShrink:0,
+                                  }}>{isMember ? "✓" : ""}</div>
+                                  <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#111827" }}>
+                                    {l.name}
+                                  </span>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                        <div style={{
+                          padding:"10px 12px", borderTop:"1px solid #f3f4f6",
+                          display:"flex", gap:6,
+                        }}>
+                          <input
+                            value={newListName}
+                            onChange={e => setNewListName(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && createListAndAdd()}
+                            placeholder="Create new list…"
+                            style={{
+                              flex:1, padding:"6px 10px", borderRadius:6,
+                              border:"1px solid #d1d5db", fontSize:12,
+                              fontFamily:"'DM Sans',sans-serif", outline:"none",
+                            }}
+                          />
+                          <button
+                            onClick={createListAndAdd}
+                            disabled={!newListName.trim()}
+                            style={{
+                              padding:"6px 12px", borderRadius:6, border:"none",
+                              background: !newListName.trim() ? "#d1d5db" : ACCENT,
+                              color:"#ffffff", cursor: !newListName.trim() ? "not-allowed" : "pointer",
+                              fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:10,
+                              letterSpacing:1, textTransform:"uppercase",
+                            }}
+                          >Add</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:500, color:ACCENT }}>{fmt(displayData.social_total_count)}</div>
                 <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280" }}>total followers</div>
               </div>
