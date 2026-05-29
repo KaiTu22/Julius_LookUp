@@ -245,6 +245,20 @@ const ACCENT  = "#3b82f6";
 const ACCENT2 = "#38bdf8";
 const PALETTE = ["#3b82f6","#0ea5e9","#38bdf8","#6366f1","#818cf8","#2563eb","#7dd3fc"];
 
+// Sort ordinal buckets (age ranges, income brackets) by the numeric
+// value embedded in their label. "<X" sorts just below X, "X+" sorts as X.
+function labelToNumber(label) {
+  const s = String(label ?? "").trim();
+  const m = s.match(/(\d+)/);
+  if (!m) return 0;
+  const n = parseInt(m[1], 10);
+  return s.startsWith("<") ? n - 1 : n;
+}
+function sortByLabel(arr) {
+  if (!Array.isArray(arr)) return [];
+  return [...arr].sort((a, b) => labelToNumber(a.label) - labelToNumber(b.label));
+}
+
 // --- Sub-components ----------------------------------------------------------
 const Card = ({ children, style }) => (
   <div style={{ background:"#ffffff", border:"1px solid #e5e7eb", borderRadius:12, padding:"18px 20px", ...style }}>
@@ -394,7 +408,7 @@ function DemographicsTab({ d }) {
         <Card>
           <SectionTitle>Age Distribution</SectionTitle>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={dem.age} margin={{top:0,right:0,bottom:0,left:-20}}>
+            <BarChart data={sortByLabel(dem.age)} margin={{top:0,right:0,bottom:0,left:-20}}>
               <XAxis dataKey="label" tick={{ fill:"#6b7280", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill:"#6b7280", fontSize:10, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
               <Tooltip
@@ -404,7 +418,7 @@ function DemographicsTab({ d }) {
                 cursor={{ fill:"#e5e7eb88" }}
               />
               <Bar dataKey="percentage" radius={[4,4,0,0]}>
-                {dem.age.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
+                {sortByLabel(dem.age).map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -434,7 +448,7 @@ function DemographicsTab({ d }) {
         <Card>
           <SectionTitle>Household Income</SectionTitle>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={dem.income} layout="vertical" margin={{top:0,right:10,bottom:0,left:10}}>
+            <BarChart data={sortByLabel(dem.income)} layout="vertical" margin={{top:0,right:10,bottom:0,left:10}}>
               <XAxis type="number" tick={{ fill:"#6b7280", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
               <YAxis type="category" dataKey="label" width={75} tick={{ fill:"#111827", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
               <Tooltip
@@ -444,7 +458,7 @@ function DemographicsTab({ d }) {
                 cursor={{ fill:"#e5e7eb88" }}
               />
               <Bar dataKey="percentage" radius={[0,4,4,0]}>
-                {dem.income.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
+                {sortByLabel(dem.income).map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
