@@ -1083,8 +1083,17 @@ export default function JuliusInfluencerLookup() {
   const [memberOf,      setMemberOf]      = useState(new Set());
   const [showSaveTo,    setShowSaveTo]    = useState(false);
   const [newListName,   setNewListName]   = useState("");
+  const [sampleProfiles, setSampleProfiles] = useState([]);
 
   const displayData = demoMode ? DEMO : data;// demo hidden by default
+
+  // Fetch a random sample of archived profiles to feature on the empty landing
+  useEffect(() => {
+    fetch("/api/archive-sample?limit=6")
+      .then(r => r.json())
+      .then(j => setSampleProfiles(j.results || []))
+      .catch(() => setSampleProfiles([]));
+  }, []);
 
   // Auto-load profile when navigating with ?slug=... (e.g. from /lists/[id])
   useEffect(() => {
@@ -1381,6 +1390,76 @@ export default function JuliusInfluencerLookup() {
           {error && (
             <div style={{ padding:"12px 16px", borderRadius:10, background:"#fef2f2", border:"1px solid #fecaca", color:"#f87171", fontSize:13, marginBottom:20 }}>
               {error}
+            </div>
+          )}
+
+          {/* Featured archive cards (empty landing state) */}
+          {!displayData && !loading && !error && sampleProfiles.length > 0 &&
+           !(mode === "name" && query.trim().length >= 2) && (
+            <div style={{ marginBottom:32 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:14 }}>
+                <div style={{
+                  fontFamily:"'Syne',sans-serif", fontSize:11, fontWeight:700,
+                  letterSpacing:3, textTransform:"uppercase", color:"#6b7280",
+                }}>
+                  From the archive
+                </div>
+                <button
+                  onClick={() => {
+                    fetch("/api/archive-sample?limit=6")
+                      .then(r => r.json())
+                      .then(j => setSampleProfiles(j.results || []));
+                  }}
+                  style={{
+                    background:"none", border:"none", padding:0, cursor:"pointer",
+                    fontFamily:"'DM Sans',sans-serif", fontSize:12, color:ACCENT,
+                  }}
+                >
+                  🔀 Shuffle
+                </button>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(260px, 1fr))", gap:14 }}>
+                {sampleProfiles.map(p => (
+                  <button
+                    key={p.slug}
+                    onClick={() => viewProfile(p.slug)}
+                    style={{
+                      background:"#ffffff", border:"1px solid #e5e7eb", borderRadius:14,
+                      padding:"18px 20px", cursor:"pointer", textAlign:"left",
+                      display:"flex", alignItems:"center", gap:14,
+                      transition:"border-color .2s, transform .2s",
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = ACCENT;
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = "#e5e7eb";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
+                  >
+                    {p.avatar_url ? (
+                      <img src={p.avatar_url} alt={p.display_name}
+                        style={{ width:54, height:54, borderRadius:"50%", objectFit:"cover", border:"2px solid #e5e7eb", flexShrink:0 }} />
+                    ) : (
+                      <div style={{ width:54, height:54, borderRadius:"50%", background:"#f3f4f6", flexShrink:0 }} />
+                    )}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontFamily:"'Syne',sans-serif", fontSize:15, fontWeight:700, color:"#111827", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                        {p.display_name}
+                      </div>
+                      {p.tagline && (
+                        <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                          {p.tagline}
+                        </div>
+                      )}
+                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:ACCENT, marginTop:6 }}>
+                        {fmt(p.total_followers)} followers
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
