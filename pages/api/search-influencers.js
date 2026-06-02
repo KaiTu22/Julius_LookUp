@@ -43,6 +43,7 @@ export default async function handler(req, res) {
 
   const url = new URL(req.url, `http://${req.headers.host}`);
   const brands = (url.searchParams.get("brands") || "").split(",").filter(Boolean);
+  const platform = url.searchParams.get("platform") || "instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
   const minAge = url.searchParams.get("minAge") ? parseInt(url.searchParams.get("minAge"), 10) : null;
   const maxAge = url.searchParams.get("maxAge") ? parseInt(url.searchParams.get("maxAge"), 10) : null;
@@ -81,22 +82,22 @@ export default async function handler(req, res) {
     });
   }
 
-  // Add engagement rate filter (per platform - use instagram as default)
+  // Add engagement rate filter (per platform)
   if (minEngagement > 0) {
     queryFilters.push({
       type: "engagement_rate",
-      platform: "instagram",
+      platform: platform,
       value: {
         min: minEngagement / 100, // Convert percentage to decimal
       },
     });
   }
 
-  // Add reach filter (followers on instagram)
+  // Add reach filter (followers on selected platform)
   if (minFollowers > 0) {
     queryFilters.push({
       type: "reach",
-      platform: "instagram",
+      platform: platform,
       value: {
         min: minFollowers,
       },
@@ -152,7 +153,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, minFollowers, minAge, maxAge, country, minEngagement },
+      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement },
       influencers: [],
       hasMore: false,
     });
@@ -176,7 +177,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, minFollowers, minAge, maxAge, country, minEngagement },
+      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
@@ -217,7 +218,7 @@ export default async function handler(req, res) {
     total,
     offset,
     limit,
-    filters: { brands, minFollowers, minAge, maxAge, country, minEngagement },
+    filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement },
     influencers: enriched,
     hasMore,
   });

@@ -23,6 +23,7 @@ const fmt = n => {
 
 export default function DiscoverPage() {
   const [brands, setBrands] = useState([]);
+  const [platform, setPlatform] = useState("instagram");
   const [minFollowers, setMinFollowers] = useState("");
   const [minAge, setMinAge] = useState("");
   const [maxAge, setMaxAge] = useState("");
@@ -31,6 +32,14 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+
+  const PLATFORMS = [
+    { id: "instagram", label: "Instagram", icon: "IG" },
+    { id: "tiktok", label: "TikTok", icon: "TT" },
+    { id: "youtube", label: "YouTube", icon: "YT" },
+    { id: "facebook", label: "Facebook", icon: "FB" },
+    { id: "twitter", label: "Twitter/X", icon: "TW" },
+  ];
 
   // Common brands for MVP
   const BRAND_OPTIONS = [
@@ -71,6 +80,7 @@ export default function DiscoverPage() {
     try {
       const params = new URLSearchParams({
         brands: brands.join(","),
+        platform: platform,
         minFollowers: minFollowers || "0",
         minAge: minAge || "",
         maxAge: maxAge || "",
@@ -137,6 +147,58 @@ export default function DiscoverPage() {
           padding: "24px",
           marginBottom: 32,
         }}>
+
+          {/* Platform Selection */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 12,
+            }}>
+              Platform
+            </label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {PLATFORMS.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => setPlatform(p.id)}
+                  style={{
+                    padding: "7px 14px",
+                    borderRadius: 20,
+                    fontSize: 12,
+                    fontFamily: "'DM Sans',sans-serif",
+                    fontWeight: 500,
+                    border: platform === p.id
+                      ? `1px solid ${ACCENT}`
+                      : "1px solid #d1d5db",
+                    background: platform === p.id
+                      ? ACCENT + "22"
+                      : "transparent",
+                    color: platform === p.id ? ACCENT : "#6b7280",
+                    cursor: "pointer",
+                    transition: "all .2s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = ACCENT;
+                    e.currentTarget.style.background = ACCENT + "11";
+                  }}
+                  onMouseLeave={e => {
+                    if (platform !== p.id) {
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                      e.currentTarget.style.background = "transparent";
+                    }
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Brands */}
           <div style={{ marginBottom: 28 }}>
@@ -426,7 +488,8 @@ export default function DiscoverPage() {
                 color: "#6b7280",
                 margin: "4px 0 0 0",
               }}>
-                {brands.join(", ")}
+                {PLATFORMS.find(p => p.id === platform)?.label}
+                {brands.length > 0 && ` · ${brands.join(", ")}`}
                 {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
                 {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}
