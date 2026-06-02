@@ -36,6 +36,8 @@ export default function DiscoverPage() {
   const [error, setError] = useState(null);
   const [archiving, setArchiving] = useState({}); // tracks which slugs are being archived
   const [archivedSlugs, setArchivedSlugs] = useState(new Set()); // tracks successfully archived slugs
+  const [offset, setOffset] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const SORT_OPTIONS = [
     { value: "reach-instagram", label: "Followers (High to Low)" },
@@ -84,10 +86,11 @@ export default function DiscoverPage() {
     );
   };
 
-  const search = async () => {
+  const search = async (pageOffset = 0) => {
     setLoading(true);
     setError(null);
-    setResults(null);
+    if (pageOffset === 0) setResults(null);
+    setOffset(pageOffset);
 
     try {
       const params = new URLSearchParams({
@@ -100,17 +103,32 @@ export default function DiscoverPage() {
         country: country || "",
         minPrice: minPrice || "",
         maxPrice: maxPrice || "",
+        offset: pageOffset,
+        limit: "50",
       });
 
       const res = await fetch(`/api/search-influencers?${params}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Search failed");
-      setResults(json);
+
+      if (pageOffset === 0) {
+        setResults(json);
+      } else {
+        setResults(prev => ({
+          ...json,
+          influencers: [...(prev?.influencers || []), ...json.influencers],
+        }));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMore = () => {
+    const nextOffset = (results?.offset || 0) + (results?.limit || 50);
+    search(nextOffset);
   };
 
   const handleKeyDown = (e) => {
@@ -785,6 +803,28 @@ export default function DiscoverPage() {
                 ))
                 })()}
               </div>
+              {results?.hasMore && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    style={{
+                      padding: "12px 32px",
+                      borderRadius: 8,
+                      border: "1px solid #3b82f6",
+                      background: loadingMore ? "#f3f4f6" : "#ffffff",
+                      color: loadingMore ? "#9ca3af" : "#3b82f6",
+                      fontFamily: "'Syne',sans-serif",
+                      fontWeight: 600,
+                      fontSize: 14,
+                      cursor: loadingMore ? "not-allowed" : "pointer",
+                      transition: "all .2s",
+                    }}
+                  >
+                    {loadingMore ? "Loading..." : "Load More"}
+                  </button>
+                </div>
+              )}
             ) : (
               <div style={{
                 background: "#ffffff",
