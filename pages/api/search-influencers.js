@@ -47,18 +47,15 @@ export default async function handler(req, res) {
 
   // Build query filters for Julius API
   // Convert interest names to tag format (e.g., "Beauty" -> "interest.beauty")
-  const interestTags = interests.map(i => {
+  // Use separate query filters for AND logic between interests
+  const queryFilters = interests.map(i => {
     const formatted = i.trim().toLowerCase().replace(/\s+/g, "-");
-    return `interest.${formatted}`;
-  });
-
-  const queryFilters = [
-    {
+    return {
       type: "tag",
       specificity: "any",
-      values: interestTags,
-    }
-  ];
+      values: [`interest.${formatted}`],
+    };
+  });
 
   const ts = Math.floor(Date.now() / 1000);
 
@@ -83,6 +80,11 @@ export default async function handler(req, res) {
 
   if (!searchRes.ok) {
     const text = await searchRes.text();
+    console.error("Julius search failed:", {
+      status: searchRes.status,
+      detail: text,
+      query: queryFilters,
+    });
     return res.status(searchRes.status).json({
       error: `Julius search failed (HTTP ${searchRes.status})`,
       detail: text,
