@@ -363,7 +363,7 @@ export default function DiscoverPage() {
         <div style={{ marginBottom: 32 }}>
           <button
             onClick={search}
-            disabled={loading || brands.length === 0}
+            disabled={loading}
             style={{
               padding: "12px 32px",
               borderRadius: 8,
@@ -373,29 +373,24 @@ export default function DiscoverPage() {
               letterSpacing: 1,
               textTransform: "uppercase",
               border: "none",
-              background: loading || brands.length === 0 ? "#d1d5db" : ACCENT,
+              background: loading ? "#d1d5db" : ACCENT,
               color: "#ffffff",
-              cursor: loading || brands.length === 0 ? "not-allowed" : "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
               transition: "all .2s",
             }}
             onMouseEnter={e => {
-              if (!loading && brands.length > 0) {
+              if (!loading) {
                 e.currentTarget.style.background = "#2563eb";
               }
             }}
             onMouseLeave={e => {
-              if (!loading && brands.length > 0) {
+              if (!loading) {
                 e.currentTarget.style.background = ACCENT;
               }
             }}
           >
             {loading ? "Searching..." : "Search"}
           </button>
-          {brands.length === 0 && !loading && (
-            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
-              Select at least one brand to search
-            </div>
-          )}
         </div>
 
         {/* Error */}

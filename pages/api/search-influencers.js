@@ -51,19 +51,17 @@ export default async function handler(req, res) {
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 100);
 
-  if (brands.length === 0) {
-    return res.status(400).json({ error: "At least one brand is required." });
-  }
-
   // Build query filters for Julius API
   const queryFilters = [];
 
-  // Add brand filters (tag-based)
-  const brandTags = brands.map(toBrandSlug);
-  if (brands.length === 1) {
-    queryFilters.push({ type: "tag", specificity: "any", values: brandTags });
-  } else {
-    queryFilters.push(...brandTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
+  // Add brand filters (tag-based) - optional
+  if (brands.length > 0) {
+    const brandTags = brands.map(toBrandSlug);
+    if (brands.length === 1) {
+      queryFilters.push({ type: "tag", specificity: "any", values: brandTags });
+    } else {
+      queryFilters.push(...brandTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
+    }
   }
 
   // Add age range filter
