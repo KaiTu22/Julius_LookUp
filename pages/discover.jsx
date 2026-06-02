@@ -35,6 +35,8 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [archiving, setArchiving] = useState({}); // tracks which slugs are being archived
+  const [archivedSlugs, setArchivedSlugs] = useState(new Set()); // tracks successfully archived slugs
 
   const SORT_OPTIONS = [
     { value: "reach-instagram", label: "Followers (High to Low)" },
@@ -115,6 +117,24 @@ export default function DiscoverPage() {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") search();
+  };
+
+  const archiveInfluencer = async (slug) => {
+    setArchiving(prev => ({ ...prev, [slug]: true }));
+    try {
+      const res = await fetch(`/api/archive-influencer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Archive failed");
+      setArchivedSlugs(prev => new Set(prev).add(slug));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setArchiving(prev => ({ ...prev, [slug]: false }));
+    }
   };
 
   return (
@@ -710,37 +730,75 @@ export default function DiscoverPage() {
                       )}
                     </div>
 
-                    <button
-                      onClick={() => {
-                        window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`;
-                      }}
-                      style={{
-                        padding: "7px 0",
-                        borderRadius: 8,
-                        fontSize: 11,
-                        fontFamily: "'Syne',sans-serif",
-                        fontWeight: 600,
-                        letterSpacing: 1,
-                        textTransform: "uppercase",
-                        border: `1px solid #d1d5db`,
-                        background: "transparent",
-                        color: "#374151",
-                        cursor: "pointer",
-                        transition: "all .2s",
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.background = "#e5e7eb";
-                        e.currentTarget.style.borderColor = ACCENT;
-                        e.currentTarget.style.color = ACCENT;
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.borderColor = "#d1d5db";
-                        e.currentTarget.style.color = "#374151";
-                      }}
-                    >
-                      View Profile →
-                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => {
+                          window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`;
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: "7px 0",
+                          borderRadius: 8,
+                          fontSize: 11,
+                          fontFamily: "'Syne',sans-serif",
+                          fontWeight: 600,
+                          letterSpacing: 1,
+                          textTransform: "uppercase",
+                          border: `1px solid #d1d5db`,
+                          background: "transparent",
+                          color: "#374151",
+                          cursor: "pointer",
+                          transition: "all .2s",
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = "#e5e7eb";
+                          e.currentTarget.style.borderColor = ACCENT;
+                          e.currentTarget.style.color = ACCENT;
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.borderColor = "#d1d5db";
+                          e.currentTarget.style.color = "#374151";
+                        }}
+                      >
+                        View Profile →
+                      </button>
+                      <button
+                        onClick={() => archiveInfluencer(inf.slug)}
+                        disabled={archiving[inf.slug] || archivedSlugs.has(inf.slug)}
+                        style={{
+                          flex: 1,
+                          padding: "7px 0",
+                          borderRadius: 8,
+                          fontSize: 11,
+                          fontFamily: "'Syne',sans-serif",
+                          fontWeight: 600,
+                          letterSpacing: 1,
+                          textTransform: "uppercase",
+                          border: `1px solid ${archivedSlugs.has(inf.slug) ? "#86efac" : "#d1d5db"}`,
+                          background: archivedSlugs.has(inf.slug) ? "#dcfce7" : (archiving[inf.slug] ? "#f3f4f6" : "transparent"),
+                          color: archivedSlugs.has(inf.slug) ? "#15803d" : (archiving[inf.slug] ? "#9ca3af" : "#374151"),
+                          cursor: archiving[inf.slug] || archivedSlugs.has(inf.slug) ? "default" : "pointer",
+                          transition: "all .2s",
+                        }}
+                        onMouseEnter={e => {
+                          if (!archiving[inf.slug] && !archivedSlugs.has(inf.slug)) {
+                            e.currentTarget.style.background = "#fef3c7";
+                            e.currentTarget.style.borderColor = "#fbbf24";
+                            e.currentTarget.style.color = "#92400e";
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!archiving[inf.slug] && !archivedSlugs.has(inf.slug)) {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.borderColor = "#d1d5db";
+                            e.currentTarget.style.color = "#374151";
+                          }
+                        }}
+                      >
+                        {archivedSlugs.has(inf.slug) ? "✓ Archived" : (archiving[inf.slug] ? "..." : "Add to Archive")}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
