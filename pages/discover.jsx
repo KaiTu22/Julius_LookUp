@@ -530,7 +530,7 @@ export default function DiscoverPage() {
         {/* Search Button */}
         <div style={{ marginBottom: 32 }}>
           <button
-            onClick={search}
+            onClick={() => search()}
             disabled={loading}
             style={{
               padding: "12px 32px",
