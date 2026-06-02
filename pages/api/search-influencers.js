@@ -60,15 +60,19 @@ export default async function handler(req, res) {
 
   const ts = Math.floor(Date.now() / 1000);
 
+  const payload = {
+    query: queryFilters,
+    sort: ["reach-instagram", "desc"],
+  };
+
+  console.log("Discovery search payload:", JSON.stringify(payload, null, 2));
+
   let searchRes;
   try {
     searchRes = await juliusFetch(
       `/influencers/search?ts=${ts}&limit=${limit}&offset=${offset}`,
       "POST",
-      {
-        query: queryFilters,
-        sort: ["follower_count", "desc"],
-      },
+      payload,
       apiKey,
       apiSecret
     );
