@@ -234,7 +234,7 @@ export default async function handler(req, res) {
     total,
     offset,
     limit,
-    filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement, minPrice, maxPrice },
+    filters: { brands, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
     influencers: enriched,
     hasMore,
   });
