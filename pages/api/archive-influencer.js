@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     const influencerData = await juliusRes.json();
 
     // Archive to database
-    await archiveInfluencer(influencerData);
+    await archiveInfluencer(slug, influencerData);
 
     return res.status(200).json({
       success: true,
