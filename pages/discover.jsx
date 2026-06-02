@@ -24,6 +24,7 @@ const fmt = n => {
 export default function DiscoverPage() {
   const [brands, setBrands] = useState([]);
   const [platform, setPlatform] = useState("all");
+  const [sort, setSort] = useState("reach-instagram");
   const [minFollowers, setMinFollowers] = useState("");
   const [minAge, setMinAge] = useState("");
   const [maxAge, setMaxAge] = useState("");
@@ -34,6 +35,13 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+
+  const SORT_OPTIONS = [
+    { value: "reach-instagram", label: "Followers (High to Low)" },
+    { value: "engagement-rate-instagram", label: "Engagement Rate (High to Low)" },
+    { value: "engagement-instagram", label: "Engagement Count (High to Low)" },
+    { value: "price", label: "Price (Low to High)" },
+  ];
 
   const PLATFORMS = [
     { id: "all", label: "All Platforms", icon: "ALL" },
@@ -84,6 +92,7 @@ export default function DiscoverPage() {
       const params = new URLSearchParams({
         brands: brands.join(","),
         platform: platform,
+        sort: sort,
         minFollowers: minFollowers || "0",
         minAge: minAge || "",
         maxAge: maxAge || "",
@@ -203,6 +212,42 @@ export default function DiscoverPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Sort Options */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Sort By
+            </label>
+            <select
+              value={sort}
+              onChange={e => setSort(e.target.value)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                fontSize: 13,
+                fontFamily: "'DM Sans',sans-serif",
+                border: "1px solid #d1d5db",
+                width: "100%",
+                maxWidth: 300,
+                outline: "none",
+                cursor: "pointer",
+                background: "#ffffff",
+              }}
+            >
+              {SORT_OPTIONS.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
           </div>
 
           {/* Brands */}

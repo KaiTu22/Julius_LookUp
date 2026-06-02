@@ -44,6 +44,7 @@ export default async function handler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const brands = (url.searchParams.get("brands") || "").split(",").filter(Boolean);
   const platform = url.searchParams.get("platform") || "instagram";
+  const sort = url.searchParams.get("sort") || "reach-instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
   const minAge = url.searchParams.get("minAge") ? parseInt(url.searchParams.get("minAge"), 10) : null;
   const maxAge = url.searchParams.get("maxAge") ? parseInt(url.searchParams.get("maxAge"), 10) : null;
@@ -122,7 +123,7 @@ export default async function handler(req, res) {
 
   const payload = {
     query: queryFilters,
-    sort: ["reach-instagram", "desc"],
+    sort: [sort, "desc"],
   };
 
   console.log("Discovery search payload:", JSON.stringify(payload, null, 2));
