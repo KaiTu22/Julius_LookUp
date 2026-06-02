@@ -604,6 +604,7 @@ export default function DiscoverPage() {
             </div>
 
             {results.influencers && results.influencers.length > 0 ? (
+              <>
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
@@ -827,6 +828,7 @@ export default function DiscoverPage() {
                   </button>
                 )}
               </div>
+              </>
             ) : (
               <div style={{
                 background: "#ffffff",
