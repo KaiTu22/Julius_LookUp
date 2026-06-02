@@ -29,7 +29,6 @@ export default function DiscoverPage() {
   const [minAge, setMinAge] = useState("");
   const [maxAge, setMaxAge] = useState("");
   const [country, setCountry] = useState("");
-  const [minEngagement, setMinEngagement] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [loading, setLoading] = useState(false);
@@ -99,7 +98,6 @@ export default function DiscoverPage() {
         minAge: minAge || "",
         maxAge: maxAge || "",
         country: country || "",
-        minEngagement: minEngagement || "0",
         minPrice: minPrice || "",
         maxPrice: maxPrice || "",
       });
@@ -452,43 +450,6 @@ export default function DiscoverPage() {
             </select>
           </div>
 
-          {/* Min Engagement Rate */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={{
-              display: "block",
-              fontFamily: "'Syne',sans-serif",
-              fontWeight: 700,
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              color: "#6b7280",
-              marginBottom: 8,
-            }}>
-              Min Engagement Rate % (optional)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={minEngagement}
-              onChange={e => setMinEngagement(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="e.g. 2.5"
-              style={{
-                padding: "8px 12px",
-                borderRadius: 8,
-                fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
-                border: "1px solid #d1d5db",
-                width: "100%",
-                maxWidth: 200,
-                outline: "none",
-              }}
-            />
-            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-              {minEngagement ? `Minimum: ${minEngagement}%` : "No engagement filter"}
-            </div>
-          </div>
-
           {/* Price Range */}
           <div style={{ marginBottom: 0 }}>
             <label style={{
@@ -621,7 +582,6 @@ export default function DiscoverPage() {
                 {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
                 {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}
-                {minEngagement && ` · Min ${minEngagement}% engagement`}
                 {(minPrice || maxPrice) && ` · $${minPrice || "any"}-$${maxPrice || "any"}`}
               </p>
             </div>

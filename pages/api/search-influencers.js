@@ -49,7 +49,6 @@ export default async function handler(req, res) {
   const minAge = url.searchParams.get("minAge") ? parseInt(url.searchParams.get("minAge"), 10) : null;
   const maxAge = url.searchParams.get("maxAge") ? parseInt(url.searchParams.get("maxAge"), 10) : null;
   const country = url.searchParams.get("country") || "";
-  const minEngagement = url.searchParams.get("minEngagement") ? parseFloat(url.searchParams.get("minEngagement")) : 0;
   const minPrice = url.searchParams.get("minPrice") ? parseInt(url.searchParams.get("minPrice"), 10) : 0;
   const maxPrice = url.searchParams.get("maxPrice") ? parseInt(url.searchParams.get("maxPrice"), 10) : 0;
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
@@ -93,17 +92,6 @@ export default async function handler(req, res) {
         slug: "instagram-post",
         min: minPrice || undefined,
         max: maxPrice || undefined,
-      },
-    });
-  }
-
-  // Add engagement rate filter (only for specific platforms)
-  if (minEngagement > 0 && platform !== "all") {
-    queryFilters.push({
-      type: "engagement_rate",
-      platform: platform,
-      value: {
-        min: minEngagement / 100, // Convert percentage to decimal
       },
     });
   }
@@ -173,14 +161,6 @@ export default async function handler(req, res) {
     if (minFollowers > 0) {
       results = results.filter(r => (r.social_total_count || 0) >= minFollowers);
     }
-    if (minEngagement > 0) {
-      results = results.filter(r => {
-        const engagement = r.social_total_count > 0
-          ? (r.social_total_engagement || 0) / r.social_total_count * 100
-          : 0;
-        return engagement >= minEngagement;
-      });
-    }
   }
 
   // Bulk lookup for enriched data
@@ -189,7 +169,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement, minPrice, maxPrice },
+      filters: { brands, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: [],
       hasMore: false,
     });
@@ -213,7 +193,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement, minPrice, maxPrice },
+      filters: { brands, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
