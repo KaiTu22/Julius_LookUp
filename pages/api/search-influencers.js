@@ -82,8 +82,8 @@ export default async function handler(req, res) {
     });
   }
 
-  // Add engagement rate filter (per platform)
-  if (minEngagement > 0) {
+  // Add engagement rate filter (only for specific platforms)
+  if (minEngagement > 0 && platform !== "all") {
     queryFilters.push({
       type: "engagement_rate",
       platform: platform,
@@ -93,8 +93,8 @@ export default async function handler(req, res) {
     });
   }
 
-  // Add reach filter (followers on selected platform)
-  if (minFollowers > 0) {
+  // Add reach filter (only for specific platforms)
+  if (minFollowers > 0 && platform !== "all") {
     queryFilters.push({
       type: "reach",
       platform: platform,
@@ -143,9 +143,24 @@ export default async function handler(req, res) {
   }
 
   const searchData = await searchRes.json();
-  const results = searchData.results || [];
+  let results = searchData.results || [];
   const total = searchData.total || 0;
   const hasMore = offset + results.length < total;
+
+  // Apply client-side filtering for "all" platform mode
+  if (platform === "all") {
+    if (minFollowers > 0) {
+      results = results.filter(r => (r.social_total_count || 0) >= minFollowers);
+    }
+    if (minEngagement > 0) {
+      results = results.filter(r => {
+        const engagement = r.social_total_count > 0
+          ? (r.social_total_engagement || 0) / r.social_total_count * 100
+          : 0;
+        return engagement >= minEngagement;
+      });
+    }
+  }
 
   // Bulk lookup for enriched data
   if (results.length === 0) {

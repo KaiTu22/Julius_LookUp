@@ -23,7 +23,7 @@ const fmt = n => {
 
 export default function DiscoverPage() {
   const [brands, setBrands] = useState([]);
-  const [platform, setPlatform] = useState("instagram");
+  const [platform, setPlatform] = useState("all");
   const [minFollowers, setMinFollowers] = useState("");
   const [minAge, setMinAge] = useState("");
   const [maxAge, setMaxAge] = useState("");
@@ -34,6 +34,7 @@ export default function DiscoverPage() {
   const [error, setError] = useState(null);
 
   const PLATFORMS = [
+    { id: "all", label: "All Platforms", icon: "ALL" },
     { id: "instagram", label: "Instagram", icon: "IG" },
     { id: "tiktok", label: "TikTok", icon: "TT" },
     { id: "youtube", label: "YouTube", icon: "YT" },
@@ -488,7 +489,7 @@ export default function DiscoverPage() {
                 color: "#6b7280",
                 margin: "4px 0 0 0",
               }}>
-                {PLATFORMS.find(p => p.id === platform)?.label}
+                {platform === "all" ? "Combined followers" : PLATFORMS.find(p => p.id === platform)?.label}
                 {brands.length > 0 && ` · ${brands.join(", ")}`}
                 {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
