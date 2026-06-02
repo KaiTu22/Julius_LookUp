@@ -37,7 +37,6 @@ export default function DiscoverPage() {
   const [archiving, setArchiving] = useState({}); // tracks which slugs are being archived
   const [archivedSlugs, setArchivedSlugs] = useState(new Set()); // tracks successfully archived slugs
   const [offset, setOffset] = useState(0);
-  const [loadingMore, setLoadingMore] = useState(false);
 
   const SORT_OPTIONS = [
     { value: "reach-instagram", label: "Followers (High to Low)" },
@@ -810,21 +809,21 @@ export default function DiscoverPage() {
                 {results?.hasMore && (
                   <button
                     onClick={loadMore}
-                    disabled={loadingMore}
+                    disabled={loading}
                     style={{
                       padding: "12px 32px",
                       borderRadius: 8,
                       border: "1px solid #3b82f6",
-                      background: loadingMore ? "#f3f4f6" : "#ffffff",
-                      color: loadingMore ? "#9ca3af" : "#3b82f6",
+                      background: loading ? "#f3f4f6" : "#ffffff",
+                      color: loading ? "#9ca3af" : "#3b82f6",
                       fontFamily: "'Syne',sans-serif",
                       fontWeight: 600,
                       fontSize: 14,
-                      cursor: loadingMore ? "not-allowed" : "pointer",
+                      cursor: loading ? "not-allowed" : "pointer",
                       transition: "all .2s",
                     }}
                   >
-                    {loadingMore ? "Loading..." : "Load More"}
+                    {loading ? "Loading..." : "Load More"}
                   </button>
                 )}
               </div>
