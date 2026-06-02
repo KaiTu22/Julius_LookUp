@@ -1262,6 +1262,8 @@ export default function JuliusInfluencerLookup() {
             <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", margin:"4px 0 0" }}>
               Influencer data & audience analytics
               <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
+              <a href="/discover" style={{ color:ACCENT, textDecoration:"none" }}>Discover</a>
+              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
               <a href="/lists" style={{ color:ACCENT, textDecoration:"none" }}>Lists</a>
               <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
               <a href="/archive" style={{ color:ACCENT, textDecoration:"none" }}>Archive</a>
