@@ -29,6 +29,8 @@ export default function DiscoverPage() {
   const [maxAge, setMaxAge] = useState("");
   const [country, setCountry] = useState("");
   const [minEngagement, setMinEngagement] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -87,6 +89,8 @@ export default function DiscoverPage() {
         maxAge: maxAge || "",
         country: country || "",
         minEngagement: minEngagement || "0",
+        minPrice: minPrice || "",
+        maxPrice: maxPrice || "",
       });
 
       const res = await fetch(`/api/search-influencers?${params}`);
@@ -384,7 +388,7 @@ export default function DiscoverPage() {
           </div>
 
           {/* Min Engagement Rate */}
-          <div style={{ marginBottom: 0 }}>
+          <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
               fontFamily: "'Syne',sans-serif",
@@ -417,6 +421,64 @@ export default function DiscoverPage() {
             />
             <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
               {minEngagement ? `Minimum: ${minEngagement}%` : "No engagement filter"}
+            </div>
+          </div>
+
+          {/* Price Range */}
+          <div style={{ marginBottom: 0 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Sponsorship Price Range USD (optional)
+            </label>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+              <div>
+                <input
+                  type="number"
+                  value={minPrice}
+                  onChange={e => setMinPrice(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Min price"
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "'DM Sans',sans-serif",
+                    border: "1px solid #d1d5db",
+                    width: 130,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <span style={{ color: "#9ca3af" }}>to</span>
+              <div>
+                <input
+                  type="number"
+                  value={maxPrice}
+                  onChange={e => setMaxPrice(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Max price"
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "'DM Sans',sans-serif",
+                    border: "1px solid #d1d5db",
+                    width: 130,
+                    outline: "none",
+                  }}
+                />
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+              {minPrice || maxPrice ? `Price: $${minPrice || "any"} - $${maxPrice || "any"}` : "No price filter"}
             </div>
           </div>
 
@@ -495,6 +557,7 @@ export default function DiscoverPage() {
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
                 {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}
                 {minEngagement && ` · Min ${minEngagement}% engagement`}
+                {(minPrice || maxPrice) && ` · $${minPrice || "any"}-$${maxPrice || "any"}`}
               </p>
             </div>
 

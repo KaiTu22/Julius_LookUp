@@ -49,6 +49,8 @@ export default async function handler(req, res) {
   const maxAge = url.searchParams.get("maxAge") ? parseInt(url.searchParams.get("maxAge"), 10) : null;
   const country = url.searchParams.get("country") || "";
   const minEngagement = url.searchParams.get("minEngagement") ? parseFloat(url.searchParams.get("minEngagement")) : 0;
+  const minPrice = url.searchParams.get("minPrice") ? parseInt(url.searchParams.get("minPrice"), 10) : 0;
+  const maxPrice = url.searchParams.get("maxPrice") ? parseInt(url.searchParams.get("maxPrice"), 10) : 0;
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 100);
 
@@ -79,6 +81,18 @@ export default async function handler(req, res) {
     queryFilters.push({
       type: "location",
       country,
+    });
+  }
+
+  // Add price filter (for Instagram post pricing)
+  if (minPrice > 0 || maxPrice > 0) {
+    queryFilters.push({
+      type: "price",
+      value: {
+        slug: "instagram-post",
+        min: minPrice || undefined,
+        max: maxPrice || undefined,
+      },
     });
   }
 
@@ -168,7 +182,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement },
+      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement, minPrice, maxPrice },
       influencers: [],
       hasMore: false,
     });
@@ -192,7 +206,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement },
+      filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement, minPrice, maxPrice },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
@@ -233,7 +247,7 @@ export default async function handler(req, res) {
     total,
     offset,
     limit,
-    filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement },
+    filters: { brands, platform, minFollowers, minAge, maxAge, country, minEngagement, minPrice, maxPrice },
     influencers: enriched,
     hasMore,
   });
