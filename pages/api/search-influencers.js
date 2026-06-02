@@ -52,7 +52,11 @@ export default async function handler(req, res) {
   }
 
   // Build query filters for Julius API - use brand tags
+  // If multiple brands, use separate query filters for AND logic; if one brand, use as-is
   const brandTags = brands.map(toBrandSlug);
+  const queryFilters = brands.length === 1
+    ? [{ type: "tag", specificity: "any", values: brandTags }]
+    : brandTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] }));
 
   const ts = Math.floor(Date.now() / 1000);
 
@@ -62,13 +66,7 @@ export default async function handler(req, res) {
       `/influencers/search?ts=${ts}&limit=${limit}&offset=${offset}`,
       "POST",
       {
-        query: [
-          {
-            type: "tag",
-            specificity: "any",
-            values: brandTags,
-          }
-        ],
+        query: queryFilters,
         sort: ["follower_count", "desc"],
       },
       apiKey,
