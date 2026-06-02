@@ -632,9 +632,31 @@ export default function DiscoverPage() {
                 gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                 gap: 16,
               }}>
-                {results.influencers.map(inf => (
-                  <div
-                    key={inf.slug}
+                {(() => {
+                  let displayInfluencers = results.influencers;
+
+                  // Client-side sorting for "all platforms" mode
+                  if (platform === "all") {
+                    if (sort === "engagement-rate-instagram") {
+                      displayInfluencers = [...displayInfluencers].sort((a, b) => {
+                        const rateA = a.social_total_count > 0
+                          ? (a.social_total_engagement / a.social_total_count) * 100
+                          : 0;
+                        const rateB = b.social_total_count > 0
+                          ? (b.social_total_engagement / b.social_total_count) * 100
+                          : 0;
+                        return rateB - rateA; // descending
+                      });
+                    } else if (sort === "engagement-instagram") {
+                      displayInfluencers = [...displayInfluencers].sort((a, b) =>
+                        (b.social_total_engagement || 0) - (a.social_total_engagement || 0)
+                      );
+                    }
+                  }
+
+                  return displayInfluencers.map(inf => (
+                    <div
+                      key={inf.slug}
                     style={{
                       background: "#ffffff",
                       border: "1px solid #e5e7eb",
@@ -800,7 +822,8 @@ export default function DiscoverPage() {
                       </button>
                     </div>
                   </div>
-                ))}
+                ))
+                })()}
               </div>
             ) : (
               <div style={{

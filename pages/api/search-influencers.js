@@ -121,9 +121,15 @@ export default async function handler(req, res) {
 
   const ts = Math.floor(Date.now() / 1000);
 
+  // When platform is "all", use generic sorts instead of platform-specific ones
+  let juliusSort = sort;
+  if (platform === "all" && (sort.includes("instagram") || sort.includes("platform"))) {
+    juliusSort = "reach"; // Fall back to reach for all-platform searches
+  }
+
   const payload = {
     query: queryFilters,
-    sort: [sort, "desc"],
+    sort: [juliusSort, "desc"],
   };
 
   console.log("Discovery search payload:", JSON.stringify(payload, null, 2));
