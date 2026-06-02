@@ -24,6 +24,15 @@ async function juliusFetch(path, method = "GET", body = null, apiKey, apiSecret)
   return fetch(fullUrl, opts);
 }
 
+function toBrandSlug(name) {
+  const slug = name
+    .toLowerCase()
+    .replace(/['']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `brand.${slug}`;
+}
+
 export default async function handler(req, res) {
   const apiKey = process.env.JULIUS_API_KEY;
   const apiSecret = process.env.JULIUS_API_SECRET;
@@ -33,29 +42,17 @@ export default async function handler(req, res) {
   }
 
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const interests = (url.searchParams.get("interests") || "").split(",").filter(Boolean);
+  const brands = (url.searchParams.get("brands") || "").split(",").filter(Boolean);
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
-  const country = url.searchParams.get("country") || "";
-  const ageRange = url.searchParams.get("ageRange") || "";
-  const minEngagement = parseFloat(url.searchParams.get("minEngagement") || "0");
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 100);
 
-  if (interests.length === 0) {
-    return res.status(400).json({ error: "At least one interest is required." });
+  if (brands.length === 0) {
+    return res.status(400).json({ error: "At least one brand is required." });
   }
 
-  // Build query filters for Julius API
-  // Convert interest names to tag format (e.g., "Beauty" -> "interest.beauty")
-  // Use separate query filters for AND logic between interests
-  const queryFilters = interests.map(i => {
-    const formatted = i.trim().toLowerCase().replace(/\s+/g, "-");
-    return {
-      type: "tag",
-      specificity: "any",
-      values: [`interest.${formatted}`],
-    };
-  });
+  // Build query filters for Julius API - use brand tags
+  const brandTags = brands.map(toBrandSlug);
 
   const ts = Math.floor(Date.now() / 1000);
 
@@ -65,7 +62,13 @@ export default async function handler(req, res) {
       `/influencers/search?ts=${ts}&limit=${limit}&offset=${offset}`,
       "POST",
       {
-        query: queryFilters,
+        query: [
+          {
+            type: "tag",
+            specificity: "any",
+            values: brandTags,
+          }
+        ],
         sort: ["follower_count", "desc"],
       },
       apiKey,
@@ -83,12 +86,11 @@ export default async function handler(req, res) {
     console.error("Julius search failed:", {
       status: searchRes.status,
       detail: text,
-      query: queryFilters,
+      brands,
     });
     return res.status(searchRes.status).json({
       error: `Julius search failed (HTTP ${searchRes.status})`,
       detail: text,
-      query: queryFilters,
     });
   }
 
@@ -97,20 +99,10 @@ export default async function handler(req, res) {
   const total = searchData.total || 0;
   const hasMore = offset + results.length < total;
 
-  // Apply client-side filtering for non-tag fields
+  // Apply client-side filtering for follower count
   let filtered = results;
-
   if (minFollowers > 0) {
     filtered = filtered.filter(r => (r.social_total_count || 0) >= minFollowers);
-  }
-
-  if (minEngagement > 0) {
-    filtered = filtered.filter(r => {
-      const engagement = r.social_total_count > 0
-        ? (r.social_total_engagement || 0) / r.social_total_count * 100
-        : 0;
-      return engagement >= minEngagement;
-    });
   }
 
   // Bulk lookup for enriched data
@@ -119,13 +111,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: {
-        interests,
-        minFollowers,
-        country,
-        ageRange,
-        minEngagement,
-      },
+      filters: { brands, minFollowers },
       influencers: [],
       hasMore: false,
     });
@@ -149,13 +135,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: {
-        interests,
-        minFollowers,
-        country,
-        ageRange,
-        minEngagement,
-      },
+      filters: { brands, minFollowers },
       influencers: filtered.map(inf => ({
         id: inf.id,
         slug: inf.slug,
@@ -196,15 +176,8 @@ export default async function handler(req, res) {
     total,
     offset,
     limit,
-    filters: {
-      interests,
-      minFollowers,
-      country,
-      ageRange,
-      minEngagement,
-    },
+    filters: { brands, minFollowers },
     influencers: enriched,
     hasMore,
   });
 }
-

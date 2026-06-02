@@ -22,43 +22,25 @@ const fmt = n => {
 };
 
 export default function DiscoverPage() {
-  const [interests, setInterests] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [minFollowers, setMinFollowers] = useState("");
-  const [country, setCountry] = useState("");
-  const [ageRange, setAgeRange] = useState("");
-  const [minEngagement, setMinEngagement] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
 
-  // Common interests for MVP
-  const INTEREST_OPTIONS = [
-    "Beauty", "Fashion", "Fitness", "Health", "Wellness",
-    "Technology", "Gaming", "Entertainment", "Music", "Film",
-    "Sports", "Travel", "Food", "Cooking", "Lifestyle",
-    "DIY", "Art", "Photography", "Education", "Business"
+  // Common brands for MVP
+  const BRAND_OPTIONS = [
+    "Nike", "Adidas", "Puma", "Gucci", "Louis Vuitton",
+    "Apple", "Samsung", "Google", "Microsoft", "Amazon",
+    "Coca-Cola", "Pepsi", "Starbucks", "McDonald's", "KFC",
+    "Netflix", "Disney", "HBO", "Spotify", "YouTube",
   ];
 
-  const COUNTRY_OPTIONS = [
-    "United States", "Canada", "United Kingdom", "Australia",
-    "Germany", "France", "Spain", "Italy", "Japan", "South Korea",
-    "Brazil", "Mexico", "India", "Indonesia", "Philippines"
-  ];
-
-  const AGE_RANGES = [
-    { label: "13-17", value: "13-17" },
-    { label: "18-24", value: "18-24" },
-    { label: "25-34", value: "25-34" },
-    { label: "35-44", value: "35-44" },
-    { label: "45-54", value: "45-54" },
-    { label: "55+", value: "55+" },
-  ];
-
-  const toggleInterest = (int) => {
-    setInterests(prev =>
-      prev.includes(int)
-        ? prev.filter(i => i !== int)
-        : [...prev, int]
+  const toggleBrand = (brand) => {
+    setBrands(prev =>
+      prev.includes(brand)
+        ? prev.filter(b => b !== brand)
+        : [...prev, brand]
     );
   };
 
@@ -69,11 +51,8 @@ export default function DiscoverPage() {
 
     try {
       const params = new URLSearchParams({
-        interests: interests.join(","),
+        brands: brands.join(","),
         minFollowers: minFollowers || "0",
-        country: country || "",
-        ageRange: ageRange || "",
-        minEngagement: minEngagement || "0",
       });
 
       const res = await fetch(`/api/search-influencers?${params}`);
@@ -136,7 +115,7 @@ export default function DiscoverPage() {
           marginBottom: 32,
         }}>
 
-          {/* Interests */}
+          {/* Brands */}
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
@@ -148,26 +127,26 @@ export default function DiscoverPage() {
               color: "#6b7280",
               marginBottom: 12,
             }}>
-              Primary Interests (AND logic)
+              Brands (OR logic)
             </label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {INTEREST_OPTIONS.map(int => (
+              {BRAND_OPTIONS.map(brand => (
                 <button
-                  key={int}
-                  onClick={() => toggleInterest(int)}
+                  key={brand}
+                  onClick={() => toggleBrand(brand)}
                   style={{
                     padding: "7px 14px",
                     borderRadius: 20,
                     fontSize: 12,
                     fontFamily: "'DM Sans',sans-serif",
                     fontWeight: 500,
-                    border: interests.includes(int)
+                    border: brands.includes(brand)
                       ? `1px solid ${ACCENT}`
                       : "1px solid #d1d5db",
-                    background: interests.includes(int)
+                    background: brands.includes(brand)
                       ? ACCENT + "22"
                       : "transparent",
-                    color: interests.includes(int) ? ACCENT : "#6b7280",
+                    color: brands.includes(brand) ? ACCENT : "#6b7280",
                     cursor: "pointer",
                     transition: "all .2s",
                   }}
@@ -176,20 +155,20 @@ export default function DiscoverPage() {
                     e.currentTarget.style.background = ACCENT + "11";
                   }}
                   onMouseLeave={e => {
-                    if (!interests.includes(int)) {
+                    if (!brands.includes(brand)) {
                       e.currentTarget.style.borderColor = "#d1d5db";
                       e.currentTarget.style.background = "transparent";
                     }
                   }}
                 >
-                  {int}
+                  {brand}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Min Followers */}
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 0 }}>
             <label style={{
               display: "block",
               fontFamily: "'Syne',sans-serif",
@@ -200,7 +179,7 @@ export default function DiscoverPage() {
               color: "#6b7280",
               marginBottom: 8,
             }}>
-              Min Followers
+              Min Followers (optional)
             </label>
             <input
               type="number"
@@ -224,138 +203,13 @@ export default function DiscoverPage() {
             </div>
           </div>
 
-          {/* Country */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={{
-              display: "block",
-              fontFamily: "'Syne',sans-serif",
-              fontWeight: 700,
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              color: "#6b7280",
-              marginBottom: 8,
-            }}>
-              Country/Location
-            </label>
-            <select
-              value={country}
-              onChange={e => setCountry(e.target.value)}
-              style={{
-                padding: "8px 12px",
-                borderRadius: 8,
-                fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
-                border: "1px solid #d1d5db",
-                width: "100%",
-                maxWidth: 250,
-                outline: "none",
-                cursor: "pointer",
-              }}
-            >
-              <option value="">Any country</option>
-              {COUNTRY_OPTIONS.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Age Range */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={{
-              display: "block",
-              fontFamily: "'Syne',sans-serif",
-              fontWeight: 700,
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              color: "#6b7280",
-              marginBottom: 8,
-            }}>
-              Audience Age Range
-            </label>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {AGE_RANGES.map(r => (
-                <button
-                  key={r.value}
-                  onClick={() => setAgeRange(ageRange === r.value ? "" : r.value)}
-                  style={{
-                    padding: "7px 14px",
-                    borderRadius: 20,
-                    fontSize: 12,
-                    fontFamily: "'DM Sans',sans-serif",
-                    fontWeight: 500,
-                    border: ageRange === r.value
-                      ? `1px solid ${ACCENT}`
-                      : "1px solid #d1d5db",
-                    background: ageRange === r.value
-                      ? ACCENT + "22"
-                      : "transparent",
-                    color: ageRange === r.value ? ACCENT : "#6b7280",
-                    cursor: "pointer",
-                    transition: "all .2s",
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = ACCENT;
-                    e.currentTarget.style.background = ACCENT + "11";
-                  }}
-                  onMouseLeave={e => {
-                    if (ageRange !== r.value) {
-                      e.currentTarget.style.borderColor = "#d1d5db";
-                      e.currentTarget.style.background = "transparent";
-                    }
-                  }}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Min Engagement Rate */}
-          <div style={{ marginBottom: 0 }}>
-            <label style={{
-              display: "block",
-              fontFamily: "'Syne',sans-serif",
-              fontWeight: 700,
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              color: "#6b7280",
-              marginBottom: 8,
-            }}>
-              Min Engagement Rate (%)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={minEngagement}
-              onChange={e => setMinEngagement(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="e.g. 2.5"
-              style={{
-                padding: "8px 12px",
-                borderRadius: 8,
-                fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
-                border: "1px solid #d1d5db",
-                width: "100%",
-                maxWidth: 200,
-                outline: "none",
-              }}
-            />
-            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-              {minEngagement ? `Minimum: ${minEngagement}%` : "No minimum"}
-            </div>
-          </div>
-
         </div>
 
         {/* Search Button */}
         <div style={{ marginBottom: 32 }}>
           <button
             onClick={search}
-            disabled={loading || interests.length === 0}
+            disabled={loading || brands.length === 0}
             style={{
               padding: "12px 32px",
               borderRadius: 8,
@@ -365,27 +219,27 @@ export default function DiscoverPage() {
               letterSpacing: 1,
               textTransform: "uppercase",
               border: "none",
-              background: loading || interests.length === 0 ? "#d1d5db" : ACCENT,
+              background: loading || brands.length === 0 ? "#d1d5db" : ACCENT,
               color: "#ffffff",
-              cursor: loading || interests.length === 0 ? "not-allowed" : "pointer",
+              cursor: loading || brands.length === 0 ? "not-allowed" : "pointer",
               transition: "all .2s",
             }}
             onMouseEnter={e => {
-              if (!loading && interests.length > 0) {
+              if (!loading && brands.length > 0) {
                 e.currentTarget.style.background = "#2563eb";
               }
             }}
             onMouseLeave={e => {
-              if (!loading && interests.length > 0) {
+              if (!loading && brands.length > 0) {
                 e.currentTarget.style.background = ACCENT;
               }
             }}
           >
             {loading ? "Searching..." : "Search"}
           </button>
-          {interests.length === 0 && !loading && (
+          {brands.length === 0 && !loading && (
             <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
-              Select at least one interest to search
+              Select at least one brand to search
             </div>
           )}
         </div>
@@ -423,8 +277,7 @@ export default function DiscoverPage() {
                 color: "#6b7280",
                 margin: "4px 0 0 0",
               }}>
-                {interests.join(", ")} · Min {fmt(parseInt(minFollowers || 0))} followers
-                {country && ` · ${country}`}
+                {brands.join(", ")} · Min {fmt(parseInt(minFollowers || 0))} followers
               </p>
             </div>
 
