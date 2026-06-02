@@ -803,8 +803,11 @@ export default function DiscoverPage() {
                 ))
                 })()}
               </div>
-              {results?.hasMore && (
-                <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24 }}>
+                <div style={{ fontSize: 12, color: "#9ca3af" }}>
+                  Showing {results?.influencers?.length || 0} of {results?.total || 0}
+                </div>
+                {results?.hasMore && (
                   <button
                     onClick={loadMore}
                     disabled={loadingMore}
@@ -823,8 +826,8 @@ export default function DiscoverPage() {
                   >
                     {loadingMore ? "Loading..." : "Load More"}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             ) : (
               <div style={{
                 background: "#ffffff",
