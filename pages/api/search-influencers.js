@@ -45,54 +45,20 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "At least one interest is required." });
   }
 
-  // Build query filters for Julius API (AND logic)
-  const queryFilters = [];
+  // Build query filters for Julius API
+  // Convert interest names to tag format (e.g., "Beauty" -> "interest.beauty")
+  const interestTags = interests.map(i => {
+    const formatted = i.trim().toLowerCase().replace(/\s+/g, "-");
+    return `interest.${formatted}`;
+  });
 
-  // Add interest filters with descendants
-  if (interests.length > 0) {
-    queryFilters.push({
+  const queryFilters = [
+    {
       type: "tag",
-      specificity: "descendants",
-      values: interests.map(i => `interest.${i.toLowerCase().replace(/\s+/g, "-")}`),
-    });
-  }
-
-  // Add country/location filter
-  if (country) {
-    queryFilters.push({
-      type: "location",
       specificity: "any",
-      values: [country.toLowerCase()],
-    });
-  }
-
-  // Add age range filter
-  if (ageRange) {
-    const [minAge, maxAge] = ageRange.split("-").map(Number);
-    queryFilters.push({
-      type: "age",
-      specificity: "range",
-      values: [minAge, maxAge],
-    });
-  }
-
-  // Add follower minimum filter
-  if (minFollowers > 0) {
-    queryFilters.push({
-      type: "follower_count",
-      specificity: "min",
-      values: [minFollowers],
-    });
-  }
-
-  // Add engagement rate filter
-  if (minEngagement > 0) {
-    queryFilters.push({
-      type: "engagement_rate",
-      specificity: "min",
-      values: [minEngagement],
-    });
-  }
+      values: interestTags,
+    }
+  ];
 
   const ts = Math.floor(Date.now() / 1000);
 
@@ -120,6 +86,7 @@ export default async function handler(req, res) {
     return res.status(searchRes.status).json({
       error: `Julius search failed (HTTP ${searchRes.status})`,
       detail: text,
+      query: queryFilters,
     });
   }
 
@@ -128,8 +95,24 @@ export default async function handler(req, res) {
   const total = searchData.total || 0;
   const hasMore = offset + results.length < total;
 
+  // Apply client-side filtering for non-tag fields
+  let filtered = results;
+
+  if (minFollowers > 0) {
+    filtered = filtered.filter(r => (r.social_total_count || 0) >= minFollowers);
+  }
+
+  if (minEngagement > 0) {
+    filtered = filtered.filter(r => {
+      const engagement = r.social_total_count > 0
+        ? (r.social_total_engagement || 0) / r.social_total_count * 100
+        : 0;
+      return engagement >= minEngagement;
+    });
+  }
+
   // Bulk lookup for enriched data
-  if (results.length === 0) {
+  if (filtered.length === 0) {
     return res.status(200).json({
       total,
       offset,
@@ -146,7 +129,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const slugs = results.map(r => r.slug).filter(Boolean);
+  const slugs = filtered.map(r => r.slug).filter(Boolean);
   const ts2 = Math.floor(Date.now() / 1000);
 
   let bulkRes;
@@ -159,9 +142,30 @@ export default async function handler(req, res) {
       apiSecret
     );
   } catch (err) {
-    return res.status(502).json({
-      error: "Failed to reach Julius API (bulk).",
-      detail: err.message,
+    // If bulk fails, use search results as-is
+    return res.status(200).json({
+      total,
+      offset,
+      limit,
+      filters: {
+        interests,
+        minFollowers,
+        country,
+        ageRange,
+        minEngagement,
+      },
+      influencers: filtered.map(inf => ({
+        id: inf.id,
+        slug: inf.slug,
+        display_name: inf.display_name,
+        tagline: inf.tagline,
+        avatar: inf.avatar,
+        gender: inf.gender,
+        current_location: inf.current_location,
+        social_total_count: inf.social_total_count,
+        social_total_engagement: inf.social_total_engagement,
+      })),
+      hasMore,
     });
   }
 
@@ -170,30 +174,20 @@ export default async function handler(req, res) {
     const parsed = await bulkRes.json();
     bulkData = Array.isArray(parsed) ? parsed : parsed.results || [];
   } else {
-    bulkData = results;
+    bulkData = filtered;
   }
 
-  const enriched = bulkData.map(inf => {
-    const topPlatform = (inf.social_combined || []).reduce(
-      (best, s) =>
-        !best || s.statistics?.count > best.statistics?.count ? s : best,
-      null
-    );
-
-    return {
-      id: inf.id,
-      slug: inf.slug,
-      display_name: inf.display_name,
-      tagline: inf.tagline,
-      avatar: inf.avatar,
-      gender: inf.gender,
-      current_location: inf.current_location,
-      social_total_count: inf.social_total_count,
-      social_total_engagement: inf.social_total_engagement,
-      topPlatform: topPlatform?.platform || null,
-      topPlatformCount: topPlatform?.statistics?.count || null,
-    };
-  });
+  const enriched = bulkData.map(inf => ({
+    id: inf.id,
+    slug: inf.slug,
+    display_name: inf.display_name,
+    tagline: inf.tagline,
+    avatar: inf.avatar,
+    gender: inf.gender,
+    current_location: inf.current_location,
+    social_total_count: inf.social_total_count,
+    social_total_engagement: inf.social_total_engagement,
+  }));
 
   res.setHeader("Content-Type", "application/json");
   return res.status(200).json({
@@ -211,3 +205,4 @@ export default async function handler(req, res) {
     hasMore,
   });
 }
+
