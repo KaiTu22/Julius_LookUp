@@ -44,6 +44,10 @@ export default async function handler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const brands = (url.searchParams.get("brands") || "").split(",").filter(Boolean);
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
+  const minAge = url.searchParams.get("minAge") ? parseInt(url.searchParams.get("minAge"), 10) : null;
+  const maxAge = url.searchParams.get("maxAge") ? parseInt(url.searchParams.get("maxAge"), 10) : null;
+  const country = url.searchParams.get("country") || "";
+  const minEngagement = url.searchParams.get("minEngagement") ? parseFloat(url.searchParams.get("minEngagement")) : 0;
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 100);
 
@@ -51,12 +55,55 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "At least one brand is required." });
   }
 
-  // Build query filters for Julius API - use brand tags
-  // If multiple brands, use separate query filters for AND logic; if one brand, use as-is
+  // Build query filters for Julius API
+  const queryFilters = [];
+
+  // Add brand filters (tag-based)
   const brandTags = brands.map(toBrandSlug);
-  const queryFilters = brands.length === 1
-    ? [{ type: "tag", specificity: "any", values: brandTags }]
-    : brandTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] }));
+  if (brands.length === 1) {
+    queryFilters.push({ type: "tag", specificity: "any", values: brandTags });
+  } else {
+    queryFilters.push(...brandTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
+  }
+
+  // Add age range filter
+  if (minAge !== null || maxAge !== null) {
+    queryFilters.push({
+      type: "age",
+      min: minAge,
+      max: maxAge,
+    });
+  }
+
+  // Add location/country filter
+  if (country) {
+    queryFilters.push({
+      type: "location",
+      country,
+    });
+  }
+
+  // Add engagement rate filter (per platform - use instagram as default)
+  if (minEngagement > 0) {
+    queryFilters.push({
+      type: "engagement_rate",
+      platform: "instagram",
+      value: {
+        min: minEngagement / 100, // Convert percentage to decimal
+      },
+    });
+  }
+
+  // Add reach filter (followers on instagram)
+  if (minFollowers > 0) {
+    queryFilters.push({
+      type: "reach",
+      platform: "instagram",
+      value: {
+        min: minFollowers,
+      },
+    });
+  }
 
   const ts = Math.floor(Date.now() / 1000);
 
@@ -101,25 +148,19 @@ export default async function handler(req, res) {
   const total = searchData.total || 0;
   const hasMore = offset + results.length < total;
 
-  // Apply client-side filtering for follower count
-  let filtered = results;
-  if (minFollowers > 0) {
-    filtered = filtered.filter(r => (r.social_total_count || 0) >= minFollowers);
-  }
-
   // Bulk lookup for enriched data
-  if (filtered.length === 0) {
+  if (results.length === 0) {
     return res.status(200).json({
       total,
       offset,
       limit,
-      filters: { brands, minFollowers },
+      filters: { brands, minFollowers, minAge, maxAge, country, minEngagement },
       influencers: [],
       hasMore: false,
     });
   }
 
-  const slugs = filtered.map(r => r.slug).filter(Boolean);
+  const slugs = results.map(r => r.slug).filter(Boolean);
   const ts2 = Math.floor(Date.now() / 1000);
 
   let bulkRes;
@@ -137,8 +178,8 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, minFollowers },
-      influencers: filtered.map(inf => ({
+      filters: { brands, minFollowers, minAge, maxAge, country, minEngagement },
+      influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
         display_name: inf.display_name,
@@ -158,7 +199,7 @@ export default async function handler(req, res) {
     const parsed = await bulkRes.json();
     bulkData = Array.isArray(parsed) ? parsed : parsed.results || [];
   } else {
-    bulkData = filtered;
+    bulkData = results;
   }
 
   const enriched = bulkData.map(inf => ({
@@ -178,7 +219,7 @@ export default async function handler(req, res) {
     total,
     offset,
     limit,
-    filters: { brands, minFollowers },
+    filters: { brands, minFollowers, minAge, maxAge, country, minEngagement },
     influencers: enriched,
     hasMore,
   });

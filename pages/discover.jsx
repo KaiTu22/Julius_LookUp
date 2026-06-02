@@ -24,6 +24,10 @@ const fmt = n => {
 export default function DiscoverPage() {
   const [brands, setBrands] = useState([]);
   const [minFollowers, setMinFollowers] = useState("");
+  const [minAge, setMinAge] = useState("");
+  const [maxAge, setMaxAge] = useState("");
+  const [country, setCountry] = useState("");
+  const [minEngagement, setMinEngagement] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -34,6 +38,21 @@ export default function DiscoverPage() {
     "Apple", "Samsung", "Google", "Microsoft", "Amazon",
     "Coca-Cola", "Pepsi", "Starbucks", "McDonald's", "KFC",
     "Netflix", "Disney", "HBO", "Spotify", "YouTube",
+  ];
+
+  const COUNTRY_OPTIONS = [
+    { code: "US", name: "United States" },
+    { code: "GB", name: "United Kingdom" },
+    { code: "CA", name: "Canada" },
+    { code: "AU", name: "Australia" },
+    { code: "DE", name: "Germany" },
+    { code: "FR", name: "France" },
+    { code: "ES", name: "Spain" },
+    { code: "IT", name: "Italy" },
+    { code: "JP", name: "Japan" },
+    { code: "BR", name: "Brazil" },
+    { code: "MX", name: "Mexico" },
+    { code: "IN", name: "India" },
   ];
 
   const toggleBrand = (brand) => {
@@ -53,6 +72,10 @@ export default function DiscoverPage() {
       const params = new URLSearchParams({
         brands: brands.join(","),
         minFollowers: minFollowers || "0",
+        minAge: minAge || "",
+        maxAge: maxAge || "",
+        country: country || "",
+        minEngagement: minEngagement || "0",
       });
 
       const res = await fetch(`/api/search-influencers?${params}`);
@@ -168,7 +191,7 @@ export default function DiscoverPage() {
           </div>
 
           {/* Min Followers */}
-          <div style={{ marginBottom: 0 }}>
+          <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
               fontFamily: "'Syne',sans-serif",
@@ -200,6 +223,137 @@ export default function DiscoverPage() {
             />
             <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
               {minFollowers ? `Minimum: ${fmt(parseInt(minFollowers))}` : "No minimum"}
+            </div>
+          </div>
+
+          {/* Age Range */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Age Range (optional)
+            </label>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+              <div>
+                <input
+                  type="number"
+                  value={minAge}
+                  onChange={e => setMinAge(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Min age"
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "'DM Sans',sans-serif",
+                    border: "1px solid #d1d5db",
+                    width: 100,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <span style={{ color: "#9ca3af" }}>to</span>
+              <div>
+                <input
+                  type="number"
+                  value={maxAge}
+                  onChange={e => setMaxAge(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Max age"
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "'DM Sans',sans-serif",
+                    border: "1px solid #d1d5db",
+                    width: 100,
+                    outline: "none",
+                  }}
+                />
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+              {minAge || maxAge ? `Age: ${minAge || "any"} - ${maxAge || "any"}` : "No age filter"}
+            </div>
+          </div>
+
+          {/* Country */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Country (optional)
+            </label>
+            <select
+              value={country}
+              onChange={e => setCountry(e.target.value)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                fontSize: 13,
+                fontFamily: "'DM Sans',sans-serif",
+                border: "1px solid #d1d5db",
+                width: "100%",
+                maxWidth: 250,
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="">Any country</option>
+              {COUNTRY_OPTIONS.map(c => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Min Engagement Rate */}
+          <div style={{ marginBottom: 0 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Min Engagement Rate % (optional)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={minEngagement}
+              onChange={e => setMinEngagement(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="e.g. 2.5"
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                fontSize: 13,
+                fontFamily: "'DM Sans',sans-serif",
+                border: "1px solid #d1d5db",
+                width: "100%",
+                maxWidth: 200,
+                outline: "none",
+              }}
+            />
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+              {minEngagement ? `Minimum: ${minEngagement}%` : "No engagement filter"}
             </div>
           </div>
 
@@ -277,7 +431,11 @@ export default function DiscoverPage() {
                 color: "#6b7280",
                 margin: "4px 0 0 0",
               }}>
-                {brands.join(", ")} · Min {fmt(parseInt(minFollowers || 0))} followers
+                {brands.join(", ")}
+                {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
+                {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
+                {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}
+                {minEngagement && ` · Min ${minEngagement}% engagement`}
               </p>
             </div>
 
