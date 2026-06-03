@@ -133,10 +133,29 @@ export default function Home() {
 
   return (
     <div>
+      {/* Global Header */}
+      <div style={{
+        background: "#ffffff",
+        borderBottom: "1px solid #e5e7eb",
+        padding: "16px 24px",
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <h1 style={{
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 800,
+            fontSize: 24,
+            color: "#111827",
+            margin: 0,
+          }}>
+            Julius Influencer Lookup
+          </h1>
+        </div>
+      </div>
+
       {/* Quick Name Search - Hide when viewing profile */}
       {!slug && (
       <div style={{
-        background: "#ffffff",
+        background: "#f9fafb",
         borderBottom: "1px solid #e5e7eb",
         padding: "24px",
       }}>
@@ -515,8 +534,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main Component */}
-      <JuliusInfluencerLookup />
+      {/* Profile View - Only show when slug is present */}
+      {slug && <JuliusInfluencerLookup />}
     </div>
   );
 }
