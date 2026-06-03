@@ -22,7 +22,8 @@ const fmt = n => {
 };
 
 export default function DiscoverPage() {
-  const [brands, setBrands] = useState([]);
+  const [brands, setBrands] = useState("");
+  const [tags, setTags] = useState("");
   const [platform, setPlatform] = useState("all");
   const [sort, setSort] = useState("reach-instagram");
   const [minFollowers, setMinFollowers] = useState("");
@@ -54,14 +55,6 @@ export default function DiscoverPage() {
     { id: "twitter", label: "Twitter/X", icon: "TW" },
   ];
 
-  // Common brands for MVP
-  const BRAND_OPTIONS = [
-    "Nike", "Adidas", "Puma", "Gucci", "Louis Vuitton",
-    "Apple", "Samsung", "Google", "Microsoft", "Amazon",
-    "Coca-Cola", "Pepsi", "Starbucks", "McDonald's", "KFC",
-    "Netflix", "Disney", "HBO", "Spotify", "YouTube",
-  ];
-
   const COUNTRY_OPTIONS = [
     { code: "US", name: "United States" },
     { code: "GB", name: "United Kingdom" },
@@ -77,14 +70,6 @@ export default function DiscoverPage() {
     { code: "IN", name: "India" },
   ];
 
-  const toggleBrand = (brand) => {
-    setBrands(prev =>
-      prev.includes(brand)
-        ? prev.filter(b => b !== brand)
-        : [...prev, brand]
-    );
-  };
-
   const search = async (pageOffset = 0) => {
     setLoading(true);
     setError(null);
@@ -93,7 +78,8 @@ export default function DiscoverPage() {
 
     try {
       const params = new URLSearchParams({
-        brands: brands.join(","),
+        brands: brands,
+        tags: tags,
         platform: platform,
         sort: sort,
         minFollowers: minFollowers || "0",
@@ -297,44 +283,54 @@ export default function DiscoverPage() {
               color: "#6b7280",
               marginBottom: 12,
             }}>
-              Brands (OR logic)
+              Brands
             </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {BRAND_OPTIONS.map(brand => (
-                <button
-                  key={brand}
-                  onClick={() => toggleBrand(brand)}
-                  style={{
-                    padding: "7px 14px",
-                    borderRadius: 20,
-                    fontSize: 12,
-                    fontFamily: "'DM Sans',sans-serif",
-                    fontWeight: 500,
-                    border: brands.includes(brand)
-                      ? `1px solid ${ACCENT}`
-                      : "1px solid #d1d5db",
-                    background: brands.includes(brand)
-                      ? ACCENT + "22"
-                      : "transparent",
-                    color: brands.includes(brand) ? ACCENT : "#6b7280",
-                    cursor: "pointer",
-                    transition: "all .2s",
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = ACCENT;
-                    e.currentTarget.style.background = ACCENT + "11";
-                  }}
-                  onMouseLeave={e => {
-                    if (!brands.includes(brand)) {
-                      e.currentTarget.style.borderColor = "#d1d5db";
-                      e.currentTarget.style.background = "transparent";
-                    }
-                  }}
-                >
-                  {brand}
-                </button>
-              ))}
-            </div>
+            <input
+              type="text"
+              value={brands}
+              onChange={e => setBrands(e.target.value)}
+              placeholder="e.g. Nike, Adidas, Gucci (comma-separated)"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                fontSize: 13,
+                fontFamily: "'DM Sans',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Tags */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 12,
+            }}>
+              Tags
+            </label>
+            <input
+              type="text"
+              value={tags}
+              onChange={e => setTags(e.target.value)}
+              placeholder="e.g. tag1, tag2, tag3 (comma-separated)"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                fontSize: 13,
+                fontFamily: "'DM Sans',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
           </div>
 
           {/* Min Followers */}
@@ -595,7 +591,8 @@ export default function DiscoverPage() {
                 margin: "4px 0 0 0",
               }}>
                 {platform === "all" ? "Combined followers" : PLATFORMS.find(p => p.id === platform)?.label}
-                {brands.length > 0 && ` · ${brands.join(", ")}`}
+                {brands && ` · Brands: ${brands}`}
+                {tags && ` · Tags: ${tags}`}
                 {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
                 {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}

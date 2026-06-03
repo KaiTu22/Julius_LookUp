@@ -43,6 +43,7 @@ export default async function handler(req, res) {
 
   const url = new URL(req.url, `http://${req.headers.host}`);
   const brands = (url.searchParams.get("brands") || "").split(",").filter(Boolean);
+  const tags = (url.searchParams.get("tags") || "").split(",").filter(Boolean);
   const platform = url.searchParams.get("platform") || "instagram";
   const sort = url.searchParams.get("sort") || "reach-instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
@@ -64,6 +65,15 @@ export default async function handler(req, res) {
       queryFilters.push({ type: "tag", specificity: "any", values: brandTags });
     } else {
       queryFilters.push(...brandTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
+    }
+  }
+
+  // Add general tag filters - optional
+  if (tags.length > 0) {
+    if (tags.length === 1) {
+      queryFilters.push({ type: "tag", specificity: "any", values: tags });
+    } else {
+      queryFilters.push(...tags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
     }
   }
 
@@ -169,7 +179,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, tags, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: [],
       hasMore: false,
     });
@@ -193,7 +203,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, tags, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
