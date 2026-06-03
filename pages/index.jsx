@@ -21,65 +21,6 @@ export default function Home() {
   const [nameSearch, setNameSearch] = useState("");
   const [nameSearchResults, setNameSearchResults] = useState([]);
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [brands, setBrands] = useState("");
-  const [interests, setInterests] = useState("");
-  const [causes, setCauses] = useState("");
-  const [genders, setGenders] = useState([]);
-  const [platform, setPlatform] = useState("all");
-  const [sort, setSort] = useState("reach-instagram");
-  const [minFollowers, setMinFollowers] = useState("");
-  const [minAge, setMinAge] = useState("");
-  const [maxAge, setMaxAge] = useState("");
-  const [country, setCountry] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-
-  const PLATFORMS = [
-    { id: "all", label: "All Platforms" },
-    { id: "instagram", label: "Instagram" },
-    { id: "tiktok", label: "TikTok" },
-    { id: "youtube", label: "YouTube" },
-  ];
-
-  const GENDERS = [
-    { id: "male", label: "Male" },
-    { id: "female", label: "Female" },
-    { id: "non-binary", label: "Non-binary" },
-  ];
-
-  const COUNTRIES = [
-    { code: "US", name: "United States" },
-    { code: "UK", name: "United Kingdom" },
-    { code: "CA", name: "Canada" },
-    { code: "AU", name: "Australia" },
-  ];
-
-  const SORTS = [
-    { value: "reach-instagram", label: "Followers (High to Low)" },
-    { value: "engagement-rate-instagram", label: "Engagement Rate (High to Low)" },
-    { value: "engagement-instagram", label: "Engagement Count (High to Low)" },
-    { value: "price", label: "Price (Low to High)" },
-  ];
-
-  const handleSearch = async () => {
-    const params = new URLSearchParams({
-      brands,
-      interests,
-      causes,
-      genders: genders.join(","),
-      platform,
-      sort,
-      minFollowers: minFollowers || "0",
-      minAge: minAge || "",
-      maxAge: maxAge || "",
-      country: country || "",
-      minPrice: minPrice || "",
-      maxPrice: maxPrice || "",
-    });
-    // Navigate to discover page with filters
-    window.location.href = `/discover?${params.toString()}`;
-  };
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -245,173 +186,22 @@ export default function Home() {
             )}
           </div>
 
-          {/* Advanced Filters Toggle */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            style={{
-              marginTop: 16,
-              padding: "8px 16px",
-              borderRadius: 8,
-              border: "1px solid #d1d5db",
-              background: showFilters ? ACCENT + "22" : "transparent",
-              color: showFilters ? ACCENT : "#6b7280",
-              cursor: "pointer",
-              fontFamily: "'Syne',sans-serif",
-              fontWeight: 600,
-              fontSize: 12,
-              transition: "all .2s",
-            }}
-          >
-            {showFilters ? "▼ Hide Filters" : "▶ Show Advanced Filters"}
-          </button>
-
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid #e5e7eb" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={{ fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 12, color: "#6b7280", display: "block", marginBottom: 8 }}>
-                    Brands
-                  </label>
-                  <input
-                    type="text"
-                    value={brands}
-                    onChange={e => setBrands(e.target.value)}
-                    placeholder="e.g. Nike, Adidas"
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #d1d5db",
-                      fontSize: 13,
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 12, color: "#6b7280", display: "block", marginBottom: 8 }}>
-                    Interests
-                  </label>
-                  <input
-                    type="text"
-                    value={interests}
-                    onChange={e => setInterests(e.target.value)}
-                    placeholder="e.g. fashion, fitness"
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #d1d5db",
-                      fontSize: 13,
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 12, color: "#6b7280", display: "block", marginBottom: 8 }}>
-                    Causes
-                  </label>
-                  <input
-                    type="text"
-                    value={causes}
-                    onChange={e => setCauses(e.target.value)}
-                    placeholder="e.g. sustainability"
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #d1d5db",
-                      fontSize: 13,
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 12, color: "#6b7280", display: "block", marginBottom: 8 }}>
-                    Min Followers
-                  </label>
-                  <input
-                    type="number"
-                    value={minFollowers}
-                    onChange={e => setMinFollowers(e.target.value)}
-                    placeholder="e.g. 10000"
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #d1d5db",
-                      fontSize: 13,
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 12, color: "#6b7280", display: "block", marginBottom: 8 }}>
-                    Platform
-                  </label>
-                  <select
-                    value={platform}
-                    onChange={e => setPlatform(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #d1d5db",
-                      fontSize: 13,
-                    }}
-                  >
-                    {PLATFORMS.map(p => (
-                      <option key={p.id} value={p.id}>{p.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 12, color: "#6b7280", display: "block", marginBottom: 8 }}>
-                    Sort By
-                  </label>
-                  <select
-                    value={sort}
-                    onChange={e => setSort(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #d1d5db",
-                      fontSize: 13,
-                    }}
-                  >
-                    {SORTS.map(s => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <button
-                onClick={handleSearch}
-                style={{
-                  width: "100%",
-                  padding: "10px 16px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: ACCENT,
-                  color: "#ffffff",
-                  cursor: "pointer",
-                  fontFamily: "'Syne',sans-serif",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  transition: "all .2s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
-                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-              >
-                Search with Filters
-              </button>
-            </div>
-          )}
+          {/* Link to Advanced Search */}
+          <div style={{ marginTop: 16, textAlign: "center" }}>
+            <a
+              href="/discover"
+              style={{
+                color: ACCENT,
+                textDecoration: "none",
+                fontFamily: "'Syne',sans-serif",
+                fontWeight: 600,
+                fontSize: 12,
+                cursor: "pointer",
+              }}
+            >
+              → Advanced Search & Filters
+            </a>
+          </div>
         </div>
       </div>
       )}

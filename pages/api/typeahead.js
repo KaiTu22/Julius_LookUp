@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import { sql } from "@/lib/db";
 
 const JULIUS_BASE_URL = "https://api.juliusworks.com";
 const JULIUS_UA = "julius-api-client";
@@ -39,34 +38,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Search term is required." });
   }
 
-  const lowerTerm = term.toLowerCase();
-  let results = [];
-
-  // Search archive first (fast)
-  if (sql) {
-    try {
-      const archiveRows = await sql`
-        SELECT slug, display_name, tagline, avatar_url, total_followers
-        FROM influencers
-        WHERE LOWER(display_name) LIKE ${`%${lowerTerm}%`}
-        ORDER BY total_followers DESC
-        LIMIT 10
-      `;
-      results = archiveRows.map(r => ({
-        id: r.slug,
-        slug: r.slug,
-        display_name: r.display_name,
-        tagline: r.tagline,
-        avatar: r.avatar_url ? { url: r.avatar_url } : null,
-        social_total_count: r.total_followers,
-        _source: "archive",
-      }));
-    } catch (err) {
-      console.warn("Archive search failed:", err.message);
-    }
-  }
-
-  // Search Julius API
   try {
     const ts = Math.floor(Date.now() / 1000);
     const typeaheadRes = await juliusFetch(
@@ -77,25 +48,25 @@ export default async function handler(req, res) {
       apiSecret
     );
 
-    if (typeaheadRes.ok) {
-      const data = await typeaheadRes.json();
-      const apiResults = Array.isArray(data) ? data : data.results || [];
-
-      // Filter out any that are already in archive results
-      const archiveSlugs = new Set(results.map(r => r.slug));
-      const apiOnly = apiResults
-        .filter(r => !archiveSlugs.has(r.slug))
-        .map(r => ({
-          ...r,
-          _source: "api",
-        }));
-
-      results = [...results, ...apiOnly];
+    if (!typeaheadRes.ok) {
+      const text = await typeaheadRes.text();
+      console.error("Julius typeahead failed:", { status: typeaheadRes.status, detail: text });
+      return res.status(typeaheadRes.status).json({
+        error: `Julius typeahead failed (HTTP ${typeaheadRes.status})`,
+        detail: text,
+      });
     }
-  } catch (err) {
-    console.error("Julius typeahead failed:", err.message);
-  }
 
-  res.setHeader("Content-Type", "application/json");
-  return res.status(200).json({ results: results.slice(0, 15) });
+    const data = await typeaheadRes.json();
+    const results = Array.isArray(data) ? data : data.results || [];
+
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({ results });
+  } catch (err) {
+    console.error("Typeahead error:", err);
+    return res.status(500).json({
+      error: "Failed to search influencers",
+      detail: err.message,
+    });
+  }
 }
