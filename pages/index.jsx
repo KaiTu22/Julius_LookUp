@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import JuliusInfluencerLookup from '../components/JuliusInfluencerLookup';
 
 const ACCENT = "#3b82f6";
@@ -12,6 +13,9 @@ const fmt = n => {
 };
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const slug = searchParams.get("slug");
+
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nameSearch, setNameSearch] = useState("");
@@ -129,7 +133,8 @@ export default function Home() {
 
   return (
     <div>
-      {/* Quick Name Search */}
+      {/* Quick Name Search - Hide when viewing profile */}
+      {!slug && (
       <div style={{
         background: "#ffffff",
         borderBottom: "1px solid #e5e7eb",
@@ -390,9 +395,10 @@ export default function Home() {
           )}
         </div>
       </div>
+      )}
 
-      {/* Featured Section */}
-      {featured.length > 0 && !loading && (
+      {/* Featured Section - Hide when viewing profile */}
+      {!slug && featured.length > 0 && !loading && (
         <div style={{
           background: "#f9fafb",
           padding: "40px 24px",
