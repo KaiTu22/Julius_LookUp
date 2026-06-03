@@ -25,6 +25,7 @@ export default function DiscoverPage() {
   const [brands, setBrands] = useState("");
   const [interests, setInterests] = useState("");
   const [causes, setCauses] = useState("");
+  const [genders, setGenders] = useState([]);
   const [platform, setPlatform] = useState("all");
   const [sort, setSort] = useState("reach-instagram");
   const [minFollowers, setMinFollowers] = useState("");
@@ -56,6 +57,12 @@ export default function DiscoverPage() {
     { id: "twitter", label: "Twitter/X", icon: "TW" },
   ];
 
+  const GENDER_OPTIONS = [
+    { id: "male", label: "Male" },
+    { id: "female", label: "Female" },
+    { id: "non-binary", label: "Non-binary" },
+  ];
+
   const COUNTRY_OPTIONS = [
     { code: "US", name: "United States" },
     { code: "GB", name: "United Kingdom" },
@@ -82,6 +89,7 @@ export default function DiscoverPage() {
         brands: brands,
         interests: interests,
         causes: causes,
+        genders: genders.join(","),
         platform: platform,
         sort: sort,
         minFollowers: minFollowers || "0",
@@ -366,6 +374,62 @@ export default function DiscoverPage() {
             />
           </div>
 
+          {/* Gender */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 12,
+            }}>
+              Gender
+            </label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {GENDER_OPTIONS.map(g => (
+                <button
+                  key={g.id}
+                  onClick={() => setGenders(prev =>
+                    prev.includes(g.id)
+                      ? prev.filter(x => x !== g.id)
+                      : [...prev, g.id]
+                  )}
+                  style={{
+                    padding: "7px 14px",
+                    borderRadius: 20,
+                    fontSize: 12,
+                    fontFamily: "'DM Sans',sans-serif",
+                    fontWeight: 500,
+                    border: genders.includes(g.id)
+                      ? `1px solid ${ACCENT}`
+                      : "1px solid #d1d5db",
+                    background: genders.includes(g.id)
+                      ? ACCENT + "22"
+                      : "transparent",
+                    color: genders.includes(g.id) ? ACCENT : "#6b7280",
+                    cursor: "pointer",
+                    transition: "all .2s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = ACCENT;
+                    e.currentTarget.style.background = ACCENT + "11";
+                  }}
+                  onMouseLeave={e => {
+                    if (!genders.includes(g.id)) {
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                      e.currentTarget.style.background = "transparent";
+                    }
+                  }}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Min Followers */}
           <div style={{ marginBottom: 28 }}>
             <label style={{
@@ -627,6 +691,7 @@ export default function DiscoverPage() {
                 {brands && ` · Brands: ${brands}`}
                 {interests && ` · Interests: ${interests}`}
                 {causes && ` · Causes: ${causes}`}
+                {genders.length > 0 && ` · Gender: ${genders.map(g => GENDER_OPTIONS.find(x => x.id === g)?.label).join(", ")}`}
                 {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
                 {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}
