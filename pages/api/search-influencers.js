@@ -43,7 +43,8 @@ export default async function handler(req, res) {
 
   const url = new URL(req.url, `http://${req.headers.host}`);
   const brands = (url.searchParams.get("brands") || "").split(",").filter(Boolean);
-  const tags = (url.searchParams.get("tags") || "").split(",").filter(Boolean);
+  const interests = (url.searchParams.get("interests") || "").split(",").filter(Boolean).map(i => i.trim());
+  const causes = (url.searchParams.get("causes") || "").split(",").filter(Boolean).map(c => c.trim());
   const platform = url.searchParams.get("platform") || "instagram";
   const sort = url.searchParams.get("sort") || "reach-instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
@@ -68,12 +69,23 @@ export default async function handler(req, res) {
     }
   }
 
-  // Add general tag filters - optional
-  if (tags.length > 0) {
-    if (tags.length === 1) {
-      queryFilters.push({ type: "tag", specificity: "any", values: tags });
+  // Add interest filters - optional
+  if (interests.length > 0) {
+    const interestTags = interests.map(i => `interest.${i.toLowerCase().replace(/\s+/g, "-")}`);
+    if (interests.length === 1) {
+      queryFilters.push({ type: "tag", specificity: "any", values: interestTags });
     } else {
-      queryFilters.push(...tags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
+      queryFilters.push(...interestTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
+    }
+  }
+
+  // Add cause filters - optional
+  if (causes.length > 0) {
+    const causeTags = causes.map(c => `cause.${c.toLowerCase().replace(/\s+/g, "-")}`);
+    if (causes.length === 1) {
+      queryFilters.push({ type: "tag", specificity: "any", values: causeTags });
+    } else {
+      queryFilters.push(...causeTags.map(tag => ({ type: "tag", specificity: "any", values: [tag] })));
     }
   }
 
@@ -179,7 +191,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, tags, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: [],
       hasMore: false,
     });
@@ -203,7 +215,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, tags, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,

@@ -23,7 +23,8 @@ const fmt = n => {
 
 export default function DiscoverPage() {
   const [brands, setBrands] = useState("");
-  const [tags, setTags] = useState("");
+  const [interests, setInterests] = useState("");
+  const [causes, setCauses] = useState("");
   const [platform, setPlatform] = useState("all");
   const [sort, setSort] = useState("reach-instagram");
   const [minFollowers, setMinFollowers] = useState("");
@@ -79,7 +80,8 @@ export default function DiscoverPage() {
     try {
       const params = new URLSearchParams({
         brands: brands,
-        tags: tags,
+        interests: interests,
+        causes: causes,
         platform: platform,
         sort: sort,
         minFollowers: minFollowers || "0",
@@ -302,7 +304,7 @@ export default function DiscoverPage() {
             />
           </div>
 
-          {/* Tags */}
+          {/* Interests */}
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
@@ -314,13 +316,44 @@ export default function DiscoverPage() {
               color: "#6b7280",
               marginBottom: 12,
             }}>
-              Tags
+              Interests
             </label>
             <input
               type="text"
-              value={tags}
-              onChange={e => setTags(e.target.value)}
-              placeholder="e.g. tag1, tag2, tag3 (comma-separated)"
+              value={interests}
+              onChange={e => setInterests(e.target.value)}
+              placeholder="e.g. fashion, entrepreneur, fitness (comma-separated)"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                fontSize: 13,
+                fontFamily: "'DM Sans',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Causes */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 12,
+            }}>
+              Causes
+            </label>
+            <input
+              type="text"
+              value={causes}
+              onChange={e => setCauses(e.target.value)}
+              placeholder="e.g. sustainability, cancer, environment (comma-separated)"
               style={{
                 width: "100%",
                 padding: "8px 12px",
@@ -592,7 +625,8 @@ export default function DiscoverPage() {
               }}>
                 {platform === "all" ? "Combined followers" : PLATFORMS.find(p => p.id === platform)?.label}
                 {brands && ` · Brands: ${brands}`}
-                {tags && ` · Tags: ${tags}`}
+                {interests && ` · Interests: ${interests}`}
+                {causes && ` · Causes: ${causes}`}
                 {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
                 {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}
