@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { sql } from "@/lib/db";
 
 const JULIUS_BASE_URL = "https://api.juliusworks.com";
 const JULIUS_UA = "julius-api-client";
@@ -140,6 +141,34 @@ export default async function handler(req, res) {
 
   const ts = Math.floor(Date.now() / 1000);
 
+  // Search local archive first
+  let archiveResults = [];
+  if (sql) {
+    try {
+      let archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers WHERE 1=1`;
+
+      if (minFollowers > 0) {
+        archiveQuery += ` AND total_followers >= ${minFollowers}`;
+      }
+
+      archiveQuery += ` ORDER BY total_followers DESC LIMIT 50`;
+
+      const rows = await sql(archiveQuery);
+      archiveResults = rows.map(r => ({
+        id: r.slug,
+        slug: r.slug,
+        display_name: r.display_name,
+        tagline: r.tagline,
+        avatar: r.avatar_url ? { url: r.avatar_url } : null,
+        social_total_count: r.total_followers,
+        social_total_engagement: 0,
+        _source: "archive",
+      }));
+    } catch (err) {
+      console.warn("Archive search failed:", err.message);
+    }
+  }
+
   // When platform is "all", use generic sorts instead of platform-specific ones
   let juliusSort = sort;
   if (platform === "all" && (sort.includes("instagram") || sort.includes("platform"))) {
@@ -185,7 +214,6 @@ export default async function handler(req, res) {
   const searchData = await searchRes.json();
   let results = searchData.results || [];
   const total = searchData.total || 0;
-  const hasMore = offset + results.length < total;
 
   // Apply client-side filtering for "all" platform mode
   if (platform === "all") {
@@ -194,10 +222,17 @@ export default async function handler(req, res) {
     }
   }
 
+  // Combine archive and Julius results, removing duplicates
+  const archivedSlugs = new Set(archiveResults.map(r => r.slug));
+  const apiOnlyResults = results.filter(r => !archivedSlugs.has(r.slug));
+  const combinedResults = [...archiveResults, ...apiOnlyResults].slice(0, limit);
+
+  const hasMore = archiveResults.length + apiOnlyResults.length > limit;
+
   // Bulk lookup for enriched data
-  if (results.length === 0) {
+  if (combinedResults.length === 0) {
     return res.status(200).json({
-      total,
+      total: total + archiveResults.length,
       offset,
       limit,
       filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
@@ -206,7 +241,9 @@ export default async function handler(req, res) {
     });
   }
 
-  const slugs = results.map(r => r.slug).filter(Boolean);
+  // Only fetch bulk data for non-archive results (archive results already have data)
+  const apiResults = combinedResults.filter(r => r._source !== "archive");
+  const slugs = apiResults.map(r => r.slug).filter(Boolean);
   const ts2 = Math.floor(Date.now() / 1000);
 
   let bulkRes;
@@ -245,10 +282,11 @@ export default async function handler(req, res) {
     const parsed = await bulkRes.json();
     bulkData = Array.isArray(parsed) ? parsed : parsed.results || [];
   } else {
-    bulkData = results;
+    bulkData = apiResults;
   }
 
-  const enriched = bulkData.map(inf => ({
+  // Map API results to enriched format
+  const enrichedApi = bulkData.map(inf => ({
     id: inf.id,
     slug: inf.slug,
     display_name: inf.display_name,
@@ -258,14 +296,19 @@ export default async function handler(req, res) {
     current_location: inf.current_location,
     social_total_count: inf.social_total_count,
     social_total_engagement: inf.social_total_engagement,
+    _source: "api",
   }));
+
+  // Combine archive and API results in correct order
+  const archiveEnriched = combinedResults.filter(r => r._source === "archive");
+  const enriched = [...archiveEnriched, ...enrichedApi];
 
   res.setHeader("Content-Type", "application/json");
   return res.status(200).json({
-    total,
+    total: archiveResults.length + total,
     offset,
     limit,
-    filters: { brands, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+    filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
     influencers: enriched,
     hasMore,
   });
