@@ -14,6 +14,9 @@ const fmt = n => {
 export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [nameSearch, setNameSearch] = useState("");
+  const [nameSearchResults, setNameSearchResults] = useState([]);
+  const [nameSearchLoading, setNameSearchLoading] = useState(false);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -30,8 +33,137 @@ export default function Home() {
     fetchFeatured();
   }, []);
 
+  const handleNameSearch = async (term) => {
+    setNameSearch(term);
+    if (term.length < 2) {
+      setNameSearchResults([]);
+      return;
+    }
+    setNameSearchLoading(true);
+    try {
+      const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Search failed");
+      setNameSearchResults(json.results || []);
+    } catch (err) {
+      setNameSearchResults([]);
+    } finally {
+      setNameSearchLoading(false);
+    }
+  };
+
+  const handleNameSearchSelect = async (influencer) => {
+    setNameSearch("");
+    setNameSearchResults([]);
+    // Archive and navigate to profile
+    try {
+      await fetch(`/api/archive-influencer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: influencer.slug }),
+      });
+    } catch (err) {
+      console.error("Archive failed:", err);
+    }
+    window.location.href = `/?slug=${encodeURIComponent(influencer.slug)}`;
+  };
+
   return (
     <div>
+      {/* Quick Name Search */}
+      <div style={{
+        background: "#ffffff",
+        borderBottom: "1px solid #e5e7eb",
+        padding: "24px",
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{
+            position: "relative",
+            marginBottom: 0,
+          }}>
+            <input
+              type="text"
+              value={nameSearch}
+              onChange={e => handleNameSearch(e.target.value)}
+              placeholder="Quick search by name... (e.g., Taylor Swift)"
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: "2px solid #3b82f6",
+                fontSize: 14,
+                fontFamily: "'DM Sans',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+            {nameSearchResults.length > 0 && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                marginTop: 4,
+                background: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: 12,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                zIndex: 10,
+                maxHeight: 300,
+                overflowY: "auto",
+              }}>
+                {nameSearchResults.map(influencer => (
+                  <button
+                    key={influencer.slug}
+                    onClick={() => handleNameSearchSelect(influencer)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      borderRadius: 0,
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      textAlign: "left",
+                      transition: "background .2s",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    {influencer.avatar?.url && (
+                      <img
+                        src={influencer.avatar.url}
+                        alt={influencer.display_name}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontFamily: "'Syne',sans-serif",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        color: "#111827",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}>
+                        {influencer.display_name}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Featured Section */}
       {featured.length > 0 && !loading && (
         <div style={{
