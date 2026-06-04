@@ -17,6 +17,7 @@ export default function Home() {
   const slug = searchParams.get("slug");
 
   const [featured, setFeatured] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nameSearch, setNameSearch] = useState("");
   const [nameSearchResults, setNameSearchResults] = useState([]);
@@ -35,7 +36,46 @@ export default function Home() {
       }
     };
     fetchFeatured();
+
+    // Load recently viewed from localStorage
+    try {
+      const stored = localStorage.getItem("recentlyViewed");
+      if (stored) setRecentlyViewed(JSON.parse(stored));
+    } catch (err) {
+      console.error("Failed to load recently viewed:", err);
+    }
   }, []);
+
+  // Track recently viewed profiles
+  useEffect(() => {
+    if (slug) {
+      const addToRecentlyViewed = async () => {
+        try {
+          // Fetch influencer data to add to recently viewed
+          const res = await fetch(`/api/typeahead?term=${encodeURIComponent(slug)}`);
+          const json = await res.json();
+          const results = json.results || [];
+          const influencer = results.find(r => r.slug === slug);
+
+          if (influencer) {
+            const stored = localStorage.getItem("recentlyViewed");
+            let recent = stored ? JSON.parse(stored) : [];
+
+            // Add to front, remove duplicates, keep last 10
+            recent = recent.filter(r => r.slug !== slug);
+            recent.unshift(influencer);
+            recent = recent.slice(0, 10);
+
+            localStorage.setItem("recentlyViewed", JSON.stringify(recent));
+            setRecentlyViewed(recent);
+          }
+        } catch (err) {
+          console.error("Failed to update recently viewed:", err);
+        }
+      };
+      addToRecentlyViewed();
+    }
+  }, [slug]);
 
   const handleNameSearch = async (term) => {
     setNameSearch(term);
@@ -80,7 +120,7 @@ export default function Home() {
         borderBottom: "1px solid #e5e7eb",
         padding: "16px 24px",
       }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h1 style={{
             fontFamily: "'Syne',sans-serif",
             fontWeight: 800,
@@ -90,6 +130,21 @@ export default function Home() {
           }}>
             Julius Influencer Lookup
           </h1>
+          {slug && (
+            <a
+              href="/"
+              style={{
+                color: ACCENT,
+                textDecoration: "none",
+                fontFamily: "'Syne',sans-serif",
+                fontWeight: 600,
+                fontSize: 12,
+                cursor: "pointer",
+              }}
+            >
+              ← Back to Home
+            </a>
+          )}
         </div>
       </div>
 
@@ -234,6 +289,124 @@ export default function Home() {
                   onClick={() => window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`}
                   style={{
                     background: "#ffffff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 12,
+                    padding: "18px 20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    cursor: "pointer",
+                    transition: "all .2s",
+                    textAlign: "left",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {inf.avatar?.url ? (
+                      <img
+                        src={inf.avatar.url}
+                        alt={inf.display_name}
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "1px solid #e5e7eb",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
+                        background: "#e5e7eb",
+                        flexShrink: 0,
+                      }} />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontFamily: "'Syne',sans-serif",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        color: "#111827",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}>
+                        {inf.display_name}
+                      </div>
+                      <div style={{
+                        fontFamily: "'DM Sans',sans-serif",
+                        fontSize: 11,
+                        color: "#6b7280",
+                        marginTop: 2,
+                      }}>
+                        {inf.tagline || "—"}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 16 }}>
+                    <div>
+                      <div style={{
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 15,
+                        fontWeight: 500,
+                        color: ACCENT,
+                      }}>
+                        {fmt(inf.social_total_count)}
+                      </div>
+                      <div style={{
+                        fontFamily: "'DM Sans',sans-serif",
+                        fontSize: 10,
+                        color: "#6b7280",
+                      }}>
+                        Followers
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recently Viewed Section - Hide when viewing profile */}
+      {!slug && recentlyViewed.length > 0 && (
+        <div style={{
+          background: "#ffffff",
+          padding: "40px 24px",
+          borderTop: "1px solid #e5e7eb",
+        }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <h2 style={{
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 24,
+              color: "#111827",
+              margin: "0 0 24px 0",
+            }}>
+              Recently Viewed
+            </h2>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 16,
+            }}>
+              {recentlyViewed.map(inf => (
+                <button
+                  key={inf.slug}
+                  onClick={() => window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`}
+                  style={{
+                    background: "#f9fafb",
                     border: "1px solid #e5e7eb",
                     borderRadius: 12,
                     padding: "18px 20px",
