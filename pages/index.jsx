@@ -37,13 +37,44 @@ export default function Home() {
     };
     fetchFeatured();
 
-    // Load recently viewed from localStorage
-    try {
-      const stored = localStorage.getItem("recentlyViewed");
-      if (stored) setRecentlyViewed(JSON.parse(stored));
-    } catch (err) {
-      console.error("Failed to load recently viewed:", err);
-    }
+    // Load and enrich recently viewed from localStorage
+    const loadRecentlyViewed = async () => {
+      try {
+        const stored = localStorage.getItem("recentlyViewed");
+        if (stored) {
+          const recent = JSON.parse(stored);
+
+          // Fetch full data for each to ensure we have follower counts
+          const slugs = recent.map(r => r.slug).filter(Boolean);
+          if (slugs.length > 0) {
+            try {
+              const res = await fetch("/api/get-influencer-data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ slugs }),
+              });
+
+              if (res.ok) {
+                const json = await res.json();
+                const enriched = recent.map(r => {
+                  const fullData = json.influencers.find(i => i.slug === r.slug);
+                  return fullData ? { ...r, ...fullData } : r;
+                });
+                setRecentlyViewed(enriched);
+              } else {
+                setRecentlyViewed(recent);
+              }
+            } catch (err) {
+              console.error("Failed to enrich recently viewed:", err);
+              setRecentlyViewed(recent);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load recently viewed:", err);
+      }
+    };
+    loadRecentlyViewed();
   }, []);
 
   // Track recently viewed profiles
