@@ -1308,7 +1308,7 @@ export default function JuliusInfluencerLookup() {
               {activeTab === "overview"     && <OverviewTab d={displayData} />}
               {activeTab === "demographics" && <DemographicsTab d={displayData} />}
               {activeTab === "interests"    && <InterestsTab d={displayData} />}
-              {activeTab === "brands"       && <BrandsTab d={displayData} />}
+              {activeTab === "brands"       && <BrandsAudienceTab d={displayData} />}
               {activeTab === "locations"    && <LocationsTab d={displayData} />}
               {activeTab === "profile"       && <ProfileTab d={displayData} />}
               {activeTab === "posts"         && <PostsTab slug={displayData.slug} />}
