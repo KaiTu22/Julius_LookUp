@@ -57,16 +57,58 @@ export default async function handler(req, res) {
 
         if (handleRes.ok) {
           const data = await handleRes.json();
-          console.log("Handle search raw response:", JSON.stringify(data).substring(0, 500));
-          results = [{
-            id: data.id,
-            slug: data.slug,
-            display_name: data.display_name,
-            avatar: data.avatar || {},
-            tagline: data.tagline,
-            social_total_count: data.social_total_count,
-            type: "influencer",
-          }];
+          // Julius social endpoint returns minimal data; use slug to fetch full data
+          const slug = data.slug || data.id;
+          if (slug && sql) {
+            try {
+              const archiveRows = await sql`
+                SELECT
+                  id,
+                  slug,
+                  display_name,
+                  (raw_data->'avatar'->>'url') AS avatar_url,
+                  (raw_data->>'tagline') AS tagline,
+                  total_followers
+                FROM influencers
+                WHERE slug = ${slug}
+              `;
+              if (archiveRows.length > 0) {
+                const r = archiveRows[0];
+                results = [{
+                  id: r.id,
+                  slug: r.slug,
+                  display_name: r.display_name,
+                  avatar: r.avatar_url ? { url: r.avatar_url } : {},
+                  tagline: r.tagline,
+                  social_total_count: r.total_followers,
+                  type: "influencer",
+                }];
+              } else {
+                // Not in archive yet, return basic Julius data
+                results = [{
+                  slug: slug,
+                  display_name: data.display_name,
+                  avatar: data.avatar || {},
+                  type: "influencer",
+                }];
+              }
+            } catch (err) {
+              console.error("Handle search archive lookup failed:", err.message);
+              results = [{
+                slug: slug,
+                display_name: data.display_name,
+                avatar: data.avatar || {},
+                type: "influencer",
+              }];
+            }
+          } else {
+            results = [{
+              slug: slug,
+              display_name: data.display_name,
+              avatar: data.avatar || {},
+              type: "influencer",
+            }];
+          }
         }
       }
     } else {
