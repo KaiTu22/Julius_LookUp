@@ -1253,6 +1253,31 @@ export default function JuliusInfluencerLookup() {
       <style>{`* { box-sizing:border-box; } ::-webkit-scrollbar { width:4px; height:4px; background:#f3f4f6; } ::-webkit-scrollbar-thumb { background:#9ca3af; border-radius:4px; }`}</style>
 
       <div style={{ maxWidth:1200, margin:"0 auto" }}>
+        {appMode === "influencer" && displayData && (
+          <div>
+            <div style={{ display:"flex", alignItems:"center", marginBottom:24, gap:16 }}>
+              <button onClick={refresh} style={{
+                fontFamily:"'Syne',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
+                background: refreshing ? "#d1d5db" : ACCENT, color:"#fff", border:"none", borderRadius:20,
+                cursor: refreshing ? "default" : "pointer"
+              }}>🔄 {refreshing ? "…" : "Refresh"}</button>
+              <button onClick={() => window.location.href = "/"} style={{
+                fontFamily:"'Syne',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
+                background:"transparent", color:ACCENT, border:`1px solid ${ACCENT}`, borderRadius:20, cursor:"pointer"
+              }}>← Back to Search</button>
+            </div>
+            <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
+            <>
+              {activeTab === "overview"     && <OverviewTab d={displayData} />}
+              {activeTab === "demographics" && <DemographicsTab d={displayData} />}
+              {activeTab === "interests"    && <InterestsTab d={displayData} />}
+              {activeTab === "brands"       && <BrandsTab d={displayData} />}
+              {activeTab === "locations"    && <LocationsTab d={displayData} />}
+              {activeTab === "profile"       && <ProfileTab d={displayData} />}
+              {activeTab === "posts"         && <PostsTab slug={displayData.slug} />}
+            </>
+          </div>
+        )}
 
         {/* Brand Search Mode */}
         {appMode === "brand" && (
