@@ -57,12 +57,14 @@ export default async function handler(req, res) {
 
         if (handleRes.ok) {
           const data = await handleRes.json();
+          console.log("Handle search raw response:", JSON.stringify(data).substring(0, 500));
           results = [{
             id: data.id,
             slug: data.slug,
             display_name: data.display_name,
             avatar: data.avatar || {},
             tagline: data.tagline,
+            social_total_count: data.social_total_count,
             type: "influencer",
           }];
         }
