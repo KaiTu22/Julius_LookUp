@@ -43,6 +43,7 @@ export default function Home() {
         const stored = localStorage.getItem("recentlyViewed");
         if (stored) {
           const recent = JSON.parse(stored);
+          console.log("Loaded from localStorage:", recent);
 
           // Fetch full data for each to ensure we have follower counts
           const slugs = recent.map(r => r.slug).filter(Boolean);
@@ -56,12 +57,15 @@ export default function Home() {
 
               if (res.ok) {
                 const json = await res.json();
+                console.log("Enriched data from API:", json);
                 const enriched = recent.map(r => {
                   const fullData = json.influencers.find(i => i.slug === r.slug);
                   return fullData ? { ...r, ...fullData } : r;
                 });
+                console.log("Final enriched:", enriched);
                 setRecentlyViewed(enriched);
               } else {
+                console.error("Enrich API failed:", res.status);
                 setRecentlyViewed(recent);
               }
             } catch (err) {
