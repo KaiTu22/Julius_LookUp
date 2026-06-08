@@ -1255,6 +1255,43 @@ export default function JuliusInfluencerLookup() {
       <div style={{ maxWidth:1200, margin:"0 auto" }}>
         {appMode === "influencer" && displayData && (
           <div>
+            {/* Profile Header */}
+            <div style={{ display:"flex", gap:20, alignItems:"flex-start", marginBottom:32, paddingBottom:24, borderBottom:"1px solid #e5e7eb" }}>
+              <div style={{ flexShrink:0 }}>
+                {displayData.avatar?.url ? (
+                  <img src={displayData.avatar.url} alt={displayData.display_name} style={{ width:120, height:120, borderRadius:"50%", objectFit:"cover", border:"2px solid #3b82f6" }} />
+                ) : (
+                  <div style={{ width:120, height:120, borderRadius:"50%", background:"#e5e7eb" }} />
+                )}
+              </div>
+              <div style={{ flex:1 }}>
+                <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:32, fontWeight:800, margin:"0 0 8px 0", color:"#111827" }}>
+                  {displayData.display_name}
+                </h1>
+                <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:14, color:"#6b7280", margin:"0 0 16px 0" }}>
+                  {displayData.tagline || displayData.current_location?.display_name || "—"}
+                </p>
+                <div style={{ display:"flex", gap:16 }}>
+                  <div>
+                    <div style={{ fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:700, color:"#3b82f6" }}>
+                      {fmt(displayData.social_total_count)}
+                    </div>
+                    <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>
+                      Followers
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:700, color:"#3b82f6" }}>
+                      {fmt(displayData.social_total_engagement)}
+                    </div>
+                    <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>
+                      Engagement
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style={{ display:"flex", alignItems:"center", marginBottom:24, gap:16 }}>
               <button onClick={refresh} style={{
                 fontFamily:"'Syne',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
