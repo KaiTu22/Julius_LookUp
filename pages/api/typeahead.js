@@ -45,6 +45,7 @@ export default async function handler(req, res) {
     // If term starts with @, search local archive by handle; otherwise use Julius typeahead
     if (term.startsWith("@")) {
       const handleQuery = term.substring(1);
+      console.log("Handle search for:", handleQuery, "sql available:", !!sql);
       if (handleQuery.length >= 2 && sql) {
         const rows = await sql`
           SELECT
@@ -59,6 +60,7 @@ export default async function handler(req, res) {
           ORDER BY total_followers DESC NULLS LAST
           LIMIT 10
         `;
+        console.log("Handle search found:", rows.length, "results");
         results = rows.map(r => ({
           id: r.id,
           slug: r.slug,
@@ -118,7 +120,14 @@ export default async function handler(req, res) {
     }
 
     res.setHeader("Content-Type", "application/json");
-    return res.status(200).json({ results });
+    return res.status(200).json({
+      results,
+      _debug: {
+        searchMode: term.startsWith("@") ? "handle" : "name",
+        term,
+        resultCount: results.length
+      }
+    });
   } catch (err) {
     console.error("Typeahead error:", err);
     return res.status(500).json({
