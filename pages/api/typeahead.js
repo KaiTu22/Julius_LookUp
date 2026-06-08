@@ -59,9 +59,11 @@ export default async function handler(req, res) {
 
     const data = await typeaheadRes.json();
     let results = Array.isArray(data) ? data : data.results || [];
+    console.log("Typeahead raw results:", results.length, "items");
 
     // Fetch full data to get follower counts
     if (results.length > 0) {
+      console.log("Entering enrichment block with", results.length, "results");
       try {
         const slugs = results.map(r => r.slug).filter(Boolean);
         console.log("Typeahead enriching slugs:", slugs);
