@@ -59,14 +59,12 @@ export default async function handler(req, res) {
 
     const data = await typeaheadRes.json();
     let results = Array.isArray(data) ? data : data.results || [];
-    console.log("Typeahead raw results:", results.length, "items");
+    let enrichmentError = null;
 
     // Fetch full data to get follower counts
     if (results.length > 0) {
-      console.log("Entering enrichment block with", results.length, "results");
       try {
         const slugs = results.map(r => r.slug).filter(Boolean);
-        console.log("Typeahead enriching slugs:", slugs);
         const ts2 = Math.floor(Date.now() / 1000);
         const bulkRes = await juliusFetch(
           `/influencers/export/bulk?ts=${ts2}`,
@@ -76,35 +74,30 @@ export default async function handler(req, res) {
           apiSecret
         );
 
-        console.log("Bulk response status:", bulkRes.status, bulkRes.ok);
         if (bulkRes.ok) {
           const bulkData = await bulkRes.json();
           const bulkArray = Array.isArray(bulkData) ? bulkData : bulkData.results || [];
-          console.log("Bulk data received:", bulkArray.length, "items", bulkArray);
 
           // Enrich results with follower counts
           results = results.map(r => {
             const fullData = bulkArray.find(b => b.slug === r.slug);
-            const enriched = {
+            return {
               ...r,
               social_total_count: fullData?.social_total_count || null,
               tagline: fullData?.tagline || r.tagline,
             };
-            console.log("Enriched result:", r.slug, "count:", enriched.social_total_count);
-            return enriched;
           });
         } else {
           const errText = await bulkRes.text();
-          console.error("Bulk fetch failed:", bulkRes.status, errText);
+          enrichmentError = `Bulk API error ${bulkRes.status}: ${errText.substring(0, 200)}`;
         }
       } catch (err) {
-        console.error("Typeahead enrichment error:", err);
-        // Continue with basic results if bulk fetch fails
+        enrichmentError = err.message;
       }
     }
 
     res.setHeader("Content-Type", "application/json");
-    return res.status(200).json({ results });
+    return res.status(200).json({ results, _debug: { enrichmentError } });
   } catch (err) {
     console.error("Typeahead error:", err);
     return res.status(500).json({
