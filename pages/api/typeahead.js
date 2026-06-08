@@ -48,6 +48,7 @@ export default async function handler(req, res) {
       if (handleQuery.length >= 2 && sql) {
         try {
           const pattern = `%${handleQuery}%`;
+          console.log("Searching slugs for pattern:", pattern);
           const rows = await sql`
             SELECT
               id,
@@ -61,6 +62,7 @@ export default async function handler(req, res) {
             ORDER BY total_followers DESC NULLS LAST
             LIMIT 10
           `;
+          console.log("Handle search returned:", rows.length, "rows");
           results = rows.map(r => ({
             id: r.id,
             slug: r.slug,
@@ -72,7 +74,10 @@ export default async function handler(req, res) {
           }));
         } catch (dbErr) {
           console.error("Handle search DB error:", dbErr.message);
+          throw dbErr;
         }
+      } else {
+        console.log("Handle search skipped: handleQuery length:", handleQuery.length, "sql available:", !!sql);
       }
     } else {
       // Use Julius typeahead for name search
@@ -128,7 +133,8 @@ export default async function handler(req, res) {
       _debug: {
         searchMode: term.startsWith("@") ? "handle" : "name",
         term,
-        resultCount: results.length
+        resultCount: results.length,
+        sqlAvailable: !!sql
       }
     });
   } catch (err) {
