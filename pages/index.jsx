@@ -22,6 +22,7 @@ export default function Home() {
   const [nameSearch, setNameSearch] = useState("");
   const [nameSearchResults, setNameSearchResults] = useState([]);
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -121,6 +122,7 @@ export default function Home() {
         background: "#ffffff",
         borderBottom: "1px solid #e5e7eb",
         padding: "16px 24px",
+        position: "relative",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h1 style={{
@@ -132,21 +134,93 @@ export default function Home() {
           }}>
             Julius Influencer Lookup
           </h1>
-          {slug && (
-            <a
-              href="/"
-              style={{
-                color: ACCENT,
-                textDecoration: "none",
-                fontFamily: "'Syne',sans-serif",
-                fontWeight: 600,
-                fontSize: 12,
-                cursor: "pointer",
-              }}
-            >
-              ← Back to Home
-            </a>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* Tools Menu */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setShowToolsMenu(!showToolsMenu)}
+                style={{
+                  background: "transparent",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 6,
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  color: "#6b7280",
+                  transition: "all .2s",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = ACCENT;
+                  e.currentTarget.style.color = ACCENT;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                  e.currentTarget.style.color = "#6b7280";
+                }}
+              >
+                Tools ▼
+              </button>
+              {showToolsMenu && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  marginTop: 8,
+                  background: "#ffffff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  zIndex: 20,
+                  minWidth: 150,
+                }}>
+                  {[
+                    { href: "/discover", label: "Discover" },
+                    { href: "/lists", label: "Lists" },
+                    { href: "/archive", label: "Archive" },
+                    { href: "/cache", label: "Cache" },
+                  ].map(tool => (
+                    <a
+                      key={tool.href}
+                      href={tool.href}
+                      style={{
+                        display: "block",
+                        padding: "12px 16px",
+                        borderBottom: "1px solid #f3f4f6",
+                        textDecoration: "none",
+                        color: ACCENT,
+                        fontSize: 12,
+                        fontFamily: "'Syne',sans-serif",
+                        fontWeight: 600,
+                        transition: "background .2s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      {tool.label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {slug && (
+              <a
+                href="/"
+                style={{
+                  color: ACCENT,
+                  textDecoration: "none",
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                ← Back
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
