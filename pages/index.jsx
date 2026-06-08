@@ -99,6 +99,28 @@ export default function Home() {
     }
   };
 
+  const handleSearchEnter = async (e, term) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    // For handle searches, navigate to profile with full data
+    if (term.startsWith("@")) {
+      const handleQuery = term.substring(1);
+      try {
+        const res = await fetch(`/api/julius?mode=handle&platform=instagram&handle=${encodeURIComponent(handleQuery)}`);
+        const json = await res.json();
+        if (res.ok && json.slug) {
+          window.location.href = `/?slug=${encodeURIComponent(json.slug)}`;
+        }
+      } catch (err) {
+        console.error("Handle search failed:", err);
+      }
+    } else if (nameSearchResults.length > 0) {
+      // For name searches, use the first result
+      handleNameSearchSelect(nameSearchResults[0]);
+    }
+  };
+
   const handleNameSearchSelect = async (influencer) => {
     setNameSearch("");
     setNameSearchResults([]);
@@ -240,6 +262,7 @@ export default function Home() {
               type="text"
               value={nameSearch}
               onChange={e => handleNameSearch(e.target.value)}
+              onKeyDown={e => handleSearchEnter(e, nameSearch)}
               placeholder="Search by name or @handle... (e.g., Taylor Swift or @taylorswift)"
               style={{
                 width: "100%",
