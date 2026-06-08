@@ -23,6 +23,7 @@ export default function Home() {
   const [nameSearchResults, setNameSearchResults] = useState([]);
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [searchMode, setSearchMode] = useState("name"); // "name" or "handle"
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -103,11 +104,10 @@ export default function Home() {
     if (e.key !== "Enter") return;
     e.preventDefault();
 
-    // For handle searches, navigate to profile with full data
-    if (term.startsWith("@")) {
-      const handleQuery = term.substring(1);
+    if (searchMode === "handle") {
+      // Handle search mode - fetch full profile
       try {
-        const res = await fetch(`/api/julius?mode=handle&platform=instagram&handle=${encodeURIComponent(handleQuery)}`);
+        const res = await fetch(`/api/julius?mode=handle&platform=instagram&handle=${encodeURIComponent(term)}`);
         const json = await res.json();
         if (res.ok && json.slug) {
           window.location.href = `/?slug=${encodeURIComponent(json.slug)}`;
@@ -115,9 +115,11 @@ export default function Home() {
       } catch (err) {
         console.error("Handle search failed:", err);
       }
-    } else if (nameSearchResults.length > 0) {
-      // For name searches, use the first result
-      handleNameSearchSelect(nameSearchResults[0]);
+    } else {
+      // Name search mode - use first typeahead result
+      if (nameSearchResults.length > 0) {
+        handleNameSearchSelect(nameSearchResults[0]);
+      }
     }
   };
 
@@ -254,6 +256,41 @@ export default function Home() {
         padding: "24px",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          {/* Search Mode Toggle */}
+          <div style={{
+            display: "flex",
+            gap: 6,
+            marginBottom: 16,
+          }}>
+            {[
+              { id: "name", label: "Name" },
+              { id: "handle", label: "Handle (@)" },
+            ].map(mode => (
+              <button
+                key={mode.id}
+                onClick={() => {
+                  setSearchMode(mode.id);
+                  setNameSearchResults([]);
+                  setNameSearch("");
+                }}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 600,
+                  border: `1px solid ${searchMode === mode.id ? ACCENT : "#d1d5db"}`,
+                  background: searchMode === mode.id ? ACCENT + "22" : "transparent",
+                  color: searchMode === mode.id ? ACCENT : "#6b7280",
+                  cursor: "pointer",
+                  transition: "all .2s",
+                }}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+
           <div style={{
             position: "relative",
             marginBottom: 0,
@@ -263,7 +300,7 @@ export default function Home() {
               value={nameSearch}
               onChange={e => handleNameSearch(e.target.value)}
               onKeyDown={e => handleSearchEnter(e, nameSearch)}
-              placeholder="Search by name or @handle... (e.g., Taylor Swift or @taylorswift)"
+              placeholder={searchMode === "handle" ? "e.g., taylorswift" : "e.g., Taylor Swift"}
               style={{
                 width: "100%",
                 padding: "12px 16px",
