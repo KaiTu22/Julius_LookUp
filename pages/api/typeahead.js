@@ -41,67 +41,35 @@ export default async function handler(req, res) {
 
   try {
     let results = [];
+    let searchTerm = term;
 
-    // If term starts with @, search local archive by handle; otherwise use Julius typeahead
+    // If term starts with @, strip it and search normally
+    // The @ is just a visual hint that the user is searching by handle
     if (term.startsWith("@")) {
-      const handleQuery = term.substring(1);
-      if (handleQuery.length >= 2 && sql) {
-        try {
-          const pattern = `%${handleQuery}%`;
-          console.log("Searching slugs for pattern:", pattern);
-          const rows = await sql`
-            SELECT
-              id,
-              slug,
-              display_name,
-              (raw_data->'avatar'->>'url') AS avatar_url,
-              (raw_data->>'tagline')       AS tagline,
-              total_followers
-            FROM influencers
-            WHERE LOWER(slug) LIKE LOWER(${pattern})
-            ORDER BY total_followers DESC NULLS LAST
-            LIMIT 10
-          `;
-          console.log("Handle search returned:", rows.length, "rows");
-          results = rows.map(r => ({
-            id: r.id,
-            slug: r.slug,
-            display_name: r.display_name,
-            avatar: r.avatar_url ? { url: r.avatar_url } : {},
-            tagline: r.tagline,
-            social_total_count: r.total_followers,
-            type: "influencer",
-          }));
-        } catch (dbErr) {
-          console.error("Handle search DB error:", dbErr.message);
-          throw dbErr;
-        }
-      } else {
-        console.log("Handle search skipped: handleQuery length:", handleQuery.length, "sql available:", !!sql);
-      }
-    } else {
-      // Use Julius typeahead for name search
-      const ts = Math.floor(Date.now() / 1000);
-      const typeaheadRes = await juliusFetch(
-        `/influencers/search/typeahead?ts=${ts}&term=${encodeURIComponent(term)}`,
-        "GET",
-        null,
-        apiKey,
-        apiSecret
-      );
-
-      if (!typeaheadRes.ok) {
-        const text = await typeaheadRes.text();
-        console.error("Julius typeahead failed:", { status: typeaheadRes.status, detail: text });
-        return res.status(typeaheadRes.status).json({
-          error: `Julius typeahead failed (HTTP ${typeaheadRes.status})`,
-          detail: text,
-        });
-      }
-
-      const data = await typeaheadRes.json();
-      results = Array.isArray(data) ? data : data.results || [];
+      searchTerm = term.substring(1);
     }
+
+    // Use Julius typeahead for all searches
+    const ts = Math.floor(Date.now() / 1000);
+    const typeaheadRes = await juliusFetch(
+      `/influencers/search/typeahead?ts=${ts}&term=${encodeURIComponent(searchTerm)}`,
+      "GET",
+      null,
+      apiKey,
+      apiSecret
+    );
+
+    if (!typeaheadRes.ok) {
+      const text = await typeaheadRes.text();
+      console.error("Julius typeahead failed:", { status: typeaheadRes.status, detail: text });
+      return res.status(typeaheadRes.status).json({
+        error: `Julius typeahead failed (HTTP ${typeaheadRes.status})`,
+        detail: text,
+      });
+    }
+
+    const data = await typeaheadRes.json();
+    results = Array.isArray(data) ? data : data.results || [];
 
     // Enrich with local database data (follower counts, tagline)
     if (results.length > 0 && sql) {
@@ -128,15 +96,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader("Content-Type", "application/json");
-    return res.status(200).json({
-      results,
-      _debug: {
-        searchMode: term.startsWith("@") ? "handle" : "name",
-        term,
-        resultCount: results.length,
-        sqlAvailable: !!sql
-      }
-    });
+    return res.status(200).json({ results });
   } catch (err) {
     console.error("Typeahead error:", err);
     return res.status(500).json({
