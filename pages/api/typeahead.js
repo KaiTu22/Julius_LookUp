@@ -40,26 +40,58 @@ export default async function handler(req, res) {
   }
 
   try {
-    const ts = Math.floor(Date.now() / 1000);
-    const typeaheadRes = await juliusFetch(
-      `/influencers/search/typeahead?ts=${ts}&term=${encodeURIComponent(term)}`,
-      "GET",
-      null,
-      apiKey,
-      apiSecret
-    );
+    let results = [];
 
-    if (!typeaheadRes.ok) {
-      const text = await typeaheadRes.text();
-      console.error("Julius typeahead failed:", { status: typeaheadRes.status, detail: text });
-      return res.status(typeaheadRes.status).json({
-        error: `Julius typeahead failed (HTTP ${typeaheadRes.status})`,
-        detail: text,
-      });
+    // If term starts with @, search local archive by handle; otherwise use Julius typeahead
+    if (term.startsWith("@")) {
+      const handleQuery = term.substring(1);
+      if (handleQuery.length >= 2 && sql) {
+        const rows = await sql`
+          SELECT
+            id,
+            slug,
+            display_name,
+            (raw_data->'avatar'->>'url') AS avatar_url,
+            (raw_data->>'tagline')       AS tagline,
+            total_followers
+          FROM influencers
+          WHERE LOWER(slug) LIKE LOWER(${'%' + handleQuery + '%'})
+          ORDER BY total_followers DESC NULLS LAST
+          LIMIT 10
+        `;
+        results = rows.map(r => ({
+          id: r.id,
+          slug: r.slug,
+          display_name: r.display_name,
+          avatar: r.avatar_url ? { url: r.avatar_url } : {},
+          tagline: r.tagline,
+          social_total_count: r.total_followers,
+          type: "influencer",
+        }));
+      }
+    } else {
+      // Use Julius typeahead for name search
+      const ts = Math.floor(Date.now() / 1000);
+      const typeaheadRes = await juliusFetch(
+        `/influencers/search/typeahead?ts=${ts}&term=${encodeURIComponent(term)}`,
+        "GET",
+        null,
+        apiKey,
+        apiSecret
+      );
+
+      if (!typeaheadRes.ok) {
+        const text = await typeaheadRes.text();
+        console.error("Julius typeahead failed:", { status: typeaheadRes.status, detail: text });
+        return res.status(typeaheadRes.status).json({
+          error: `Julius typeahead failed (HTTP ${typeaheadRes.status})`,
+          detail: text,
+        });
+      }
+
+      const data = await typeaheadRes.json();
+      results = Array.isArray(data) ? data : data.results || [];
     }
-
-    const data = await typeaheadRes.json();
-    let results = Array.isArray(data) ? data : data.results || [];
 
     // Enrich with local database data (follower counts, tagline)
     if (results.length > 0 && sql) {

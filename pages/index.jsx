@@ -166,7 +166,7 @@ export default function Home() {
               type="text"
               value={nameSearch}
               onChange={e => handleNameSearch(e.target.value)}
-              placeholder="Quick search by name... (e.g., Taylor Swift)"
+              placeholder="Search by name or @handle... (e.g., Taylor Swift or @taylorswift)"
               style={{
                 width: "100%",
                 padding: "12px 16px",
