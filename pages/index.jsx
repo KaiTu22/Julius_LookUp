@@ -24,6 +24,8 @@ export default function Home() {
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [searchMode, setSearchMode] = useState("name"); // "name" or "handle"
+  const [handleSearchResults, setHandleSearchResults] = useState([]);
+  const [handleSearchLoading, setHandleSearchLoading] = useState(false);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -85,18 +87,34 @@ export default function Home() {
     setNameSearch(term);
     if (term.length < 2) {
       setNameSearchResults([]);
+      setHandleSearchResults([]);
       return;
     }
-    setNameSearchLoading(true);
-    try {
-      const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`);
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Search failed");
-      setNameSearchResults(json.results || []);
-    } catch (err) {
-      setNameSearchResults([]);
-    } finally {
-      setNameSearchLoading(false);
+
+    if (searchMode === "handle") {
+      setHandleSearchLoading(true);
+      try {
+        const res = await fetch(`/api/handle-typeahead?handle=${encodeURIComponent(term)}`);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Search failed");
+        setHandleSearchResults(json.results || []);
+      } catch (err) {
+        setHandleSearchResults([]);
+      } finally {
+        setHandleSearchLoading(false);
+      }
+    } else {
+      setNameSearchLoading(true);
+      try {
+        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Search failed");
+        setNameSearchResults(json.results || []);
+      } catch (err) {
+        setNameSearchResults([]);
+      } finally {
+        setNameSearchLoading(false);
+      }
     }
   };
 
@@ -271,6 +289,7 @@ export default function Home() {
                 onClick={() => {
                   setSearchMode(mode.id);
                   setNameSearchResults([]);
+                  setHandleSearchResults([]);
                   setNameSearch("");
                 }}
                 style={{
@@ -311,7 +330,7 @@ export default function Home() {
                 boxSizing: "border-box",
               }}
             />
-            {nameSearchResults.length > 0 && (
+            {(nameSearchResults.length > 0 || handleSearchResults.length > 0) && (
               <div style={{
                 position: "absolute",
                 top: "100%",
@@ -323,22 +342,23 @@ export default function Home() {
                 borderRadius: 12,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 zIndex: 10,
-                maxHeight: 300,
+                maxHeight: 400,
                 overflowY: "auto",
               }}>
-                {nameSearchResults.map(influencer => (
+                {(searchMode === "name" ? nameSearchResults : handleSearchResults).map(influencer => (
                   <button
-                    key={influencer.slug}
+                    key={`${influencer.slug}-${influencer.platform || 'base'}`}
                     onClick={() => handleNameSearchSelect(influencer)}
                     style={{
                       width: "100%",
                       padding: "12px 16px",
                       borderRadius: 0,
                       border: "none",
+                      borderBottom: "1px solid #f3f4f6",
                       background: "transparent",
                       cursor: "pointer",
                       display: "flex",
-                      alignItems: "center",
+                      alignItems: "flex-start",
                       gap: 12,
                       textAlign: "left",
                       transition: "background .2s",
@@ -355,6 +375,8 @@ export default function Home() {
                           height: 32,
                           borderRadius: "50%",
                           objectFit: "cover",
+                          flexShrink: 0,
+                          marginTop: 2,
                         }}
                       />
                     )}
@@ -369,6 +391,17 @@ export default function Home() {
                         textOverflow: "ellipsis",
                       }}>
                         {influencer.display_name}
+                      </div>
+                      <div style={{
+                        fontFamily: "'DM Sans',sans-serif",
+                        fontSize: 11,
+                        color: "#3b82f6",
+                        marginTop: 2,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}>
+                        {influencer.accountUrl || influencer.platformUrl || "—"}
                       </div>
                     </div>
                   </button>

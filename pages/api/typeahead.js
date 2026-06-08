@@ -75,12 +75,16 @@ export default async function handler(req, res) {
                     display_name,
                     (raw_data->'avatar'->>'url') AS avatar_url,
                     (raw_data->>'tagline') AS tagline,
-                    total_followers
+                    total_followers,
+                    raw_data
                   FROM influencers
                   WHERE slug = ${slug}
                 `;
                 if (archiveRows.length > 0) {
                   const r = archiveRows[0];
+                  const rawData = typeof r.raw_data === 'string' ? JSON.parse(r.raw_data) : r.raw_data;
+                  const socialCombined = rawData?.social_combined || [];
+                  const accountUrl = socialCombined[0]?.accounts?.[0]?.url || `https://juliusworks.com/${r.slug}`;
                   results = [{
                     id: r.id,
                     slug: r.slug,
@@ -88,10 +92,12 @@ export default async function handler(req, res) {
                     avatar: r.avatar_url ? { url: r.avatar_url } : {},
                     tagline: r.tagline,
                     social_total_count: r.total_followers,
+                    accountUrl,
                     type: "influencer",
                   }];
                 } else {
                   // Not in archive yet, return full Julius data
+                  const accountUrl = influencer.social_combined?.[0]?.accounts?.[0]?.url || `https://juliusworks.com/${influencer.slug}`;
                   results = [{
                     id: influencer.id,
                     slug: influencer.slug,
@@ -99,11 +105,13 @@ export default async function handler(req, res) {
                     avatar: influencer.avatar || {},
                     tagline: influencer.tagline,
                     social_total_count: influencer.social_total_count,
+                    accountUrl,
                     type: "influencer",
                   }];
                 }
               } catch (err) {
                 console.error("Handle search archive lookup failed:", err.message);
+                const accountUrl = influencer.social_combined?.[0]?.accounts?.[0]?.url || `https://juliusworks.com/${influencer.slug}`;
                 results = [{
                   id: influencer.id,
                   slug: influencer.slug,
@@ -111,11 +119,13 @@ export default async function handler(req, res) {
                   avatar: influencer.avatar || {},
                   tagline: influencer.tagline,
                   social_total_count: influencer.social_total_count,
+                  accountUrl,
                   type: "influencer",
                 }];
               }
             } else {
               // No sql, return Julius data as-is
+              const accountUrl = influencer.social_combined?.[0]?.accounts?.[0]?.url || `https://juliusworks.com/${influencer.slug}`;
               results = [{
                 id: influencer.id,
                 slug: influencer.slug,
@@ -123,6 +133,7 @@ export default async function handler(req, res) {
                 avatar: influencer.avatar || {},
                 tagline: influencer.tagline,
                 social_total_count: influencer.social_total_count,
+                accountUrl,
                 type: "influencer",
               }];
             }
@@ -178,14 +189,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader("Content-Type", "application/json");
-    return res.status(200).json({
-      results,
-      _debug: {
-        term,
-        isHandle: term.startsWith("@"),
-        juliusRawData
-      }
-    });
+    return res.status(200).json({ results });
   } catch (err) {
     console.error("Typeahead error:", err);
     return res.status(500).json({
