@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { sql } from "@/lib/db";
 
 const JULIUS_BASE_URL = "https://api.juliusworks.com";
 const JULIUS_UA = "julius-api-client";
@@ -59,45 +60,33 @@ export default async function handler(req, res) {
 
     const data = await typeaheadRes.json();
     let results = Array.isArray(data) ? data : data.results || [];
-    let enrichmentError = null;
 
-    // Fetch full data to get follower counts
-    if (results.length > 0) {
+    // Enrich with local database data (follower counts, tagline)
+    if (results.length > 0 && sql) {
       try {
         const slugs = results.map(r => r.slug).filter(Boolean);
-        const ts2 = Math.floor(Date.now() / 1000);
-        const bulkRes = await juliusFetch(
-          `/influencers/export/bulk?ts=${ts2}`,
-          "POST",
-          { ids: slugs },
-          apiKey,
-          apiSecret
+        const archiveData = await sql`
+          SELECT slug, total_followers, tagline
+          FROM influencers
+          WHERE slug = ANY(${slugs})
+        `;
+
+        const archiveMap = Object.fromEntries(
+          archiveData.map(r => [r.slug, r])
         );
 
-        if (bulkRes.ok) {
-          const bulkData = await bulkRes.json();
-          const bulkArray = Array.isArray(bulkData) ? bulkData : bulkData.results || [];
-
-          // Enrich results with follower counts
-          results = results.map(r => {
-            const fullData = bulkArray.find(b => b.slug === r.slug);
-            return {
-              ...r,
-              social_total_count: fullData?.social_total_count || null,
-              tagline: fullData?.tagline || r.tagline,
-            };
-          });
-        } else {
-          const errText = await bulkRes.text();
-          enrichmentError = `Bulk API error ${bulkRes.status}: ${errText.substring(0, 200)}`;
-        }
+        results = results.map(r => ({
+          ...r,
+          social_total_count: archiveMap[r.slug]?.total_followers || null,
+          tagline: archiveMap[r.slug]?.tagline || r.tagline,
+        }));
       } catch (err) {
-        enrichmentError = err.message;
+        console.warn("Failed to enrich from archive:", err.message);
       }
     }
 
     res.setHeader("Content-Type", "application/json");
-    return res.status(200).json({ results, _debug: { enrichmentError } });
+    return res.status(200).json({ results });
   } catch (err) {
     console.error("Typeahead error:", err);
     return res.status(500).json({
