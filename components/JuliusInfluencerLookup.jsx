@@ -1252,38 +1252,7 @@ export default function JuliusInfluencerLookup() {
     <div style={{ minHeight:"100vh", background:"#f3f4f6", color:"#111827", fontFamily:"'DM Sans',sans-serif", padding:"32px 24px" }}>
       <style>{`* { box-sizing:border-box; } ::-webkit-scrollbar { width:4px; height:4px; background:#f3f4f6; } ::-webkit-scrollbar-thumb { background:#9ca3af; border-radius:4px; }`}</style>
 
-      {/* Header */}
       <div style={{ maxWidth:1200, margin:"0 auto" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:32, flexWrap:"wrap", gap:12 }}>
-          <div>
-            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, fontWeight:800, margin:0, letterSpacing:-0.5, color:"#111827" }}>
-              Influencer Intelligence <span style={{ color:ACCENT, fontSize:16, fontWeight:600 }}>powered by Julius</span>
-            </h1>
-            <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", margin:"4px 0 0" }}>
-              Influencer data & audience analytics
-              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
-              <a href="/discover" style={{ color:ACCENT, textDecoration:"none" }}>Discover</a>
-              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
-              <a href="/lists" style={{ color:ACCENT, textDecoration:"none" }}>Lists</a>
-              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
-              <a href="/archive" style={{ color:ACCENT, textDecoration:"none" }}>Archive</a>
-              <span style={{ margin:"0 8px", color:"#d1d5db" }}>·</span>
-              <a href="/cache" style={{ color:ACCENT, textDecoration:"none" }}>Cache</a>
-            </p>
-          </div>
-          {/* App mode switcher */}
-          <div style={{ display:"flex", gap:6, background:"#ffffff", border:"1px solid #e5e7eb", borderRadius:24, padding:4 }}>
-            {[["influencer"," Influencer"],["brand"," Brand"]].map(([id,label]) => (
-              <button key={id} onClick={() => setAppMode(id)} style={{
-                padding:"7px 18px", borderRadius:20, fontSize:11, fontFamily:"'Syne',sans-serif", fontWeight:700,
-                letterSpacing:1, textTransform:"uppercase", border:"none",
-                background: appMode===id ? ACCENT : "transparent",
-                color: appMode===id ? "#fff" : "#6b7280", cursor:"pointer", transition:"all .2s"
-              }}>{label}</button>
-            ))}
-          </div>
-          </div>
-
         {/* Influencer Search Mode */}
         {appMode === "influencer" && (<>
           <div style={{ display:"flex", gap:10, marginBottom:32, flexWrap:"wrap" }}>
