@@ -64,6 +64,7 @@ export default async function handler(req, res) {
     if (results.length > 0) {
       try {
         const slugs = results.map(r => r.slug).filter(Boolean);
+        console.log("Typeahead enriching slugs:", slugs);
         const ts2 = Math.floor(Date.now() / 1000);
         const bulkRes = await juliusFetch(
           `/influencers/export/bulk?ts=${ts2}`,
@@ -76,16 +77,21 @@ export default async function handler(req, res) {
         if (bulkRes.ok) {
           const bulkData = await bulkRes.json();
           const bulkArray = Array.isArray(bulkData) ? bulkData : bulkData.results || [];
+          console.log("Bulk data received:", bulkArray.length, "items");
 
           // Enrich results with follower counts
           results = results.map(r => {
             const fullData = bulkArray.find(b => b.slug === r.slug);
-            return {
+            const enriched = {
               ...r,
               social_total_count: fullData?.social_total_count || null,
               tagline: fullData?.tagline || r.tagline,
             };
+            console.log("Enriched result:", r.slug, "count:", enriched.social_total_count);
+            return enriched;
           });
+        } else {
+          console.warn("Bulk fetch not ok:", bulkRes.status);
         }
       } catch (err) {
         console.warn("Failed to fetch full data for typeahead:", err.message);
