@@ -57,6 +57,7 @@ export default async function handler(req, res) {
 
         if (handleRes.ok) {
           const data = await handleRes.json();
+          console.log("Julius social response:", JSON.stringify(data));
           // Julius social endpoint returns minimal data; use slug to fetch full data
           const slug = data.slug || data.id;
           if (slug && sql) {
@@ -160,7 +161,13 @@ export default async function handler(req, res) {
     }
 
     res.setHeader("Content-Type", "application/json");
-    return res.status(200).json({ results });
+    return res.status(200).json({
+      results,
+      _debug: {
+        term,
+        isHandle: term.startsWith("@")
+      }
+    });
   } catch (err) {
     console.error("Typeahead error:", err);
     return res.status(500).json({
