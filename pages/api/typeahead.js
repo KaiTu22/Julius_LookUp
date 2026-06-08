@@ -43,6 +43,7 @@ export default async function handler(req, res) {
     let results = [];
 
     // If term starts with @, search by handle
+    let juliusRawData = null;
     if (term.startsWith("@")) {
       const handleQuery = term.substring(1);
       if (handleQuery.length >= 2) {
@@ -57,7 +58,7 @@ export default async function handler(req, res) {
 
         if (handleRes.ok) {
           const data = await handleRes.json();
-          console.log("Julius social response:", JSON.stringify(data));
+          juliusRawData = data;
           // Julius social endpoint returns minimal data; use slug to fetch full data
           const slug = data.slug || data.id;
           if (slug && sql) {
@@ -165,7 +166,8 @@ export default async function handler(req, res) {
       results,
       _debug: {
         term,
-        isHandle: term.startsWith("@")
+        isHandle: term.startsWith("@"),
+        juliusRawData
       }
     });
   } catch (err) {
