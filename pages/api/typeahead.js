@@ -58,7 +58,40 @@ export default async function handler(req, res) {
     }
 
     const data = await typeaheadRes.json();
-    const results = Array.isArray(data) ? data : data.results || [];
+    let results = Array.isArray(data) ? data : data.results || [];
+
+    // Fetch full data to get follower counts
+    if (results.length > 0) {
+      try {
+        const slugs = results.map(r => r.slug).filter(Boolean);
+        const ts2 = Math.floor(Date.now() / 1000);
+        const bulkRes = await juliusFetch(
+          `/influencers/export/bulk?ts=${ts2}`,
+          "POST",
+          { ids: slugs },
+          apiKey,
+          apiSecret
+        );
+
+        if (bulkRes.ok) {
+          const bulkData = await bulkRes.json();
+          const bulkArray = Array.isArray(bulkData) ? bulkData : bulkData.results || [];
+
+          // Enrich results with follower counts
+          results = results.map(r => {
+            const fullData = bulkArray.find(b => b.slug === r.slug);
+            return {
+              ...r,
+              social_total_count: fullData?.social_total_count || null,
+              tagline: fullData?.tagline || r.tagline,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to fetch full data for typeahead:", err.message);
+        // Continue with basic results if bulk fetch fails
+      }
+    }
 
     res.setHeader("Content-Type", "application/json");
     return res.status(200).json({ results });
