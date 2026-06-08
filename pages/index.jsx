@@ -37,48 +37,13 @@ export default function Home() {
     };
     fetchFeatured();
 
-    // Load and enrich recently viewed from localStorage
-    const loadRecentlyViewed = async () => {
-      try {
-        const stored = localStorage.getItem("recentlyViewed");
-        if (stored) {
-          const recent = JSON.parse(stored);
-          console.log("Loaded from localStorage:", recent);
-
-          // Fetch full data for each to ensure we have follower counts
-          const slugs = recent.map(r => r.slug).filter(Boolean);
-          if (slugs.length > 0) {
-            try {
-              const res = await fetch("/api/get-influencer-data", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ slugs }),
-              });
-
-              if (res.ok) {
-                const json = await res.json();
-                console.log("Enriched data from API:", json);
-                const enriched = recent.map(r => {
-                  const fullData = json.influencers.find(i => i.slug === r.slug);
-                  return fullData ? { ...r, ...fullData } : r;
-                });
-                console.log("Final enriched:", enriched);
-                setRecentlyViewed(enriched);
-              } else {
-                console.error("Enrich API failed:", res.status);
-                setRecentlyViewed(recent);
-              }
-            } catch (err) {
-              console.error("Failed to enrich recently viewed:", err);
-              setRecentlyViewed(recent);
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load recently viewed:", err);
-      }
-    };
-    loadRecentlyViewed();
+    // Load recently viewed from localStorage
+    try {
+      const stored = localStorage.getItem("recentlyViewed");
+      if (stored) setRecentlyViewed(JSON.parse(stored));
+    } catch (err) {
+      console.error("Failed to load recently viewed:", err);
+    }
   }, []);
 
   // Track recently viewed profiles
