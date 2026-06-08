@@ -74,10 +74,11 @@ export default async function handler(req, res) {
           apiSecret
         );
 
+        console.log("Bulk response status:", bulkRes.status, bulkRes.ok);
         if (bulkRes.ok) {
           const bulkData = await bulkRes.json();
           const bulkArray = Array.isArray(bulkData) ? bulkData : bulkData.results || [];
-          console.log("Bulk data received:", bulkArray.length, "items");
+          console.log("Bulk data received:", bulkArray.length, "items", bulkArray);
 
           // Enrich results with follower counts
           results = results.map(r => {
@@ -91,10 +92,11 @@ export default async function handler(req, res) {
             return enriched;
           });
         } else {
-          console.warn("Bulk fetch not ok:", bulkRes.status);
+          const errText = await bulkRes.text();
+          console.error("Bulk fetch failed:", bulkRes.status, errText);
         }
       } catch (err) {
-        console.warn("Failed to fetch full data for typeahead:", err.message);
+        console.error("Typeahead enrichment error:", err);
         // Continue with basic results if bulk fetch fails
       }
     }
