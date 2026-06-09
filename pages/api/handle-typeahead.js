@@ -70,14 +70,26 @@ export default async function handler(req, res) {
           apiSecret
         );
 
-        if (!handleRes.ok) return null;
+        console.log(`[handle-typeahead] ${platform}: HTTP ${handleRes.status}`);
+
+        if (!handleRes.ok) {
+          const text = await handleRes.text();
+          console.log(`[handle-typeahead] ${platform} error response:`, text.substring(0, 200));
+          return null;
+        }
 
         const responseData = await handleRes.json();
+        console.log(`[handle-typeahead] ${platform} data:`, JSON.stringify(responseData).substring(0, 200));
+
         const influencer = Array.isArray(responseData.results)
           ? responseData.results[0]
           : responseData;
 
-        return influencer && influencer.slug ? { influencer, platform } : null;
+        if (influencer && influencer.slug) {
+          console.log(`[handle-typeahead] ${platform}: Found ${influencer.display_name} (${influencer.slug})`);
+          return { influencer, platform };
+        }
+        return null;
       } catch (err) {
         console.error(`Error searching ${platform}:`, err.message);
         return null;
