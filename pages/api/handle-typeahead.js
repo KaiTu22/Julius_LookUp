@@ -30,16 +30,21 @@ export default async function handler(req, res) {
           LIMIT 20
         `;
 
+        console.log(`[handle-typeahead] Search term: "${handle}" (clean: "${cleanHandle}"), found ${rows.length} rows`);
+
         for (const row of rows) {
           try {
             const rawData = typeof row.raw_data === 'string' ? JSON.parse(row.raw_data) : row.raw_data;
             const socialCombined = rawData?.social_combined || [];
+
+            console.log(`[handle-typeahead] Row ${row.slug}: has ${socialCombined.length} platforms`);
 
             // Find matching handles and platforms
             for (const platform of socialCombined) {
               const accounts = platform.accounts || [];
               for (const account of accounts) {
                 const remoteHandle = (account.remote_handle || "").toLowerCase();
+                console.log(`  [${platform.platform}] handle: "${remoteHandle}", searching for: "${cleanHandle}", match: ${remoteHandle.includes(cleanHandle)}`);
                 if (remoteHandle.includes(cleanHandle)) {
                   const platformName = platform.platform || 'unknown';
                   const accountUrl = account.url || `https://${platformName}.com/${remoteHandle}`;
