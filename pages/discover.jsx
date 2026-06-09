@@ -174,7 +174,7 @@ export default function DiscoverPage() {
     setNameSearch("");
     setNameSearchResults([]);
     await archiveInfluencer(influencer.slug);
-    window.location.href = `/?slug=${encodeURIComponent(influencer.slug)}`;
+    window.open(`/?slug=${encodeURIComponent(influencer.slug)}`, '_blank');
   };
 
   return (
@@ -944,7 +944,7 @@ export default function DiscoverPage() {
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
                         onClick={() => {
-                          window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`;
+                          window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank');
                         }}
                         style={{
                           flex: 1,
