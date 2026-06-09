@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import FolderBrowser from "@/components/FolderBrowser";
 
 const ACCENT = "#3b82f6";
 
@@ -202,28 +203,56 @@ export default function ListsPage() {
           </div>
         )}
 
-        {loading && !lists.length ? (
-          <div style={{ color: "#9ca3af", padding: 24 }}>Loading…</div>
-        ) : lists.length === 0 ? (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "280px 1fr",
+          gap: 24,
+        }}>
+          {/* Sidebar: Folder Browser */}
           <div style={{
-            background: "#ffffff", border: "1px dashed #d1d5db",
-            borderRadius: 12, padding: "48px 24px", textAlign: "center",
-            color: "#6b7280",
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: 12,
+            padding: 16,
+            height: "fit-content",
+            position: "sticky",
+            top: 20,
           }}>
-            <div style={{ fontSize: 14, marginBottom: 8 }}>
-              No lists yet.
-            </div>
-            <div style={{ fontSize: 12, color: "#9ca3af" }}>
-              Create your first list, then add influencers from their profile or this page.
-            </div>
+            <h2 style={{
+              fontFamily: "'Syne',sans-serif",
+              fontSize: 13,
+              fontWeight: 700,
+              margin: "0 0 12px 0",
+            }}>
+              Organize
+            </h2>
+            <FolderBrowser onFoldersChange={load} />
           </div>
-        ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 16,
-          }}>
-            {lists.map(l => (
+
+          {/* Main: Lists Grid */}
+          <div>
+            {loading && !lists.length ? (
+              <div style={{ color: "#9ca3af", padding: 24 }}>Loading…</div>
+            ) : lists.length === 0 ? (
+              <div style={{
+                background: "#ffffff", border: "1px dashed #d1d5db",
+                borderRadius: 12, padding: "48px 24px", textAlign: "center",
+                color: "#6b7280",
+              }}>
+                <div style={{ fontSize: 14, marginBottom: 8 }}>
+                  No lists yet.
+                </div>
+                <div style={{ fontSize: 12, color: "#9ca3af" }}>
+                  Create your first list, then add influencers from their profile or this page.
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 16,
+              }}>
+                {lists.map(l => (
               <div key={l.id} style={{
                 background: "#ffffff", border: "1px solid #e5e7eb",
                 borderRadius: 12, padding: 20,
@@ -286,9 +315,11 @@ export default function ListsPage() {
                   )}
                 </div>
               </div>
-            ))}
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
       </div>
     </div>
