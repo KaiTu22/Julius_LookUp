@@ -94,7 +94,9 @@ export default function Home() {
     if (searchMode === "handle") {
       setHandleSearchLoading(true);
       try {
-        const res = await fetch(`/api/handle-typeahead?handle=${encodeURIComponent(term)}`);
+        // Use typeahead endpoint for handles (already works with @)
+        const searchTerm = term.startsWith("@") ? term : `@${term}`;
+        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(searchTerm)}`);
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Search failed");
         setHandleSearchResults(json.results || []);

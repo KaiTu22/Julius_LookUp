@@ -42,103 +42,111 @@ export default async function handler(req, res) {
   try {
     let results = [];
 
-    // If term starts with @, search by handle
-    let juliusRawData = null;
+    // If term starts with @, search by handle across multiple platforms
     if (term.startsWith("@")) {
       const handleQuery = term.substring(1);
       if (handleQuery.length >= 2) {
+        const platforms = [
+          "instagram",
+          "tiktok",
+          "twitter",
+          "youtube",
+          "facebook",
+          "twitch",
+          "snapchat",
+          "pinterest",
+          "linkedin",
+          "threads",
+        ];
+
+        const seenSlugs = new Set();
         const ts = Math.floor(Date.now() / 1000);
-        const handleRes = await juliusFetch(
-          `/influencers/export/social?platform=instagram&handle=${encodeURIComponent(handleQuery)}&ts=${ts}`,
-          "GET",
-          null,
-          apiKey,
-          apiSecret
+
+        // Search each platform in parallel
+        const platformResults = await Promise.all(
+          platforms.map(async (platform) => {
+            try {
+              const handleRes = await juliusFetch(
+                `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(handleQuery)}&ts=${ts}`,
+                "GET",
+                null,
+                apiKey,
+                apiSecret
+              );
+
+              if (!handleRes.ok) return null;
+
+              const responseData = await handleRes.json();
+              const influencer = Array.isArray(responseData.results)
+                ? responseData.results[0]
+                : responseData;
+
+              if (!influencer || !influencer.id) return null;
+
+              return { influencer, platform };
+            } catch (err) {
+              console.error(`Handle search on ${platform} failed:`, err.message);
+              return null;
+            }
+          })
         );
 
-        if (handleRes.ok) {
-          const responseData = await handleRes.json();
-          juliusRawData = responseData;
-          // Julius returns results array
-          const influencer = Array.isArray(responseData.results) ? responseData.results[0] : responseData;
-          if (!influencer) {
-            // No result found
-          } else {
-            // Use slug to fetch full data from archive
-            const slug = influencer.slug || influencer.id;
-            if (slug && sql) {
-              try {
-                const archiveRows = await sql`
-                  SELECT
-                    id,
-                    slug,
-                    display_name,
-                    (raw_data->'avatar'->>'url') AS avatar_url,
-                    (raw_data->>'tagline') AS tagline,
-                    total_followers,
-                    raw_data
-                  FROM influencers
-                  WHERE slug = ${slug}
-                `;
-                if (archiveRows.length > 0) {
-                  const r = archiveRows[0];
-                  const rawData = typeof r.raw_data === 'string' ? JSON.parse(r.raw_data) : r.raw_data;
-                  const socialCombined = rawData?.social_combined || [];
-                  const accountUrl = socialCombined[0]?.accounts?.[0]?.url || `https://juliusworks.com/${r.slug}`;
-                  results = [{
-                    id: r.id,
-                    slug: r.slug,
-                    display_name: r.display_name,
-                    avatar: r.avatar_url ? { url: r.avatar_url } : {},
-                    tagline: r.tagline,
-                    social_total_count: r.total_followers,
-                    accountUrl,
-                    type: "influencer",
-                  }];
-                } else {
-                  // Not in archive yet, return full Julius data
-                  const accountUrl = influencer.social_combined?.[0]?.accounts?.[0]?.url || `https://juliusworks.com/${influencer.slug}`;
-                  results = [{
-                    id: influencer.id,
-                    slug: influencer.slug,
-                    display_name: influencer.display_name,
-                    avatar: influencer.avatar || {},
-                    tagline: influencer.tagline,
-                    social_total_count: influencer.social_total_count,
-                    accountUrl,
-                    type: "influencer",
-                  }];
-                }
-              } catch (err) {
-                console.error("Handle search archive lookup failed:", err.message);
-                const accountUrl = influencer.social_combined?.[0]?.accounts?.[0]?.url || `https://juliusworks.com/${influencer.slug}`;
-                results = [{
-                  id: influencer.id,
-                  slug: influencer.slug,
-                  display_name: influencer.display_name,
-                  avatar: influencer.avatar || {},
-                  tagline: influencer.tagline,
-                  social_total_count: influencer.social_total_count,
-                  accountUrl,
-                  type: "influencer",
-                }];
-              }
-            } else {
-              // No sql, return Julius data as-is
-              const accountUrl = influencer.social_combined?.[0]?.accounts?.[0]?.url || `https://juliusworks.com/${influencer.slug}`;
-              results = [{
-                id: influencer.id,
-                slug: influencer.slug,
-                display_name: influencer.display_name,
-                avatar: influencer.avatar || {},
-                tagline: influencer.tagline,
-                social_total_count: influencer.social_total_count,
-                accountUrl,
-                type: "influencer",
-              }];
+        // Process results
+        for (const result of platformResults) {
+          if (!result) continue;
+
+          const { influencer, platform } = result;
+          const slug = influencer.slug || influencer.id;
+
+          // Skip duplicates
+          if (seenSlugs.has(slug)) continue;
+          seenSlugs.add(slug);
+
+          // Get platform-specific URL
+          let accountUrl = influencer.social_combined
+            ?.find((s) => s.platform?.toLowerCase() === platform.toLowerCase())
+            ?.accounts?.[0]?.url;
+
+          if (!accountUrl) {
+            accountUrl = `https://juliusworks.com/${slug}`;
+          }
+
+          // Try to enrich with archive data
+          let archiveData = null;
+          if (sql) {
+            try {
+              const archiveRows = await sql`
+                SELECT
+                  id,
+                  slug,
+                  display_name,
+                  (raw_data->'avatar'->>'url') AS avatar_url,
+                  (raw_data->>'tagline') AS tagline,
+                  total_followers
+                FROM influencers
+                WHERE slug = ${slug}
+                LIMIT 1
+              `;
+              archiveData = archiveRows[0];
+            } catch (err) {
+              console.error(`Archive lookup failed for ${slug}:`, err.message);
             }
           }
+
+          results.push({
+            id: influencer.id,
+            slug: slug,
+            display_name: influencer.display_name,
+            avatar: influencer.avatar || (archiveData?.avatar_url ? { url: archiveData.avatar_url } : {}),
+            tagline: archiveData?.tagline || influencer.tagline,
+            social_total_count: archiveData?.total_followers || influencer.social_total_count,
+            accountUrl,
+            type: "influencer",
+          });
         }
+
+        // Sort by followers
+        results.sort((a, b) => (b.social_total_count || 0) - (a.social_total_count || 0));
       }
     } else {
       // Use Julius typeahead for name search
