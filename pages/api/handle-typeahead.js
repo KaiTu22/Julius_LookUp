@@ -58,85 +58,72 @@ export default async function handler(req, res) {
       "threads",
     ];
 
-    // Search each platform for the handle
-    const searchPromises = platforms.map(async (platform) => {
-      try {
-        const ts = Math.floor(Date.now() / 1000);
-        const handleRes = await juliusFetch(
-          `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`,
-          "GET",
-          null,
-          apiKey,
-          apiSecret
-        );
+    // Search each platform for the handle in parallel
+    const platformResults = await Promise.all(
+      platforms.map(async (platform) => {
+        try {
+          const ts = Math.floor(Date.now() / 1000);
+          const url = `/influencers/export/social?platform=${encodeURIComponent(
+            platform
+          )}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`;
 
-        console.log(`[handle-typeahead] ${platform}: HTTP ${handleRes.status}`);
+          const handleRes = await juliusFetch(url, "GET", null, apiKey, apiSecret);
 
-        if (!handleRes.ok) {
-          const text = await handleRes.text();
-          console.log(`[handle-typeahead] ${platform} error response:`, text.substring(0, 200));
+          if (!handleRes.ok) {
+            return null;
+          }
+
+          const responseData = await handleRes.json();
+          // Handle both array and direct object responses
+          const influencer = Array.isArray(responseData.results)
+            ? responseData.results[0]
+            : responseData;
+
+          if (!influencer || !influencer.id) {
+            return null;
+          }
+
+          return { influencer, platform };
+        } catch (err) {
+          console.error(`[handle-typeahead] Error on ${platform}:`, err.message);
           return null;
         }
+      })
+    );
 
-        const responseData = await handleRes.json();
-        console.log(`[handle-typeahead] ${platform} data:`, JSON.stringify(responseData).substring(0, 200));
-
-        const influencer = Array.isArray(responseData.results)
-          ? responseData.results[0]
-          : responseData;
-
-        if (influencer && influencer.slug) {
-          console.log(`[handle-typeahead] ${platform}: Found ${influencer.display_name} (${influencer.slug})`);
-          return { influencer, platform };
-        }
-        return null;
-      } catch (err) {
-        console.error(`Error searching ${platform}:`, err.message);
-        return null;
-      }
-    });
-
-    const platformResults = await Promise.all(searchPromises);
-
-    // Process results and deduplicate by slug
+    // Process and deduplicate by slug
     for (const result of platformResults) {
       if (!result) continue;
 
       const { influencer, platform } = result;
-      const slug = influencer.slug;
+      const slug = influencer.slug || influencer.id;
 
-      // Skip if we've already added this influencer
+      // Skip duplicates
       if (seenSlugs.has(slug)) continue;
       seenSlugs.add(slug);
 
-      // Find the account URL for this platform
-      let platformUrl = null;
-      const socialCombined = influencer.social_combined || [];
-      const platformData = socialCombined.find(
-        (s) => s.platform?.toLowerCase() === platform.toLowerCase()
-      );
-      if (platformData?.accounts?.[0]?.url) {
-        platformUrl = platformData.accounts[0].url;
-      }
+      // Get the URL for this specific platform
+      let platformUrl = influencer.social_combined
+        ?.find((s) => s.platform?.toLowerCase() === platform.toLowerCase())
+        ?.accounts?.[0]?.url;
 
-      // Fallback URL construction
       if (!platformUrl) {
-        platformUrl = `https://${platform}.com/${cleanHandle}`;
+        platformUrl = `https://juliusworks.com/${slug}`;
       }
 
-      // Try to get additional data from archive
+      // Try to enrich with archive data if available
       let archiveData = null;
       if (sql) {
         try {
-          const rows = await sql`
+          const archiveRows = await sql`
             SELECT total_followers, tagline, (raw_data->'avatar'->>'url') AS avatar_url
             FROM influencers
             WHERE slug = ${slug}
             LIMIT 1
           `;
-          archiveData = rows[0];
+          archiveData = archiveRows[0];
         } catch (err) {
-          console.error(`Error fetching archive data for ${slug}:`, err.message);
+          console.error(`[handle-typeahead] Archive lookup failed for ${slug}:`, err.message);
         }
       }
 
@@ -153,7 +140,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Sort by followers descending
+    // Sort by followers
     results.sort((a, b) => (b.social_total_count || 0) - (a.social_total_count || 0));
 
     res.setHeader("Content-Type", "application/json");
