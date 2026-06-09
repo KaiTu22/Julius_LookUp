@@ -23,9 +23,6 @@ export default function Home() {
   const [nameSearchResults, setNameSearchResults] = useState([]);
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
-  const [searchMode, setSearchMode] = useState("name"); // "name" or "handle"
-  const [handleSearchResults, setHandleSearchResults] = useState([]);
-  const [handleSearchLoading, setHandleSearchLoading] = useState(false);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -87,45 +84,21 @@ export default function Home() {
     setNameSearch(term);
     if (term.length < 2) {
       setNameSearchResults([]);
-      setHandleSearchResults([]);
       return;
     }
 
-    if (searchMode === "handle") {
-      setHandleSearchLoading(true);
-      try {
-        // Use typeahead endpoint for handles (already works with @)
-        const searchTerm = term.startsWith("@") ? term : `@${term}`;
-        console.log(`[Handle Mode] Searching: "${searchTerm}"`);
-        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(searchTerm)}`, {
-          cache: "no-store",
-        });
-        console.log(`[Handle Mode] Response status: ${res.status}`);
-        const json = await res.json();
-        console.log(`[Handle Mode] Got ${json.results?.length || 0} results:`, json.results?.map(r => r.display_name));
-        if (!res.ok) throw new Error(json.error || "Search failed");
-        setHandleSearchResults(json.results || []);
-        console.log(`[Handle Mode] State updated with ${(json.results || []).length} results`);
-      } catch (err) {
-        console.error(`[Handle Mode] Error:`, err);
-        setHandleSearchResults([]);
-      } finally {
-        setHandleSearchLoading(false);
-      }
-    } else {
-      setNameSearchLoading(true);
-      try {
-        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`, {
-          cache: "no-store",
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Search failed");
-        setNameSearchResults(json.results || []);
-      } catch (err) {
-        setNameSearchResults([]);
-      } finally {
-        setNameSearchLoading(false);
-      }
+    setNameSearchLoading(true);
+    try {
+      const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Search failed");
+      setNameSearchResults(json.results || []);
+    } catch (err) {
+      setNameSearchResults([]);
+    } finally {
+      setNameSearchLoading(false);
     }
   };
 
@@ -133,22 +106,8 @@ export default function Home() {
     if (e.key !== "Enter") return;
     e.preventDefault();
 
-    if (searchMode === "handle") {
-      // Handle search mode - fetch full profile
-      try {
-        const res = await fetch(`/api/julius?mode=handle&platform=instagram&handle=${encodeURIComponent(term)}`);
-        const json = await res.json();
-        if (res.ok && json.slug) {
-          window.location.href = `/?slug=${encodeURIComponent(json.slug)}`;
-        }
-      } catch (err) {
-        console.error("Handle search failed:", err);
-      }
-    } else {
-      // Name search mode - use first typeahead result
-      if (nameSearchResults.length > 0) {
-        handleNameSearchSelect(nameSearchResults[0]);
-      }
+    if (nameSearchResults.length > 0) {
+      handleNameSearchSelect(nameSearchResults[0]);
     }
   };
 
@@ -285,42 +244,6 @@ export default function Home() {
         padding: "24px",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          {/* Search Mode Toggle */}
-          <div style={{
-            display: "flex",
-            gap: 6,
-            marginBottom: 16,
-          }}>
-            {[
-              { id: "name", label: "Name" },
-              { id: "handle", label: "Handle (@)" },
-            ].map(mode => (
-              <button
-                key={mode.id}
-                onClick={() => {
-                  setSearchMode(mode.id);
-                  setNameSearchResults([]);
-                  setHandleSearchResults([]);
-                  setNameSearch("");
-                }}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: 20,
-                  fontSize: 12,
-                  fontFamily: "'Syne',sans-serif",
-                  fontWeight: 600,
-                  border: `1px solid ${searchMode === mode.id ? ACCENT : "#d1d5db"}`,
-                  background: searchMode === mode.id ? ACCENT + "22" : "transparent",
-                  color: searchMode === mode.id ? ACCENT : "#6b7280",
-                  cursor: "pointer",
-                  transition: "all .2s",
-                }}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
-
           <div style={{
             position: "relative",
             marginBottom: 0,
@@ -330,7 +253,7 @@ export default function Home() {
               value={nameSearch}
               onChange={e => handleNameSearch(e.target.value)}
               onKeyDown={e => handleSearchEnter(e, nameSearch)}
-              placeholder={searchMode === "handle" ? "e.g., taylorswift" : "e.g., Taylor Swift"}
+              placeholder="e.g., Taylor Swift or @handle"
               style={{
                 width: "100%",
                 padding: "12px 16px",
@@ -341,7 +264,7 @@ export default function Home() {
                 boxSizing: "border-box",
               }}
             />
-            {(nameSearchResults.length > 0 || handleSearchResults.length > 0) && (
+            {nameSearchResults.length > 0 && (
               <div style={{
                 position: "absolute",
                 top: "100%",
@@ -356,7 +279,7 @@ export default function Home() {
                 maxHeight: 400,
                 overflowY: "auto",
               }}>
-                {(searchMode === "name" ? nameSearchResults : handleSearchResults).map(influencer => (
+                {nameSearchResults.map(influencer => (
                   <button
                     key={`${influencer.slug}-${influencer.platform || 'base'}`}
                     onClick={() => handleNameSearchSelect(influencer)}
