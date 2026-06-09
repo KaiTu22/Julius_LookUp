@@ -1303,6 +1303,56 @@ export default function JuliusInfluencerLookup() {
                 background:"transparent", color:ACCENT, border:`1px solid ${ACCENT}`, borderRadius:20, cursor:"pointer"
               }}>← Back to Search</button>
             </div>
+
+            {/* Add to Lists */}
+            {allLists.length > 0 && (
+              <div style={{ marginBottom:24, padding:16, background:"#fff", border:`1px solid #e5e7eb`, borderRadius:12 }}>
+                <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, margin:"0 0 12px 0" }}>Add to List</h3>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                  {allLists.map(list => (
+                    <button
+                      key={list.id}
+                      onClick={() => toggleListMembership(list.id)}
+                      style={{
+                        fontFamily:"'DM Sans',sans-serif", fontSize:12, padding:"8px 12px", borderRadius:8,
+                        border: memberOf.has(list.id) ? `2px solid ${ACCENT}` : `1px solid #d1d5db`,
+                        background: memberOf.has(list.id) ? ACCENT+"22" : "transparent",
+                        color: memberOf.has(list.id) ? ACCENT : "#6b7280",
+                        cursor:"pointer", transition:"all .2s"
+                      }}
+                    >
+                      {memberOf.has(list.id) ? "✓ " : ""}{list.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Create New List */}
+            <div style={{ marginBottom:24, padding:16, background:"#fff", border:`1px solid #e5e7eb`, borderRadius:12 }}>
+              <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, margin:"0 0 12px 0" }}>Create New List</h3>
+              <div style={{ display:"flex", gap:8 }}>
+                <input
+                  type="text"
+                  placeholder="List name..."
+                  value={newListName}
+                  onChange={e => setNewListName(e.target.value)}
+                  style={{
+                    flex:1, fontFamily:"'DM Sans',sans-serif", fontSize:12, padding:"8px 12px",
+                    border:`1px solid #d1d5db`, borderRadius:6, outline:"none"
+                  }}
+                />
+                <button
+                  onClick={createListAndAdd}
+                  style={{
+                    fontFamily:"'Syne',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
+                    background:ACCENT, color:"#fff", border:"none", borderRadius:6, cursor:"pointer"
+                  }}
+                >
+                  Create & Add
+                </button>
+              </div>
+            </div>
             <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
             <>
               {activeTab === "overview"     && <OverviewTab d={displayData} />}
