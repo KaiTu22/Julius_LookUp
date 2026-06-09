@@ -96,15 +96,13 @@ export default function Home() {
       try {
         // Use typeahead endpoint for handles (already works with @)
         const searchTerm = term.startsWith("@") ? term : `@${term}`;
-        console.log(`[Handle Search] Searching for: "${searchTerm}"`);
-        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(searchTerm)}`);
+        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(searchTerm)}`, {
+          cache: "no-store",
+        });
         const json = await res.json();
-        console.log(`[Handle Search] Response:`, json);
         if (!res.ok) throw new Error(json.error || "Search failed");
-        console.log(`[Handle Search] Setting ${json.results?.length || 0} results`);
         setHandleSearchResults(json.results || []);
       } catch (err) {
-        console.error(`[Handle Search] Error:`, err);
         setHandleSearchResults([]);
       } finally {
         setHandleSearchLoading(false);
@@ -112,7 +110,9 @@ export default function Home() {
     } else {
       setNameSearchLoading(true);
       try {
-        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`);
+        const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`, {
+          cache: "no-store",
+        });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Search failed");
         setNameSearchResults(json.results || []);
