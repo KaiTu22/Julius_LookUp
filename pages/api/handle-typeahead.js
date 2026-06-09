@@ -14,6 +14,12 @@ export default async function handler(req, res) {
     // Search local archive for matching social handles
     if (sql) {
       try {
+        // First, test if we can get ANY rows at all
+        const testRows = await sql`
+          SELECT slug, display_name FROM influencers LIMIT 1
+        `;
+        console.log(`[handle-typeahead] Test query returned ${testRows.length} rows`);
+
         const rows = await sql`
           SELECT
             id,
@@ -25,10 +31,11 @@ export default async function handler(req, res) {
             raw_data
           FROM influencers
           WHERE
-            raw_data::text ILIKE ${'%' + cleanHandle + '%'}
+            raw_data::text ILIKE ${`%${cleanHandle}%`}
           ORDER BY total_followers DESC NULLS LAST
           LIMIT 20
         `;
+
 
         console.log(`[handle-typeahead] Search term: "${handle}" (clean: "${cleanHandle}"), found ${rows.length} rows`);
 
