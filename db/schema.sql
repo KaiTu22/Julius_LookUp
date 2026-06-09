@@ -51,3 +51,45 @@ CREATE TABLE IF NOT EXISTS list_members (
 
 CREATE INDEX IF NOT EXISTS idx_list_members_influencer
   ON list_members (influencer_slug);
+
+-- =========================================================================
+-- Folder hierarchy for organizing lists
+-- Supports up to 4 levels of nesting for organizing lists into folders.
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS folders (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id       UUID REFERENCES folders(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  description     TEXT,
+  depth           INT NOT NULL DEFAULT 1,
+  display_order   INT NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT folder_depth_range CHECK (depth >= 1 AND depth <= 4)
+);
+
+CREATE INDEX IF NOT EXISTS idx_folders_parent_id
+  ON folders(parent_id);
+
+CREATE INDEX IF NOT EXISTS idx_folders_depth
+  ON folders(depth);
+
+-- =========================================================================
+-- Folder ancestry for efficient hierarchical queries
+-- Closure table: tracks all ancestor-descendant relationships
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS folder_ancestors (
+  descendant_id   UUID NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+  ancestor_id     UUID NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+  depth           INT NOT NULL,
+  PRIMARY KEY (descendant_id, ancestor_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_folder_ancestors_ancestor
+  ON folder_ancestors(ancestor_id);
+
+-- =========================================================================
+-- Update lists table to support folder organization
+-- =========================================================================
+ALTER TABLE lists ADD COLUMN IF NOT EXISTS folder_id UUID REFERENCES folders(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_lists_folder_id ON lists(folder_id);
