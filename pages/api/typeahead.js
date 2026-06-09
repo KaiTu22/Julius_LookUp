@@ -149,7 +149,7 @@ export default async function handler(req, res) {
         results.sort((a, b) => (b.social_total_count || 0) - (a.social_total_count || 0));
       }
     } else {
-      // Use Julius typeahead for name search
+      // Use Julius typeahead for name search (exact matches)
       const ts = Math.floor(Date.now() / 1000);
       const typeaheadRes = await juliusFetch(
         `/influencers/search/typeahead?ts=${ts}&term=${encodeURIComponent(term)}`,
@@ -170,27 +170,68 @@ export default async function handler(req, res) {
 
       const data = await typeaheadRes.json();
       results = Array.isArray(data) ? data : data.results || [];
+
+      // Add fuzzy matches from archive if exact results are sparse
+      if (sql && results.length < 5) {
+        try {
+          const searchTerm = term.toLowerCase();
+          const fuzzyResults = await sql`
+            SELECT
+              id,
+              slug,
+              display_name,
+              (raw_data->'avatar'->>'url') AS avatar_url,
+              (raw_data->>'tagline') AS tagline,
+              total_followers
+            FROM influencers
+            WHERE LOWER(display_name) ILIKE ${`%${searchTerm}%`}
+            AND slug NOT IN (${results.map(r => r.slug).filter(Boolean)})
+            ORDER BY total_followers DESC NULLS LAST
+            LIMIT ${10 - results.length}
+          `;
+
+          // Add fuzzy results
+          for (const row of fuzzyResults) {
+            results.push({
+              id: row.id,
+              slug: row.slug,
+              display_name: row.display_name,
+              avatar: row.avatar_url ? { url: row.avatar_url } : {},
+              tagline: row.tagline,
+              social_total_count: row.total_followers,
+              type: "influencer",
+              fuzzy: true, // Mark as fuzzy match
+            });
+          }
+        } catch (err) {
+          console.warn("Fuzzy search failed:", err.message);
+        }
+      }
     }
 
-    // Enrich with local database data (follower counts, tagline)
+    // Enrich exact matches with local database data
     if (results.length > 0 && sql) {
       try {
-        const slugs = results.map(r => r.slug).filter(Boolean);
-        const archiveData = await sql`
-          SELECT slug, total_followers, tagline
-          FROM influencers
-          WHERE slug = ANY(${slugs})
-        `;
+        const exactResults = results.filter(r => !r.fuzzy);
+        const slugs = exactResults.map(r => r.slug).filter(Boolean);
 
-        const archiveMap = Object.fromEntries(
-          archiveData.map(r => [r.slug, r])
-        );
+        if (slugs.length > 0) {
+          const archiveData = await sql`
+            SELECT slug, total_followers, tagline
+            FROM influencers
+            WHERE slug = ANY(${slugs})
+          `;
 
-        results = results.map(r => ({
-          ...r,
-          social_total_count: archiveMap[r.slug]?.total_followers || null,
-          tagline: archiveMap[r.slug]?.tagline || r.tagline,
-        }));
+          const archiveMap = Object.fromEntries(
+            archiveData.map(r => [r.slug, r])
+          );
+
+          results = results.map(r => ({
+            ...r,
+            social_total_count: r.fuzzy ? r.social_total_count : (archiveMap[r.slug]?.total_followers || null),
+            tagline: r.fuzzy ? r.tagline : (archiveMap[r.slug]?.tagline || r.tagline),
+          }));
+        }
       } catch (err) {
         console.warn("Failed to enrich from archive:", err.message);
       }
