@@ -91,7 +91,7 @@ export default async function handler(req, res) {
           })
         );
 
-        // Process results
+        // Process handle results
         for (const result of platformResults) {
           if (!result) continue;
 
@@ -142,11 +142,50 @@ export default async function handler(req, res) {
             social_total_count: archiveData?.total_followers || influencer.social_total_count,
             accountUrl,
             type: "influencer",
+            searchType: "handle", // Mark as handle match
           });
         }
 
-        // Sort by followers
-        results.sort((a, b) => (b.social_total_count || 0) - (a.social_total_count || 0));
+        // If handle search returns sparse results, fall back to name search
+        if (results.length < 5) {
+          try {
+            const nameQuery = handleQuery; // Search by the name part without @
+            const ts2 = Math.floor(Date.now() / 1000);
+            const nameRes = await juliusFetch(
+              `/influencers/search/typeahead?ts=${ts2}&term=${encodeURIComponent(nameQuery)}`,
+              "GET",
+              null,
+              apiKey,
+              apiSecret
+            );
+
+            if (nameRes.ok) {
+              const nameData = await nameRes.json();
+              const nameResults = Array.isArray(nameData) ? nameData : nameData.results || [];
+
+              // Add name results, avoiding duplicates
+              for (const influencer of nameResults) {
+                const slug = influencer.slug || influencer.id;
+                if (seenSlugs.has(slug)) continue; // Skip already included
+                seenSlugs.add(slug);
+
+                results.push({
+                  ...influencer,
+                  searchType: "name", // Mark as name match (fallback)
+                });
+              }
+            }
+          } catch (err) {
+            console.error("Name fallback search failed:", err.message);
+          }
+        }
+
+        // Sort by type first (handle before name), then by followers
+        results.sort((a, b) => {
+          if (a.searchType === "handle" && b.searchType === "name") return -1;
+          if (a.searchType === "name" && b.searchType === "handle") return 1;
+          return (b.social_total_count || 0) - (a.social_total_count || 0);
+        });
       }
     } else {
       // Use Julius typeahead for name search (exact matches)
