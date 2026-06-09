@@ -1,6 +1,38 @@
+import crypto from "crypto";
 import { sql } from "@/lib/db";
 
+const JULIUS_BASE_URL = "https://api.juliusworks.com";
+const JULIUS_UA = "julius-api-client";
+
+function generateSignature(method, fullUrl, secret) {
+  const payload = `${method.toUpperCase()}|${fullUrl}|${JULIUS_UA}`;
+  return crypto.createHmac("sha256", secret).update(payload).digest("base64");
+}
+
+async function juliusFetch(path, method = "GET", body = null, apiKey, apiSecret) {
+  const fullUrl = `${JULIUS_BASE_URL}${path}`;
+  const sig = generateSignature(method, fullUrl, apiSecret);
+  const opts = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": JULIUS_UA,
+      "X-API-Key": apiKey,
+      "X-Signature": sig,
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(fullUrl, opts);
+}
+
 export default async function handler(req, res) {
+  const apiKey = process.env.JULIUS_API_KEY;
+  const apiSecret = process.env.JULIUS_API_SECRET;
+
+  if (!apiKey || !apiSecret) {
+    return res.status(500).json({ error: "Julius credentials not configured." });
+  }
+
   const { handle } = req.query;
 
   if (!handle || handle.length < 2) {
@@ -8,87 +40,112 @@ export default async function handler(req, res) {
   }
 
   try {
-    const cleanHandle = handle.replace(/^@/, "").toLowerCase();
+    const cleanHandle = handle.replace(/^@/, "");
     const results = [];
+    const seenSlugs = new Set();
 
-    // Search local archive for matching social handles
-    if (sql) {
+    // List of platforms to search
+    const platforms = [
+      "instagram",
+      "tiktok",
+      "twitter",
+      "youtube",
+      "facebook",
+      "twitch",
+      "snapchat",
+      "pinterest",
+      "linkedin",
+      "threads",
+    ];
+
+    // Search each platform for the handle
+    const searchPromises = platforms.map(async (platform) => {
       try {
-        // First, test if we can get ANY rows at all
-        const testRows = await sql`
-          SELECT slug, display_name FROM influencers LIMIT 1
-        `;
-        console.log(`[handle-typeahead] Test query returned ${testRows.length} rows`);
-
-        const rows = await sql`
-          SELECT
-            id,
-            slug,
-            display_name,
-            (raw_data->'avatar'->>'url') AS avatar_url,
-            (raw_data->>'tagline') AS tagline,
-            total_followers,
-            raw_data
-          FROM influencers
-          WHERE
-            raw_data::text ILIKE ${`%${cleanHandle}%`}
-          ORDER BY total_followers DESC NULLS LAST
-          LIMIT 20
-        `;
-
-
-        console.log(`[handle-typeahead] Search term: "${handle}" (clean: "${cleanHandle}"), found ${rows.length} rows`);
-
-        for (const row of rows) {
-          try {
-            const rawData = typeof row.raw_data === 'string' ? JSON.parse(row.raw_data) : row.raw_data;
-            const socialCombined = rawData?.social_combined || [];
-
-            console.log(`[handle-typeahead] Row ${row.slug}: has ${socialCombined.length} platforms`);
-
-            // Find matching handles and platforms
-            for (const platform of socialCombined) {
-              const accounts = platform.accounts || [];
-              for (const account of accounts) {
-                const remoteHandle = (account.remote_handle || "").toLowerCase();
-                console.log(`  [${platform.platform}] handle: "${remoteHandle}", searching for: "${cleanHandle}", match: ${remoteHandle.includes(cleanHandle)}`);
-                if (remoteHandle.includes(cleanHandle)) {
-                  const platformName = platform.platform || 'unknown';
-                  const accountUrl = account.url || `https://${platformName}.com/${remoteHandle}`;
-
-                  results.push({
-                    id: row.id,
-                    slug: row.slug,
-                    display_name: row.display_name,
-                    avatar: row.avatar_url ? { url: row.avatar_url } : {},
-                    tagline: row.tagline,
-                    social_total_count: row.total_followers,
-                    platform: platformName,
-                    platformUrl: accountUrl,
-                    type: "influencer",
-                  });
-                }
-              }
-            }
-          } catch (err) {
-            console.error("Error parsing raw_data:", err);
-          }
-        }
-
-        // Deduplicate by slug (in case same influencer has multiple matching handles)
-        const deduped = Array.from(
-          new Map(results.map(r => [r.slug, r])).values()
+        const ts = Math.floor(Date.now() / 1000);
+        const handleRes = await juliusFetch(
+          `/influencers/export/social?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(cleanHandle)}&ts=${ts}`,
+          "GET",
+          null,
+          apiKey,
+          apiSecret
         );
 
-        res.setHeader("Content-Type", "application/json");
-        return res.status(200).json({ results: deduped });
+        if (!handleRes.ok) return null;
+
+        const responseData = await handleRes.json();
+        const influencer = Array.isArray(responseData.results)
+          ? responseData.results[0]
+          : responseData;
+
+        return influencer && influencer.slug ? { influencer, platform } : null;
       } catch (err) {
-        console.error("Archive search error:", err);
-        return res.status(200).json({ results: [] });
+        console.error(`Error searching ${platform}:`, err.message);
+        return null;
       }
-    } else {
-      return res.status(200).json({ results: [] });
+    });
+
+    const platformResults = await Promise.all(searchPromises);
+
+    // Process results and deduplicate by slug
+    for (const result of platformResults) {
+      if (!result) continue;
+
+      const { influencer, platform } = result;
+      const slug = influencer.slug;
+
+      // Skip if we've already added this influencer
+      if (seenSlugs.has(slug)) continue;
+      seenSlugs.add(slug);
+
+      // Find the account URL for this platform
+      let platformUrl = null;
+      const socialCombined = influencer.social_combined || [];
+      const platformData = socialCombined.find(
+        (s) => s.platform?.toLowerCase() === platform.toLowerCase()
+      );
+      if (platformData?.accounts?.[0]?.url) {
+        platformUrl = platformData.accounts[0].url;
+      }
+
+      // Fallback URL construction
+      if (!platformUrl) {
+        platformUrl = `https://${platform}.com/${cleanHandle}`;
+      }
+
+      // Try to get additional data from archive
+      let archiveData = null;
+      if (sql) {
+        try {
+          const rows = await sql`
+            SELECT total_followers, tagline, (raw_data->'avatar'->>'url') AS avatar_url
+            FROM influencers
+            WHERE slug = ${slug}
+            LIMIT 1
+          `;
+          archiveData = rows[0];
+        } catch (err) {
+          console.error(`Error fetching archive data for ${slug}:`, err.message);
+        }
+      }
+
+      results.push({
+        id: influencer.id,
+        slug: slug,
+        display_name: influencer.display_name,
+        avatar: influencer.avatar || (archiveData?.avatar_url ? { url: archiveData.avatar_url } : {}),
+        tagline: archiveData?.tagline || influencer.tagline,
+        social_total_count: archiveData?.total_followers || influencer.social_total_count,
+        platform: platform,
+        platformUrl: platformUrl,
+        type: "influencer",
+      });
     }
+
+    // Sort by followers descending
+    results.sort((a, b) => (b.social_total_count || 0) - (a.social_total_count || 0));
+
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({ results: results.slice(0, 20) });
   } catch (err) {
     console.error("Handle typeahead error:", err);
     return res.status(200).json({ results: [] });
