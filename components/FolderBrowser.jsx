@@ -3,10 +3,28 @@ import { useState, useEffect } from "react";
 
 const ACCENT = "#3b82f6";
 
-function FolderNode({ folder, lists, subfolders, onSelectFolder, onEdit, onDelete, onMove, level = 0 }) {
+function FolderNode({
+  folder,
+  lists,
+  subfolders,
+  onSelectFolder,
+  onEdit,
+  onDelete,
+  onCreateChild,
+  level = 0,
+}) {
   const [expanded, setExpanded] = useState(false);
+  const [showNewChild, setShowNewChild] = useState(false);
+  const [newChildName, setNewChildName] = useState("");
 
   const hasChildren = (subfolders && subfolders.length > 0) || (lists && lists.length > 0);
+
+  const handleCreateChild = async () => {
+    if (!newChildName.trim()) return;
+    await onCreateChild?.(folder.id, newChildName.trim());
+    setNewChildName("");
+    setShowNewChild(false);
+  };
 
   return (
     <div style={{ marginLeft: `${level * 16}px` }}>
@@ -63,14 +81,33 @@ function FolderNode({ folder, lists, subfolders, onSelectFolder, onEdit, onDelet
         </span>
 
         <button
-          onClick={() => onEdit?.(folder)}
+          onClick={() => setShowNewChild(true)}
           style={{
-            background: "none",
-            border: "none",
-            color: "#6b7280",
+            background: "#dbeafe",
+            border: "1px solid #93c5fd",
+            color: ACCENT,
             cursor: "pointer",
             fontSize: 12,
-            padding: "4px 6px",
+            padding: "4px 8px",
+            borderRadius: 4,
+            fontWeight: 600,
+          }}
+          title="Add subfolder"
+        >
+          +
+        </button>
+
+        <button
+          onClick={() => onEdit?.(folder)}
+          style={{
+            background: "#f3f4f6",
+            border: "1px solid #d1d5db",
+            color: "#374151",
+            cursor: "pointer",
+            fontSize: 12,
+            padding: "4px 8px",
+            borderRadius: 4,
+            fontWeight: 600,
           }}
           title="Edit"
         >
@@ -80,18 +117,80 @@ function FolderNode({ folder, lists, subfolders, onSelectFolder, onEdit, onDelet
         <button
           onClick={() => onDelete?.(folder.id)}
           style={{
-            background: "none",
-            border: "none",
-            color: "#ef4444",
+            background: "#fee2e2",
+            border: "1px solid #fecaca",
+            color: "#dc2626",
             cursor: "pointer",
             fontSize: 12,
-            padding: "4px 6px",
+            padding: "4px 8px",
+            borderRadius: 4,
+            fontWeight: 600,
           }}
           title="Delete"
         >
           ✕
         </button>
       </div>
+
+      {showNewChild && (
+        <div style={{
+          marginLeft: `${(level + 1) * 16}px`,
+          padding: "8px 12px",
+          display: "flex",
+          gap: 6,
+          marginTop: 6,
+        }}>
+          <input
+            type="text"
+            placeholder="Folder name..."
+            value={newChildName}
+            onChange={e => setNewChildName(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleCreateChild()}
+            autoFocus
+            style={{
+              flex: 1,
+              padding: "6px 8px",
+              borderRadius: 4,
+              border: `1px solid #d1d5db`,
+              fontFamily: "'DM Sans',sans-serif",
+              fontSize: 12,
+              boxSizing: "border-box",
+            }}
+          />
+          <button
+            onClick={handleCreateChild}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 4,
+              background: ACCENT,
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          >
+            Create
+          </button>
+          <button
+            onClick={() => {
+              setShowNewChild(false);
+              setNewChildName("");
+            }}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 4,
+              background: "#e5e7eb",
+              color: "#374151",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 11,
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       {expanded && hasChildren && (
         <div>
@@ -104,7 +203,7 @@ function FolderNode({ folder, lists, subfolders, onSelectFolder, onEdit, onDelet
               onSelectFolder={onSelectFolder}
               onEdit={onEdit}
               onDelete={onDelete}
-              onMove={onMove}
+              onCreateChild={onCreateChild}
               level={level + 1}
             />
           ))}
@@ -142,13 +241,13 @@ export default function FolderBrowser({ onSelectFolder, onFoldersChange }) {
   const [rootLists, setRootLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingFolder, setEditingFolder] = useState(null);
+  const [editName, setEditName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [newFolderParent, setNewFolderParent] = useState(null);
 
   const loadFolders = async () => {
     try {
-      const res = await fetch("/api/folders/tree/all");
+      const res = await fetch("/api/folders/tree/all", { cache: "no-store" });
       const json = await res.json();
       setFolders(json.folders || []);
       setRootLists(json.rootLists || []);
@@ -172,35 +271,79 @@ export default function FolderBrowser({ onSelectFolder, onFoldersChange }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newFolderName.trim(),
-          parent_id: newFolderParent,
+          parent_id: null,
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create folder");
+      if (!res.ok) {
+        const json = await res.json();
+        alert(`Error: ${json.error}`);
+        return;
+      }
 
       setNewFolderName("");
-      setNewFolderParent(null);
       setShowNewFolder(false);
       await loadFolders();
     } catch (err) {
       console.error("Create folder error:", err);
+      alert("Failed to create folder");
+    }
+  };
+
+  const handleCreateChild = async (parentId, name) => {
+    try {
+      const res = await fetch("/api/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          parent_id: parentId,
+        }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json();
+        alert(`Error: ${json.error}`);
+        return;
+      }
+
+      await loadFolders();
+    } catch (err) {
+      console.error("Create child folder error:", err);
+      alert("Failed to create subfolder");
+    }
+  };
+
+  const handleEditFolder = async (folderId, newName) => {
+    try {
+      const res = await fetch(`/api/folders/${folderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+
+      if (!res.ok) throw new Error("Failed to edit");
+
+      setEditingFolder(null);
+      setEditName("");
+      await loadFolders();
+    } catch (err) {
+      console.error("Edit folder error:", err);
+      alert("Failed to edit folder");
     }
   };
 
   const handleDeleteFolder = async (folderId) => {
-    if (!confirm("Delete this folder? Lists inside will not be deleted.")) return;
+    if (!confirm("Delete this folder? Lists inside will remain.")) return;
 
     try {
       const res = await fetch(`/api/folders/${folderId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete folder");
+      if (!res.ok) throw new Error("Failed to delete");
       await loadFolders();
     } catch (err) {
       console.error("Delete error:", err);
+      alert("Failed to delete folder");
     }
-  };
-
-  const handleEditFolder = (folder) => {
-    setEditingFolder(folder);
   };
 
   if (loading) {
@@ -287,6 +430,65 @@ export default function FolderBrowser({ onSelectFolder, onFoldersChange }) {
         </div>
       )}
 
+      {editingFolder && (
+        <div style={{ marginBottom: 16, padding: 12, background: "#f9fafb", borderRadius: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Edit folder:</div>
+          <input
+            type="text"
+            value={editName}
+            onChange={e => setEditName(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleEditFolder(editingFolder.id, editName)}
+            autoFocus
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              borderRadius: 6,
+              border: `1px solid #d1d5db`,
+              fontFamily: "'DM Sans',sans-serif",
+              fontSize: 13,
+              marginBottom: 8,
+              boxSizing: "border-box",
+            }}
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => handleEditFolder(editingFolder.id, editName)}
+              style={{
+                flex: 1,
+                padding: "6px 12px",
+                borderRadius: 6,
+                background: ACCENT,
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => {
+                setEditingFolder(null);
+                setEditName("");
+              }}
+              style={{
+                flex: 1,
+                padding: "6px 12px",
+                borderRadius: 6,
+                background: "#e5e7eb",
+                color: "#374151",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 12,
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Root level folders */}
       {folders && folders.map(folder => (
         <FolderNode
@@ -295,8 +497,12 @@ export default function FolderBrowser({ onSelectFolder, onFoldersChange }) {
           lists={folder.lists}
           subfolders={folder.subfolders}
           onSelectFolder={onSelectFolder}
-          onEdit={handleEditFolder}
+          onEdit={folder => {
+            setEditingFolder(folder);
+            setEditName(folder.name);
+          }}
           onDelete={handleDeleteFolder}
+          onCreateChild={handleCreateChild}
           level={0}
         />
       ))}
