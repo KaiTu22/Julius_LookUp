@@ -83,43 +83,48 @@ export default async function handler(req, res) {
     if (req.method === "PATCH") {
       const { name, description, display_order } = req.body;
 
-      let [updated];
+      let updated;
 
       if (name !== undefined && description !== undefined && display_order !== undefined) {
-        [updated] = await sql`
+        const result = await sql`
           UPDATE folders
           SET name = ${name}, description = ${description}, display_order = ${display_order}, updated_at = NOW()
           WHERE id = ${id} AND deleted_at IS NULL
           RETURNING *
         `;
+        updated = result[0];
       } else if (name !== undefined && description !== undefined) {
-        [updated] = await sql`
+        const result = await sql`
           UPDATE folders
           SET name = ${name}, description = ${description}, updated_at = NOW()
           WHERE id = ${id} AND deleted_at IS NULL
           RETURNING *
         `;
+        updated = result[0];
       } else if (name !== undefined) {
-        [updated] = await sql`
+        const result = await sql`
           UPDATE folders
           SET name = ${name}, updated_at = NOW()
           WHERE id = ${id} AND deleted_at IS NULL
           RETURNING *
         `;
+        updated = result[0];
       } else if (description !== undefined) {
-        [updated] = await sql`
+        const result = await sql`
           UPDATE folders
           SET description = ${description}, updated_at = NOW()
           WHERE id = ${id} AND deleted_at IS NULL
           RETURNING *
         `;
+        updated = result[0];
       } else if (display_order !== undefined) {
-        [updated] = await sql`
+        const result = await sql`
           UPDATE folders
           SET display_order = ${display_order}, updated_at = NOW()
           WHERE id = ${id} AND deleted_at IS NULL
           RETURNING *
         `;
+        updated = result[0];
       } else {
         return res.status(400).json({ error: "No fields to update" });
       }
