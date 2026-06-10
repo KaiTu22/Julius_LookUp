@@ -49,6 +49,7 @@ async function buildTree(folderId = null) {
     result.push({
       ...folder,
       type: "folder",
+      list_count: lists.length,
       lists,
       subfolders: children,
     });
