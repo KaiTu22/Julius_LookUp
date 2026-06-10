@@ -60,10 +60,12 @@ export default function ListFolderPicker({ listId, currentFolderId, onMove, onCl
 
       if (!res.ok) throw new Error("Failed to move list");
 
-      onMove?.();
+      // Small delay to ensure database update is complete before refresh
+      setTimeout(() => {
+        onMove?.();
+      }, 100);
     } catch (err) {
       console.error("Move error:", err);
-    } finally {
       setMoving(false);
     }
   };

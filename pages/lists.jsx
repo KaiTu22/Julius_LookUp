@@ -33,6 +33,7 @@ export default function ListsPage() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [movingList, setMovingList] = useState(null);
+  const [folderBrowserKey, setFolderBrowserKey] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -232,7 +233,7 @@ export default function ListsPage() {
             }}>
               Organize
             </h2>
-            <FolderBrowser onFoldersChange={load} />
+            <FolderBrowser key={folderBrowserKey} onFoldersChange={load} />
           </div>
 
           {/* Main: Lists Grid */}
@@ -294,6 +295,7 @@ export default function ListsPage() {
                       onMove={() => {
                         setMovingList(null);
                         load();
+                        setFolderBrowserKey(prev => prev + 1);
                       }}
                       onClose={() => setMovingList(null)}
                     />
