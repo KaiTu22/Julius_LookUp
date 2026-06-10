@@ -4,6 +4,7 @@ import Link from "next/link";
 import FolderBrowser from "@/components/FolderBrowser";
 import FolderStats from "@/components/FolderStats";
 import FolderSearch from "@/components/FolderSearch";
+import ListFolderPicker from "@/components/ListFolderPicker";
 
 const ACCENT = "#3b82f6";
 
@@ -31,6 +32,7 @@ export default function ListsPage() {
   const [newDescription, setNewDescription] = useState("");
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [movingList, setMovingList] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -284,38 +286,64 @@ export default function ListsPage() {
                     Created {fmtDate(l.created_at)}
                   </div>
                 </Link>
-                <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
-                  {confirmDelete === l.id ? (
-                    <div style={{ display: "flex", gap: 6 }}>
+                {movingList === l.id && (
+                  <div style={{ marginTop: 14 }}>
+                    <ListFolderPicker
+                      listId={l.id}
+                      currentFolderId={l.folder_id}
+                      onMove={() => {
+                        setMovingList(null);
+                        load();
+                      }}
+                      onClose={() => setMovingList(null)}
+                    />
+                  </div>
+                )}
+                <div style={{ marginTop: 14, display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                  {!movingList && (
+                    <>
                       <button
-                        onClick={() => setConfirmDelete(null)}
+                        onClick={() => setMovingList(l.id)}
                         style={{
                           padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
-                          background: "#ffffff", color: "#6b7280", cursor: "pointer",
+                          background: "transparent", color: ACCENT, cursor: "pointer",
                           fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
                           letterSpacing: 1, textTransform: "uppercase",
                         }}
-                      >Cancel</button>
-                      <button
-                        onClick={() => deleteList(l.id)}
-                        style={{
-                          padding: "4px 10px", borderRadius: 6, border: "none",
-                          background: "#ef4444", color: "#ffffff", cursor: "pointer",
-                          fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 10,
-                          letterSpacing: 1, textTransform: "uppercase",
-                        }}
-                      >Confirm Delete</button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmDelete(l.id)}
-                      style={{
-                        padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
-                        background: "transparent", color: "#9ca3af", cursor: "pointer",
-                        fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
-                        letterSpacing: 1, textTransform: "uppercase",
-                      }}
-                    >Delete</button>
+                      >Move</button>
+                      {confirmDelete === l.id ? (
+                        <>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            style={{
+                              padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
+                              background: "#ffffff", color: "#6b7280", cursor: "pointer",
+                              fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                              letterSpacing: 1, textTransform: "uppercase",
+                            }}
+                          >Cancel</button>
+                          <button
+                            onClick={() => deleteList(l.id)}
+                            style={{
+                              padding: "4px 10px", borderRadius: 6, border: "none",
+                              background: "#ef4444", color: "#ffffff", cursor: "pointer",
+                              fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 10,
+                              letterSpacing: 1, textTransform: "uppercase",
+                            }}
+                          >Confirm Delete</button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDelete(l.id)}
+                          style={{
+                            padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
+                            background: "transparent", color: "#9ca3af", cursor: "pointer",
+                            fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                            letterSpacing: 1, textTransform: "uppercase",
+                          }}
+                        >Delete</button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
