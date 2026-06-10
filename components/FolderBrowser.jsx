@@ -126,6 +126,7 @@ function FolderNode({ folder, lists, subfolders, onSelectFolder, onEdit, onDelet
               onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
+              <span style={{ minWidth: 16 }}></span>
               <span style={{ color: ACCENT }}>📋</span>
               <span style={{ fontSize: 13, flex: 1 }}>{list.name}</span>
             </div>
