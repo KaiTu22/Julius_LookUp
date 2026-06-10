@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS lists (
   name        TEXT NOT NULL,
   description TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at  TIMESTAMPTZ
 );
 
 -- =========================================================================
@@ -65,6 +66,7 @@ CREATE TABLE IF NOT EXISTS folders (
   display_order   INT NOT NULL DEFAULT 0,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at      TIMESTAMPTZ,
   CONSTRAINT folder_depth_range CHECK (depth >= 1 AND depth <= 4)
 );
 
@@ -93,3 +95,13 @@ CREATE INDEX IF NOT EXISTS idx_folder_ancestors_ancestor
 -- =========================================================================
 ALTER TABLE lists ADD COLUMN IF NOT EXISTS folder_id UUID REFERENCES folders(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_lists_folder_id ON lists(folder_id);
+
+-- =========================================================================
+-- Add soft delete support (undo/restore capability)
+-- =========================================================================
+ALTER TABLE lists ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE folders ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+-- Index for efficient soft-delete queries
+CREATE INDEX IF NOT EXISTS idx_lists_deleted ON lists(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_folders_deleted ON folders(deleted_at);

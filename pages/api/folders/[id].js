@@ -27,9 +27,9 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      // Get folder with children
+      // Get folder with children (exclude soft-deleted)
       const [folder] = await sql`
-        SELECT * FROM folders WHERE id = ${id}
+        SELECT * FROM folders WHERE id = ${id} AND deleted_at IS NULL
       `;
 
       if (!folder) {
@@ -120,12 +120,14 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "DELETE") {
-      const folder = await sql`
-        DELETE FROM folders WHERE id = ${id}
+      const [folder] = await sql`
+        UPDATE folders
+        SET deleted_at = NOW(), updated_at = NOW()
+        WHERE id = ${id} AND deleted_at IS NULL
         RETURNING *
       `;
 
-      if (!folder || folder.length === 0) {
+      if (!folder) {
         return res.status(404).json({ error: "Folder not found" });
       }
 

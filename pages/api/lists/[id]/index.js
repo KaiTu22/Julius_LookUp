@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   const { id } = req.query;
   try {
     if (req.method === "GET") {
-      const [list] = await sql`SELECT * FROM lists WHERE id = ${id}`;
+      const [list] = await sql`SELECT * FROM lists WHERE id = ${id} AND deleted_at IS NULL`;
       if (!list) return res.status(404).json({ error: "List not found." });
       const members = await sql`
         SELECT
@@ -24,8 +24,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "DELETE") {
-      const result = await sql`DELETE FROM lists WHERE id = ${id} RETURNING id`;
-      if (result.length === 0) return res.status(404).json({ error: "List not found." });
+      const [result] = await sql`UPDATE lists SET deleted_at = NOW(), updated_at = NOW() WHERE id = ${id} AND deleted_at IS NULL RETURNING id`;
+      if (!result) return res.status(404).json({ error: "List not found." });
       return res.status(200).json({ deleted: id });
     }
 
