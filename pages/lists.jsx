@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import FolderBrowser from "@/components/FolderBrowser";
+import FolderStats from "@/components/FolderStats";
+import FolderSearch from "@/components/FolderSearch";
 
 const ACCENT = "#3b82f6";
 
@@ -218,6 +220,8 @@ export default function ListsPage() {
             position: "sticky",
             top: 20,
           }}>
+            <FolderStats />
+            <FolderSearch />
             <h2 style={{
               fontFamily: "'Syne',sans-serif",
               fontSize: 13,
