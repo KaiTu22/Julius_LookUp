@@ -83,34 +83,46 @@ export default async function handler(req, res) {
     if (req.method === "PATCH") {
       const { name, description, display_order } = req.body;
 
-      const updates = [];
-      const values = [];
+      let [updated];
 
-      if (name !== undefined) {
-        updates.push(`name = $${updates.length + 1}`);
-        values.push(name);
-      }
-      if (description !== undefined) {
-        updates.push(`description = $${updates.length + 1}`);
-        values.push(description);
-      }
-      if (display_order !== undefined) {
-        updates.push(`display_order = $${updates.length + 1}`);
-        values.push(display_order);
-      }
-
-      if (updates.length === 0) {
+      if (name !== undefined && description !== undefined && display_order !== undefined) {
+        [updated] = await sql`
+          UPDATE folders
+          SET name = ${name}, description = ${description}, display_order = ${display_order}, updated_at = NOW()
+          WHERE id = ${id} AND deleted_at IS NULL
+          RETURNING *
+        `;
+      } else if (name !== undefined && description !== undefined) {
+        [updated] = await sql`
+          UPDATE folders
+          SET name = ${name}, description = ${description}, updated_at = NOW()
+          WHERE id = ${id} AND deleted_at IS NULL
+          RETURNING *
+        `;
+      } else if (name !== undefined) {
+        [updated] = await sql`
+          UPDATE folders
+          SET name = ${name}, updated_at = NOW()
+          WHERE id = ${id} AND deleted_at IS NULL
+          RETURNING *
+        `;
+      } else if (description !== undefined) {
+        [updated] = await sql`
+          UPDATE folders
+          SET description = ${description}, updated_at = NOW()
+          WHERE id = ${id} AND deleted_at IS NULL
+          RETURNING *
+        `;
+      } else if (display_order !== undefined) {
+        [updated] = await sql`
+          UPDATE folders
+          SET display_order = ${display_order}, updated_at = NOW()
+          WHERE id = ${id} AND deleted_at IS NULL
+          RETURNING *
+        `;
+      } else {
         return res.status(400).json({ error: "No fields to update" });
       }
-
-      values.push(id);
-
-      const [updated] = await sql`
-        UPDATE folders
-        SET ${updates.join(", ")}, updated_at = NOW()
-        WHERE id = $${updates.length + 1}
-        RETURNING *
-      `;
 
       if (!updated) {
         return res.status(404).json({ error: "Folder not found" });
