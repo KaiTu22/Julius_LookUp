@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 const ACCENT = "#3b82f6";
 
 function FolderOption({ folder, subfolders, level, selectedId, onSelect }) {
+  const indent = "─ ".repeat(level);
   return (
     <>
-      <option value={folder.id} style={{ paddingLeft: `${level * 20}px` }}>
-        {"  ".repeat(level)}{folder.name}
+      <option value={folder.id}>
+        {indent}{folder.name} ({level})
       </option>
       {subfolders && subfolders.map(sub => (
         <FolderOption
@@ -32,7 +33,7 @@ export default function ListFolderPicker({ listId, currentFolderId, onMove, onCl
   useEffect(() => {
     const loadFolders = async () => {
       try {
-        const res = await fetch("/api/folders/tree/all");
+        const res = await fetch("/api/folders/tree/all", { cache: "no-store" });
         const json = await res.json();
         setFolders(json.folders || []);
       } catch (err) {
