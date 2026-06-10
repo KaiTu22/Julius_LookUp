@@ -322,14 +322,17 @@ export default function FolderBrowser({ onSelectFolder, onFoldersChange }) {
         body: JSON.stringify({ name: newName.trim() }),
       });
 
-      if (!res.ok) throw new Error("Failed to edit");
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || "Failed to edit");
+      }
 
       setEditingFolder(null);
       setEditName("");
       await loadFolders();
     } catch (err) {
       console.error("Edit folder error:", err);
-      alert("Failed to edit folder");
+      alert(`Failed to edit folder: ${err.message}`);
     }
   };
 
