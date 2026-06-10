@@ -2,19 +2,37 @@ import { sql } from "@/lib/db";
 
 async function buildTree(folderId = null) {
   // Get folders at this level
-  const folders = await sql`
-    SELECT
-      f.id,
-      f.name,
-      f.description,
-      f.depth,
-      f.display_order,
-      f.created_at,
-      f.updated_at
-    FROM folders f
-    WHERE f.parent_id ${folderId ? `= ${folderId}` : "IS NULL"}
-    ORDER BY f.display_order, f.created_at
-  `;
+  let folders;
+
+  if (folderId) {
+    folders = await sql`
+      SELECT
+        f.id,
+        f.name,
+        f.description,
+        f.depth,
+        f.display_order,
+        f.created_at,
+        f.updated_at
+      FROM folders f
+      WHERE f.parent_id = ${folderId}
+      ORDER BY f.display_order, f.created_at
+    `;
+  } else {
+    folders = await sql`
+      SELECT
+        f.id,
+        f.name,
+        f.description,
+        f.depth,
+        f.display_order,
+        f.created_at,
+        f.updated_at
+      FROM folders f
+      WHERE f.parent_id IS NULL
+      ORDER BY f.display_order, f.created_at
+    `;
+  }
 
   // For each folder, get lists and build subtree
   const result = [];
