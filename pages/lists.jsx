@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import FolderBrowser from "@/components/FolderBrowser";
+import FolderNavigator from "@/components/FolderNavigator";
 import FolderStats from "@/components/FolderStats";
 import FolderSearch from "@/components/FolderSearch";
 import ListFolderPicker from "@/components/ListFolderPicker";
@@ -33,7 +33,7 @@ export default function ListsPage() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [movingList, setMovingList] = useState(null);
-  const [folderBrowserKey, setFolderBrowserKey] = useState(0);
+  const [selectedFolder, setSelectedFolder] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -233,124 +233,176 @@ export default function ListsPage() {
             }}>
               Organize
             </h2>
-            <FolderBrowser key={folderBrowserKey} onFoldersChange={load} />
+            <FolderNavigator selectedFolder={selectedFolder} onSelectFolder={setSelectedFolder} />
           </div>
 
           {/* Main: Lists Grid */}
           <div>
+            {/* Breadcrumb */}
+            <div style={{
+              marginBottom: 24,
+              fontSize: 13,
+              color: "#6b7280",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}>
+              <button
+                onClick={() => setSelectedFolder(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: selectedFolder ? ACCENT : "#6b7280",
+                  cursor: "pointer",
+                  fontWeight: selectedFolder ? 400 : 600,
+                  fontSize: 13,
+                  textDecoration: "none",
+                }}
+              >
+                🏠 Home
+              </button>
+              {selectedFolder && (
+                <>
+                  <span style={{ color: "#d1d5db" }}>/</span>
+                  <span style={{ fontWeight: 600, color: "#111827" }}>
+                    {selectedFolder.name}
+                  </span>
+                </>
+              )}
+            </div>
+
             {loading && !lists.length ? (
               <div style={{ color: "#9ca3af", padding: 24 }}>Loading…</div>
-            ) : lists.length === 0 ? (
-              <div style={{
-                background: "#ffffff", border: "1px dashed #d1d5db",
-                borderRadius: 12, padding: "48px 24px", textAlign: "center",
-                color: "#6b7280",
-              }}>
-                <div style={{ fontSize: 14, marginBottom: 8 }}>
-                  No lists yet.
-                </div>
-                <div style={{ fontSize: 12, color: "#9ca3af" }}>
-                  Create your first list, then add influencers from their profile or this page.
-                </div>
-              </div>
             ) : (
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                gap: 16,
-              }}>
-                {lists.map(l => (
-              <div key={l.id} style={{
-                background: "#ffffff", border: "1px solid #e5e7eb",
-                borderRadius: 12, padding: 20,
-                display: "flex", flexDirection: "column",
-              }}>
-                <Link href={`/lists/${l.id}`} style={{ textDecoration: "none", color: "inherit", flex: 1 }}>
-                  <div style={{
-                    fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 18,
-                    color: "#111827", marginBottom: 4,
+              <>
+                {/* View Title */}
+                <div style={{ marginBottom: 16 }}>
+                  <h2 style={{
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: "#111827",
+                    margin: 0,
                   }}>
-                    {l.name}
-                  </div>
-                  {l.description && (
-                    <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 10 }}>
-                      {l.description}
+                    Lists in: {selectedFolder ? selectedFolder.name : "All"}
+                  </h2>
+                </div>
+
+                {/* Lists Grid */}
+                {(selectedFolder ? lists.filter(l => l.folder_id === selectedFolder.id) : lists).length === 0 ? (
+                  <div style={{
+                    background: "#ffffff", border: "1px dashed #d1d5db",
+                    borderRadius: 12, padding: "48px 24px", textAlign: "center",
+                    color: "#6b7280",
+                  }}>
+                    <div style={{ fontSize: 14, marginBottom: 8 }}>
+                      {selectedFolder ? "No lists in this folder." : "No lists yet."}
                     </div>
-                  )}
+                    <div style={{ fontSize: 12, color: "#9ca3af" }}>
+                      {selectedFolder
+                        ? "Create a new list or move lists here from the Move button."
+                        : "Create your first list, then add influencers from their profile or this page."}
+                    </div>
+                  </div>
+                ) : (
                   <div style={{
-                    fontFamily: "'DM Mono',monospace", fontSize: 12, color: ACCENT,
-                    marginTop: 8,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: 16,
                   }}>
-                    {l.member_count} {l.member_count === 1 ? "member" : "members"}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
-                    Created {fmtDate(l.created_at)}
-                  </div>
-                </Link>
-                {movingList === l.id && (
-                  <div style={{ marginTop: 14 }}>
-                    <ListFolderPicker
-                      listId={l.id}
-                      currentFolderId={l.folder_id}
-                      onMove={() => {
-                        setMovingList(null);
-                        load();
-                        setFolderBrowserKey(prev => prev + 1);
-                      }}
-                      onClose={() => setMovingList(null)}
-                    />
-                  </div>
-                )}
-                <div style={{ marginTop: 14, display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                  {!movingList && (
-                    <>
-                      <button
-                        onClick={() => setMovingList(l.id)}
-                        style={{
-                          padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
-                          background: "transparent", color: ACCENT, cursor: "pointer",
-                          fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
-                          letterSpacing: 1, textTransform: "uppercase",
-                        }}
-                      >Move</button>
-                      {confirmDelete === l.id ? (
+                    {(selectedFolder ? lists.filter(l => l.folder_id === selectedFolder.id) : lists).map(l => (
+                  <div key={l.id} style={{
+                    background: "#ffffff", border: "1px solid #e5e7eb",
+                    borderRadius: 12, padding: 20,
+                    display: "flex", flexDirection: "column",
+                  }}>
+                    <Link href={`/lists/${l.id}`} style={{ textDecoration: "none", color: "inherit", flex: 1 }}>
+                      <div style={{
+                        fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 18,
+                        color: "#111827", marginBottom: 4,
+                      }}>
+                        {l.name}
+                      </div>
+                      {l.description && (
+                        <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 10 }}>
+                          {l.description}
+                        </div>
+                      )}
+                      <div style={{
+                        fontFamily: "'DM Mono',monospace", fontSize: 12, color: ACCENT,
+                        marginTop: 8,
+                      }}>
+                        {l.member_count} {l.member_count === 1 ? "member" : "members"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
+                        Created {fmtDate(l.created_at)}
+                      </div>
+                    </Link>
+                    {movingList === l.id && (
+                      <div style={{ marginTop: 14 }}>
+                        <ListFolderPicker
+                          listId={l.id}
+                          currentFolderId={l.folder_id}
+                          onMove={() => {
+                            setMovingList(null);
+                            load();
+                          }}
+                          onClose={() => setMovingList(null)}
+                        />
+                      </div>
+                    )}
+                    <div style={{ marginTop: 14, display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                      {!movingList && (
                         <>
                           <button
-                            onClick={() => setConfirmDelete(null)}
+                            onClick={() => setMovingList(l.id)}
                             style={{
                               padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
-                              background: "#ffffff", color: "#6b7280", cursor: "pointer",
+                              background: "transparent", color: ACCENT, cursor: "pointer",
                               fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
                               letterSpacing: 1, textTransform: "uppercase",
                             }}
-                          >Cancel</button>
-                          <button
-                            onClick={() => deleteList(l.id)}
-                            style={{
-                              padding: "4px 10px", borderRadius: 6, border: "none",
-                              background: "#ef4444", color: "#ffffff", cursor: "pointer",
-                              fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 10,
-                              letterSpacing: 1, textTransform: "uppercase",
-                            }}
-                          >Confirm Delete</button>
+                          >Move</button>
+                          {confirmDelete === l.id ? (
+                            <>
+                              <button
+                                onClick={() => setConfirmDelete(null)}
+                                style={{
+                                  padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
+                                  background: "#ffffff", color: "#6b7280", cursor: "pointer",
+                                  fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                                  letterSpacing: 1, textTransform: "uppercase",
+                                }}
+                              >Cancel</button>
+                              <button
+                                onClick={() => deleteList(l.id)}
+                                style={{
+                                  padding: "4px 10px", borderRadius: 6, border: "none",
+                                  background: "#ef4444", color: "#ffffff", cursor: "pointer",
+                                  fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 10,
+                                  letterSpacing: 1, textTransform: "uppercase",
+                                }}
+                              >Confirm Delete</button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDelete(l.id)}
+                              style={{
+                                padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
+                                background: "transparent", color: "#9ca3af", cursor: "pointer",
+                                fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                                letterSpacing: 1, textTransform: "uppercase",
+                              }}
+                            >Delete</button>
+                          )}
                         </>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmDelete(l.id)}
-                          style={{
-                            padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
-                            background: "transparent", color: "#9ca3af", cursor: "pointer",
-                            fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
-                            letterSpacing: 1, textTransform: "uppercase",
-                          }}
-                        >Delete</button>
                       )}
-                    </>
-                  )}
-                </div>
-              </div>
-                ))}
-              </div>
+                    </div>
+                  </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
