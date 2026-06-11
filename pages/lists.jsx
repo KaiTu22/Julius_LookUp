@@ -39,7 +39,7 @@ export default function ListsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/lists");
+      const res = await fetch("/api/lists", { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to load lists");
       setLists(json.lists || []);
