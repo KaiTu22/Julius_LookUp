@@ -59,14 +59,20 @@ export default function ListFolderPicker({ listId, currentFolderId, onMove, onCl
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to move list");
+      const json = await res.json();
+      if (!res.ok) {
+        console.error("Move failed:", json);
+        throw new Error(json.error || "Failed to move list");
+      }
 
+      console.log("Move successful:", json);
       // Small delay to ensure database update is complete before refresh
       setTimeout(() => {
         onMove?.();
       }, 100);
     } catch (err) {
       console.error("Move error:", err);
+      alert(`Error moving list: ${err.message}`);
       setMoving(false);
     }
   };
