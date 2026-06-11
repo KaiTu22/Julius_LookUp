@@ -5,9 +5,10 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
       const rows = await sql`
         SELECT
-          l.id, l.name, l.description, l.created_at, l.updated_at,
+          l.id, l.name, l.description, l.folder_id, l.created_at, l.updated_at,
           (SELECT COUNT(*)::int FROM list_members WHERE list_id = l.id) AS member_count
         FROM lists l
+        WHERE l.deleted_at IS NULL
         ORDER BY l.created_at DESC
       `;
       return res.status(200).json({ lists: rows });
