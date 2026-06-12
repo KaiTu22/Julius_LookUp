@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         COUNT(DISTINCT l.id) as list_count
       FROM folders f
       LEFT JOIN lists l ON l.folder_id = f.id
-      WHERE LOWER(f.name) LIKE ${searchTerm} AND f.deleted_at IS NULL
+      WHERE LOWER(f.name) LIKE ${searchTerm}
       GROUP BY f.id, f.name, f.description, f.depth, f.created_at
       ORDER BY f.name
       LIMIT 20
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
       FROM lists l
       LEFT JOIN list_members lm ON l.id = lm.list_id
       LEFT JOIN folders f ON l.folder_id = f.id
-      WHERE LOWER(l.name) LIKE ${searchTerm} AND l.deleted_at IS NULL
+      WHERE LOWER(l.name) LIKE ${searchTerm}
       GROUP BY l.id, l.name, l.description, l.folder_id, l.created_at, f.name
       ORDER BY l.name
       LIMIT 20
