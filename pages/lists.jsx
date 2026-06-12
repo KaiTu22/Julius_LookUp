@@ -224,7 +224,7 @@ export default function ListsPage() {
             top: 20,
           }}>
             <FolderStats />
-            <FolderSearch />
+            <FolderSearch onSelectItem={setSelectedFolder} />
             <h2 style={{
               fontFamily: "'Syne',sans-serif",
               fontSize: 13,
