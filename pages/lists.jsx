@@ -34,6 +34,7 @@ export default function ListsPage() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [movingList, setMovingList] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
+  const [viewFilter, setViewFilter] = useState("all"); // all, ungrouped, grouped
 
   const load = async () => {
     setLoading(true);
@@ -238,37 +239,96 @@ export default function ListsPage() {
 
           {/* Main: Lists Grid */}
           <div>
-            {/* Breadcrumb */}
+            {/* Breadcrumb + Filters */}
             <div style={{
               marginBottom: 24,
-              fontSize: 13,
-              color: "#6b7280",
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              justifyContent: "space-between",
+              gap: 16,
             }}>
-              <button
-                onClick={() => setSelectedFolder(null)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: selectedFolder ? ACCENT : "#6b7280",
-                  cursor: "pointer",
-                  fontWeight: selectedFolder ? 400 : 600,
-                  fontSize: 13,
-                  textDecoration: "none",
-                }}
-              >
-                🏠 Home
-              </button>
-              {selectedFolder && (
-                <>
-                  <span style={{ color: "#d1d5db" }}>/</span>
-                  <span style={{ fontWeight: 600, color: "#111827" }}>
-                    {selectedFolder.name}
-                  </span>
-                </>
-              )}
+              <div style={{
+                fontSize: 13,
+                color: "#6b7280",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}>
+                <button
+                  onClick={() => setSelectedFolder(null)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: selectedFolder ? ACCENT : "#6b7280",
+                    cursor: "pointer",
+                    fontWeight: selectedFolder ? 400 : 600,
+                    fontSize: 13,
+                    textDecoration: "none",
+                  }}
+                >
+                  🏠 Home
+                </button>
+                {selectedFolder && (
+                  <>
+                    <span style={{ color: "#d1d5db" }}>/</span>
+                    <span style={{ fontWeight: 600, color: "#111827" }}>
+                      {selectedFolder.name}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Filter Buttons */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={() => { setViewFilter("all"); setSelectedFolder(null); }}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 6,
+                    border: `1px solid ${viewFilter === "all" ? ACCENT : "#d1d5db"}`,
+                    background: viewFilter === "all" ? ACCENT : "#fff",
+                    color: viewFilter === "all" ? "#fff" : "#6b7280",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    fontFamily: "'Syne',sans-serif",
+                  }}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => { setViewFilter("ungrouped"); setSelectedFolder(null); }}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 6,
+                    border: `1px solid ${viewFilter === "ungrouped" ? ACCENT : "#d1d5db"}`,
+                    background: viewFilter === "ungrouped" ? ACCENT : "#fff",
+                    color: viewFilter === "ungrouped" ? "#fff" : "#6b7280",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    fontFamily: "'Syne',sans-serif",
+                  }}
+                >
+                  Ungrouped
+                </button>
+                <button
+                  onClick={() => { setViewFilter("grouped"); setSelectedFolder(null); }}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 6,
+                    border: `1px solid ${viewFilter === "grouped" ? ACCENT : "#d1d5db"}`,
+                    background: viewFilter === "grouped" ? ACCENT : "#fff",
+                    color: viewFilter === "grouped" ? "#fff" : "#6b7280",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    fontFamily: "'Syne',sans-serif",
+                  }}
+                >
+                  Grouped
+                </button>
+              </div>
             </div>
 
             {loading && !lists.length ? (
@@ -289,7 +349,17 @@ export default function ListsPage() {
                 </div>
 
                 {/* Lists Grid */}
-                {(selectedFolder ? lists.filter(l => l.folder_id === selectedFolder.id) : lists).length === 0 ? (
+                {(() => {
+                  let filtered = lists;
+                  if (selectedFolder) {
+                    filtered = lists.filter(l => l.folder_id === selectedFolder.id);
+                  } else if (viewFilter === "ungrouped") {
+                    filtered = lists.filter(l => !l.folder_id);
+                  } else if (viewFilter === "grouped") {
+                    filtered = lists.filter(l => l.folder_id);
+                  }
+                  return filtered;
+                })().length === 0 ? (
                   <div style={{
                     background: "#ffffff", border: "1px dashed #d1d5db",
                     borderRadius: 12, padding: "48px 24px", textAlign: "center",
@@ -310,7 +380,17 @@ export default function ListsPage() {
                     gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                     gap: 16,
                   }}>
-                    {(selectedFolder ? lists.filter(l => l.folder_id === selectedFolder.id) : lists).map(l => (
+                    {(() => {
+                      let filtered = lists;
+                      if (selectedFolder) {
+                        filtered = lists.filter(l => l.folder_id === selectedFolder.id);
+                      } else if (viewFilter === "ungrouped") {
+                        filtered = lists.filter(l => !l.folder_id);
+                      } else if (viewFilter === "grouped") {
+                        filtered = lists.filter(l => l.folder_id);
+                      }
+                      return filtered;
+                    })().map(l => (
                   <div key={l.id} style={{
                     background: "#ffffff", border: "1px solid #e5e7eb",
                     borderRadius: 12, padding: 20,
