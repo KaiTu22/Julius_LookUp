@@ -20,38 +20,18 @@ export default async function handler(req, res) {
 
     // Search folders
     const folders = await sql`
-      SELECT
-        id,
-        name,
-        description,
-        depth,
-        created_at,
-        'folder' as type,
-        COUNT(DISTINCT l.id) as list_count
+      SELECT f.id, f.name, f.description, f.depth, f.created_at, 'folder' as type
       FROM folders f
-      LEFT JOIN lists l ON l.folder_id = f.id
       WHERE LOWER(f.name) LIKE ${searchTerm}
-      GROUP BY f.id, f.name, f.description, f.depth, f.created_at
       ORDER BY f.name
       LIMIT 20
     `;
 
     // Search lists
     const lists = await sql`
-      SELECT
-        l.id,
-        l.name,
-        l.description,
-        l.folder_id,
-        l.created_at,
-        'list' as type,
-        COUNT(lm.influencer_slug) as member_count,
-        f.name as folder_name
+      SELECT l.id, l.name, l.description, l.folder_id, l.created_at, 'list' as type
       FROM lists l
-      LEFT JOIN list_members lm ON l.id = lm.list_id
-      LEFT JOIN folders f ON l.folder_id = f.id
       WHERE LOWER(l.name) LIKE ${searchTerm}
-      GROUP BY l.id, l.name, l.description, l.folder_id, l.created_at, f.name
       ORDER BY l.name
       LIMIT 20
     `;
