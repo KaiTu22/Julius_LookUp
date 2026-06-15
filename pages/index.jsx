@@ -23,6 +23,9 @@ export default function Home() {
   const [nameSearchResults, setNameSearchResults] = useState([]);
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [userLists, setUserLists] = useState([]);
+  const [addingToList, setAddingToList] = useState(null);
+  const [selectedListId, setSelectedListId] = useState(null);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -37,6 +40,18 @@ export default function Home() {
       }
     };
     fetchFeatured();
+
+    // Load user's lists
+    const fetchLists = async () => {
+      try {
+        const res = await fetch("/api/lists", { cache: "no-store" });
+        const json = await res.json();
+        if (res.ok) setUserLists(json.lists || []);
+      } catch (err) {
+        console.error("Failed to fetch lists:", err);
+      }
+    };
+    fetchLists();
 
     // Load recently viewed from localStorage
     try {
@@ -383,99 +398,263 @@ export default function Home() {
             </h2>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: 16,
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gap: 20,
             }}>
               {featured.map(inf => (
-                <button
+                <div
                   key={inf.slug}
-                  onClick={() => window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`}
                   style={{
                     background: "#ffffff",
                     border: "1px solid #e5e7eb",
                     borderRadius: 12,
-                    padding: "18px 20px",
+                    overflow: "hidden",
                     display: "flex",
                     flexDirection: "column",
-                    gap: 12,
                     cursor: "pointer",
                     transition: "all .2s",
-                    textAlign: "left",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
-                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
+                    e.currentTarget.style.transform = "translateY(-4px)";
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.boxShadow = "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {/* Large Image */}
+                  <div
+                    onClick={() => window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`}
+                    style={{
+                      aspectRatio: "1 / 1",
+                      background: "#e5e7eb",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }}
+                  >
                     {inf.avatar?.url ? (
                       <img
                         src={inf.avatar.url}
                         alt={inf.display_name}
                         style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: "50%",
+                          width: "100%",
+                          height: "100%",
                           objectFit: "cover",
-                          border: "1px solid #e5e7eb",
-                          flexShrink: 0,
                         }}
                       />
                     ) : (
                       <div style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: "50%",
-                        background: "#e5e7eb",
-                        flexShrink: 0,
+                        width: "100%",
+                        height: "100%",
+                        background: "#f3f4f6",
                       }} />
                     )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
+                  </div>
+
+                  {/* Info Section */}
+                  <div style={{ padding: 16 }}>
+                    <div
+                      onClick={() => window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`}
+                      style={{
                         fontFamily: "'Syne',sans-serif",
                         fontWeight: 700,
-                        fontSize: 14,
-                        color: "#111827",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}>
-                        {inf.display_name}
-                      </div>
-                      <div style={{
-                        fontFamily: "'DM Sans',sans-serif",
-                        fontSize: 11,
-                        color: "#6b7280",
-                        marginTop: 2,
-                      }}>
-                        {inf.tagline || "—"}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 16 }}>
-                    <div>
-                      <div style={{
-                        fontFamily: "'DM Mono',monospace",
                         fontSize: 15,
-                        fontWeight: 500,
-                        color: ACCENT,
-                      }}>
-                        {fmt(inf.social_total_count)}
-                      </div>
-                      <div style={{
-                        fontFamily: "'DM Sans',sans-serif",
-                        fontSize: 10,
-                        color: "#6b7280",
-                      }}>
-                        Followers
-                      </div>
+                        color: "#111827",
+                        marginBottom: 4,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {inf.display_name}
                     </div>
+                    <div style={{
+                      fontFamily: "'DM Sans',sans-serif",
+                      fontSize: 11,
+                      color: "#6b7280",
+                      marginBottom: 10,
+                    }}>
+                      {inf.tagline || "—"}
+                    </div>
+
+                    {/* Followers */}
+                    <div style={{
+                      fontFamily: "'DM Mono',monospace",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: ACCENT,
+                      marginBottom: 12,
+                    }}>
+                      {fmt(inf.social_total_count)} followers
+                    </div>
+
+                    {/* Social Links */}
+                    <div style={{
+                      display: "flex",
+                      gap: 8,
+                      marginBottom: 12,
+                      justifyContent: "center",
+                    }}>
+                      {inf.instagram_handle && (
+                        <a
+                          href={`https://instagram.com/${inf.instagram_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: "#f3f4f6",
+                            color: "#111827",
+                            textDecoration: "none",
+                            fontSize: 14,
+                            transition: "all .2s",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = ACCENT;
+                            e.currentTarget.style.color = "#ffffff";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = "#f3f4f6";
+                            e.currentTarget.style.color = "#111827";
+                          }}
+                          title="Instagram"
+                        >
+                          📷
+                        </a>
+                      )}
+                      {inf.tiktok_handle && (
+                        <a
+                          href={`https://tiktok.com/@${inf.tiktok_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: "#f3f4f6",
+                            color: "#111827",
+                            textDecoration: "none",
+                            fontSize: 14,
+                            transition: "all .2s",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = ACCENT;
+                            e.currentTarget.style.color = "#ffffff";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = "#f3f4f6";
+                            e.currentTarget.style.color = "#111827";
+                          }}
+                          title="TikTok"
+                        >
+                          🎵
+                        </a>
+                      )}
+                      {inf.twitter_handle && (
+                        <a
+                          href={`https://twitter.com/${inf.twitter_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: "#f3f4f6",
+                            color: "#111827",
+                            textDecoration: "none",
+                            fontSize: 14,
+                            transition: "all .2s",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = ACCENT;
+                            e.currentTarget.style.color = "#ffffff";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = "#f3f4f6";
+                            e.currentTarget.style.color = "#111827";
+                          }}
+                          title="Twitter"
+                        >
+                          𝕏
+                        </a>
+                      )}
+                      {inf.youtube_handle && (
+                        <a
+                          href={`https://youtube.com/@${inf.youtube_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: "#f3f4f6",
+                            color: "#111827",
+                            textDecoration: "none",
+                            fontSize: 14,
+                            transition: "all .2s",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = ACCENT;
+                            e.currentTarget.style.color = "#ffffff";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = "#f3f4f6";
+                            e.currentTarget.style.color = "#111827";
+                          }}
+                          title="YouTube"
+                        >
+                          ▶️
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Add to List Button */}
+                    <button
+                      onClick={() => setAddingToList(inf)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: 6,
+                        border: "1px solid " + ACCENT,
+                        background: "transparent",
+                        color: ACCENT,
+                        cursor: "pointer",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        fontFamily: "'Syne',sans-serif",
+                        transition: "all .2s",
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = ACCENT;
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = ACCENT;
+                      }}
+                    >
+                      + Add to List
+                    </button>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -574,7 +753,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                     <div>
                       <div style={{
                         fontFamily: "'DM Mono',monospace",
@@ -593,8 +772,187 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
+
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setAddingToList(inf);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "6px 10px",
+                      borderRadius: 6,
+                      border: "1px solid " + ACCENT,
+                      background: "transparent",
+                      color: ACCENT,
+                      cursor: "pointer",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      fontFamily: "'Syne',sans-serif",
+                      transition: "all .2s",
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = ACCENT;
+                      e.currentTarget.style.color = "#ffffff";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = ACCENT;
+                    }}
+                  >
+                    + Add to List
+                  </button>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add to List Modal */}
+      {addingToList && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 50,
+        }} onClick={() => setAddingToList(null)}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: 12,
+            padding: 24,
+            maxWidth: 400,
+            width: "90%",
+            boxShadow: "0 20px 25px rgba(0,0,0,0.15)",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 18,
+              color: "#111827",
+              marginBottom: 4,
+            }}>
+              Add {addingToList.display_name} to a List
+            </div>
+            <div style={{
+              fontSize: 13,
+              color: "#6b7280",
+              marginBottom: 16,
+            }}>
+              Select a list or create a new one
+            </div>
+
+            {userLists.length > 0 ? (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  maxHeight: 300,
+                  overflowY: "auto",
+                }}>
+                  {userLists.map(list => (
+                    <button
+                      key={list.id}
+                      onClick={() => {
+                        // Add influencer to list
+                        fetch(`/api/lists/${list.id}/add-member`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ influencer_slug: addingToList.slug }),
+                        }).then(() => {
+                          setAddingToList(null);
+                          alert(`Added to "${list.name}"`);
+                        }).catch(err => {
+                          alert(`Error: ${err.message}`);
+                        });
+                      }}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: 6,
+                        border: "1px solid #d1d5db",
+                        background: "#f9fafb",
+                        color: "#111827",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        transition: "all .2s",
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = ACCENT;
+                        e.currentTarget.style.color = "#ffffff";
+                        e.currentTarget.style.borderColor = ACCENT;
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = "#f9fafb";
+                        e.currentTarget.style.color = "#111827";
+                        e.currentTarget.style.borderColor = "#d1d5db";
+                      }}
+                    >
+                      📋 {list.name}
+                      {list.member_count > 0 && (
+                        <div style={{ fontSize: 11, color: "inherit", marginTop: 2 }}>
+                          {list.member_count} member{list.member_count !== 1 ? "s" : ""}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                padding: 16,
+                background: "#f9fafb",
+                borderRadius: 6,
+                textAlign: "center",
+                color: "#6b7280",
+                fontSize: 13,
+                marginBottom: 16,
+              }}>
+                No lists yet. Create one in the Lists section.
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <a
+                href="/lists"
+                style={{
+                  flex: 1,
+                  padding: "10px 16px",
+                  borderRadius: 6,
+                  background: ACCENT,
+                  color: "#ffffff",
+                  textDecoration: "none",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  fontFamily: "'Syne',sans-serif",
+                }}
+              >
+                Go to Lists
+              </a>
+              <button
+                onClick={() => setAddingToList(null)}
+                style={{
+                  flex: 1,
+                  padding: "10px 16px",
+                  borderRadius: 6,
+                  background: "#e5e7eb",
+                  color: "#374151",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  fontFamily: "'Syne',sans-serif",
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
