@@ -403,11 +403,26 @@ export default function ListsPage() {
                       }}>
                         {l.name}
                       </div>
-                      {l.description && (
-                        <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 10 }}>
-                          {l.description}
+
+                      {l.folder_name && (
+                        <div style={{
+                          fontSize: 11, color: ACCENT, fontWeight: 600,
+                          marginBottom: 8, display: "flex", alignItems: "center", gap: 4,
+                        }}>
+                          📁 {l.folder_name}
                         </div>
                       )}
+
+                      {l.description && (
+                        <div style={{
+                          fontSize: 12, color: "#6b7280", marginBottom: 10,
+                          fontStyle: "italic", borderLeft: `2px solid ${ACCENT}`,
+                          paddingLeft: 8,
+                        }}>
+                          "{l.description}"
+                        </div>
+                      )}
+
                       <div style={{
                         fontFamily: "'DM Mono',monospace", fontSize: 12, color: ACCENT,
                         marginTop: 8,

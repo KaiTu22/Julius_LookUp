@@ -6,8 +6,10 @@ export default async function handler(req, res) {
       const rows = await sql`
         SELECT
           l.id, l.name, l.description, l.folder_id, l.created_at, l.updated_at,
+          f.name AS folder_name,
           (SELECT COUNT(*)::int FROM list_members WHERE list_id = l.id) AS member_count
         FROM lists l
+        LEFT JOIN folders f ON l.folder_id = f.id
         ORDER BY l.created_at DESC
       `;
       return res.status(200).json({ lists: rows });
