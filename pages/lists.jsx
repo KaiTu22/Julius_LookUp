@@ -35,6 +35,9 @@ export default function ListsPage() {
   const [movingList, setMovingList] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [viewFilter, setViewFilter] = useState("all"); // all, ungrouped, grouped
+  const [editingList, setEditingList] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -84,6 +87,25 @@ export default function ListsPage() {
         throw new Error(json.error || "Delete failed");
       }
       setConfirmDelete(null);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const editList = async (id) => {
+    if (!editingList) return;
+    try {
+      const res = await fetch(`/api/lists/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editName.trim(), description: editDescription.trim() || null }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to edit");
+      setEditingList(null);
+      setEditName("");
+      setEditDescription("");
       load();
     } catch (err) {
       setError(err.message);
@@ -204,6 +226,69 @@ export default function ListsPage() {
                 }}
               >
                 {creating ? "Creating…" : "Create List"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {editingList && (
+          <div style={{
+            background: "#ffffff", border: "1px solid #e5e7eb",
+            borderRadius: 12, padding: 24, marginBottom: 24,
+          }}>
+            <div style={{
+              fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+              letterSpacing: 3, textTransform: "uppercase",
+              color: "#6b7280", marginBottom: 14,
+            }}>
+              Edit List
+            </div>
+            <input
+              autoFocus
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && editList(editingList.id)}
+              placeholder="List name"
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 8,
+                border: "1px solid #d1d5db", fontFamily: "'DM Sans',sans-serif",
+                fontSize: 14, marginBottom: 10, outline: "none",
+              }}
+            />
+            <textarea
+              value={editDescription}
+              onChange={e => setEditDescription(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && e.ctrlKey && editList(editingList.id)}
+              placeholder="Description (optional)"
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 8,
+                border: "1px solid #d1d5db", fontFamily: "'DM Sans',sans-serif",
+                fontSize: 13, marginBottom: 14, outline: "none", color: "#374151",
+                minHeight: 80, resize: "none",
+              }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => { setEditingList(null); setEditName(""); setEditDescription(""); }}
+                style={{
+                  padding: "8px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
+                  background: "#ffffff", color: "#6b7280", cursor: "pointer",
+                  fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 11,
+                  letterSpacing: 1, textTransform: "uppercase",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => editList(editingList.id)}
+                style={{
+                  padding: "8px 18px", borderRadius: 8, border: "none",
+                  background: ACCENT, color: "#ffffff", cursor: "pointer",
+                  fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+                  letterSpacing: 1, textTransform: "uppercase",
+                }}
+              >
+                Save Changes
               </button>
             </div>
           </div>
@@ -449,6 +534,19 @@ export default function ListsPage() {
                     <div style={{ marginTop: 14, display: "flex", gap: 6, justifyContent: "flex-end" }}>
                       {!movingList && (
                         <>
+                          <button
+                            onClick={() => {
+                              setEditingList(l);
+                              setEditName(l.name);
+                              setEditDescription(l.description || "");
+                            }}
+                            style={{
+                              padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
+                              background: "transparent", color: "#6b7280", cursor: "pointer",
+                              fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                              letterSpacing: 1, textTransform: "uppercase",
+                            }}
+                          >Edit</button>
                           <button
                             onClick={() => setMovingList(l.id)}
                             style={{
