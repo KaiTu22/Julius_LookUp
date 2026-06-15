@@ -26,12 +26,13 @@ export default async function handler(req, res) {
       if (r.raw_data) {
         try {
           const data = typeof r.raw_data === 'string' ? JSON.parse(r.raw_data) : r.raw_data;
-          handles.instagram_handle = data.instagram?.['@'] || data.instagram_handle;
-          handles.tiktok_handle = data.tiktok?.['@'] || data.tiktok_handle;
-          handles.twitter_handle = data.twitter?.['@'] || data.twitter_handle;
-          handles.youtube_handle = data.youtube?.['@'] || data.youtube_handle;
+          // Try different possible data structures
+          handles.instagram_handle = data.instagram?.['@'] || data.instagram?.handle || data.instagram_handle || (data.social_accounts?.instagram?.handle);
+          handles.tiktok_handle = data.tiktok?.['@'] || data.tiktok?.handle || data.tiktok_handle || (data.social_accounts?.tiktok?.handle);
+          handles.twitter_handle = data.twitter?.['@'] || data.twitter?.handle || data.twitter_handle || (data.social_accounts?.twitter?.handle);
+          handles.youtube_handle = data.youtube?.['@'] || data.youtube?.handle || data.youtube_handle || (data.social_accounts?.youtube?.handle);
         } catch (e) {
-          // If parsing fails, just skip handles
+          console.error("Failed to parse raw_data for " + r.slug, e);
         }
       }
 
@@ -43,6 +44,7 @@ export default async function handler(req, res) {
         avatar: r.avatar_url ? { url: r.avatar_url } : null,
         social_total_count: r.total_followers,
         current_location: null,
+        raw_data: r.raw_data,
         ...handles,
       };
     });
