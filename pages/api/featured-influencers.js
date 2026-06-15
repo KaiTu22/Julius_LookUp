@@ -22,19 +22,14 @@ export default async function handler(req, res) {
     `;
 
     const influencers = rows.map(r => {
-      const handles = {};
-      if (r.raw_data) {
-        try {
-          const data = typeof r.raw_data === 'string' ? JSON.parse(r.raw_data) : r.raw_data;
-          // Try different possible data structures
-          handles.instagram_handle = data.instagram?.['@'] || data.instagram?.handle || data.instagram_handle || (data.social_accounts?.instagram?.handle);
-          handles.tiktok_handle = data.tiktok?.['@'] || data.tiktok?.handle || data.tiktok_handle || (data.social_accounts?.tiktok?.handle);
-          handles.twitter_handle = data.twitter?.['@'] || data.twitter?.handle || data.twitter_handle || (data.social_accounts?.twitter?.handle);
-          handles.youtube_handle = data.youtube?.['@'] || data.youtube?.handle || data.youtube_handle || (data.social_accounts?.youtube?.handle);
-        } catch (e) {
-          console.error("Failed to parse raw_data for " + r.slug, e);
-        }
-      }
+      // Use display_name as Instagram handle (it appears to be the Instagram handle)
+      // Use slug as fallback for other platforms
+      const handles = {
+        instagram_handle: r.display_name,
+        tiktok_handle: r.display_name,
+        twitter_handle: r.display_name,
+        youtube_handle: r.display_name,
+      };
 
       return {
         id: r.slug,
@@ -44,7 +39,6 @@ export default async function handler(req, res) {
         avatar: r.avatar_url ? { url: r.avatar_url } : null,
         social_total_count: r.total_followers,
         current_location: null,
-        raw_data: r.raw_data,
         ...handles,
       };
     });
