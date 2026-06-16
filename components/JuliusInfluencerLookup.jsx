@@ -1294,23 +1294,30 @@ export default function JuliusInfluencerLookup() {
                 <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                   {displayData.social_combined?.map(s => {
                     const platformConfig = {
-                      instagram: { icon: "📷", label: "Instagram", color: "#E1306C", url: `https://instagram.com/${displayData.display_name}` },
-                      tiktok: { icon: "🎵", label: "TikTok", color: "#fe2c55", url: `https://tiktok.com/@${displayData.display_name}` },
-                      twitter: { icon: "𝕏", label: "Twitter/X", color: "#000000", url: `https://twitter.com/${displayData.display_name}` },
-                      youtube: { icon: "▶️", label: "YouTube", color: "#FF0000", url: `https://youtube.com/@${displayData.display_name}` },
-                      facebook: { icon: "f", label: "Facebook", color: "#1877F2", url: `https://facebook.com/${displayData.display_name}` },
-                      twitch: { icon: "🎮", label: "Twitch", color: "#9146ff", url: `https://twitch.tv/${displayData.display_name}` },
-                      snapchat: { icon: "👻", label: "Snapchat", color: "#FFFC00", url: `https://snapchat.com/add/${displayData.display_name}` },
-                      pinterest: { icon: "📌", label: "Pinterest", color: "#E60023", url: `https://pinterest.com/${displayData.display_name}` },
-                      linkedin: { icon: "in", label: "LinkedIn", color: "#0A66C2", url: `https://linkedin.com/in/${displayData.display_name}` },
+                      instagram: { icon: "📷", label: "Instagram", color: "#E1306C", buildUrl: (h) => `https://instagram.com/${h}` },
+                      tiktok: { icon: "🎵", label: "TikTok", color: "#fe2c55", buildUrl: (h) => `https://tiktok.com/@${h}` },
+                      twitter: { icon: "𝕏", label: "Twitter/X", color: "#000000", buildUrl: (h) => `https://twitter.com/${h}` },
+                      youtube: { icon: "▶️", label: "YouTube", color: "#FF0000", buildUrl: (h) => `https://youtube.com/@${h}` },
+                      facebook: { icon: "f", label: "Facebook", color: "#1877F2", buildUrl: (h) => `https://facebook.com/${h}` },
+                      twitch: { icon: "🎮", label: "Twitch", color: "#9146ff", buildUrl: (h) => `https://twitch.tv/${h}` },
+                      snapchat: { icon: "👻", label: "Snapchat", color: "#FFFC00", buildUrl: (h) => `https://snapchat.com/add/${h}` },
+                      pinterest: { icon: "📌", label: "Pinterest", color: "#E60023", buildUrl: (h) => `https://pinterest.com/${h}` },
+                      linkedin: { icon: "in", label: "LinkedIn", color: "#0A66C2", buildUrl: (h) => `https://linkedin.com/in/${h}` },
+                      threads: { icon: "@", label: "Threads", color: "#000000", buildUrl: (h) => `https://threads.net/@${h}` },
                     };
                     const config = platformConfig[s.platform];
                     if (!config) return null;
 
+                    // Get the actual handle from accounts
+                    const handle = s.accounts?.[0]?.remote_handle;
+                    if (!handle) return null;
+
+                    const url = config.buildUrl(handle);
+
                     return (
                       <a
                         key={s.platform}
-                        href={config.url}
+                        href={url}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={config.label}
