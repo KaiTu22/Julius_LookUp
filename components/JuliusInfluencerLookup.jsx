@@ -1271,7 +1271,7 @@ export default function JuliusInfluencerLookup() {
                 <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:14, color:"#6b7280", margin:"0 0 16px 0" }}>
                   {displayData.tagline || displayData.current_location?.display_name || "—"}
                 </p>
-                <div style={{ display:"flex", gap:16 }}>
+                <div style={{ display:"flex", gap:16, marginBottom:16 }}>
                   <div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:700, color:"#3b82f6" }}>
                       {fmt(displayData.social_total_count)}
@@ -1288,6 +1288,61 @@ export default function JuliusInfluencerLookup() {
                       Engagement
                     </div>
                   </div>
+                </div>
+
+                {/* Social Media Links */}
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                  {displayData.social_combined?.map(s => {
+                    const platformConfig = {
+                      instagram: { icon: "📷", label: "Instagram", color: "#E1306C", url: `https://instagram.com/${displayData.display_name}` },
+                      tiktok: { icon: "🎵", label: "TikTok", color: "#fe2c55", url: `https://tiktok.com/@${displayData.display_name}` },
+                      twitter: { icon: "𝕏", label: "Twitter/X", color: "#000000", url: `https://twitter.com/${displayData.display_name}` },
+                      youtube: { icon: "▶️", label: "YouTube", color: "#FF0000", url: `https://youtube.com/@${displayData.display_name}` },
+                      facebook: { icon: "f", label: "Facebook", color: "#1877F2", url: `https://facebook.com/${displayData.display_name}` },
+                      twitch: { icon: "🎮", label: "Twitch", color: "#9146ff", url: `https://twitch.tv/${displayData.display_name}` },
+                      snapchat: { icon: "👻", label: "Snapchat", color: "#FFFC00", url: `https://snapchat.com/add/${displayData.display_name}` },
+                      pinterest: { icon: "📌", label: "Pinterest", color: "#E60023", url: `https://pinterest.com/${displayData.display_name}` },
+                      linkedin: { icon: "in", label: "LinkedIn", color: "#0A66C2", url: `https://linkedin.com/in/${displayData.display_name}` },
+                    };
+                    const config = platformConfig[s.platform];
+                    if (!config) return null;
+
+                    return (
+                      <a
+                        key={s.platform}
+                        href={config.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={config.label}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 40,
+                          height: 40,
+                          borderRadius: "50%",
+                          background: config.color,
+                          color: "#ffffff",
+                          textDecoration: "none",
+                          fontSize: 18,
+                          fontWeight: 700,
+                          transition: "all .2s",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        {config.icon}
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             </div>
