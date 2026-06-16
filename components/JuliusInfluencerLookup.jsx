@@ -1294,16 +1294,16 @@ export default function JuliusInfluencerLookup() {
                 <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                   {displayData.social_combined?.map(s => {
                     const platformConfig = {
-                      instagram: { icon: "📷", label: "Instagram", color: "#E1306C", buildUrl: (h) => `https://instagram.com/${h}` },
-                      tiktok: { icon: "🎵", label: "TikTok", color: "#fe2c55", buildUrl: (h) => `https://tiktok.com/@${h}` },
-                      twitter: { icon: "𝕏", label: "Twitter/X", color: "#000000", buildUrl: (h) => `https://twitter.com/${h}` },
-                      youtube: { icon: "▶️", label: "YouTube", color: "#FF0000", buildUrl: (h) => `https://youtube.com/@${h}` },
-                      facebook: { icon: "f", label: "Facebook", color: "#1877F2", buildUrl: (h) => `https://facebook.com/${h}` },
-                      twitch: { icon: "🎮", label: "Twitch", color: "#9146ff", buildUrl: (h) => `https://twitch.tv/${h}` },
-                      snapchat: { icon: "👻", label: "Snapchat", color: "#FFFC00", buildUrl: (h) => `https://snapchat.com/add/${h}` },
-                      pinterest: { icon: "📌", label: "Pinterest", color: "#E60023", buildUrl: (h) => `https://pinterest.com/${h}` },
-                      linkedin: { icon: "in", label: "LinkedIn", color: "#0A66C2", buildUrl: (h) => `https://linkedin.com/in/${h}` },
-                      threads: { icon: "@", label: "Threads", color: "#000000", buildUrl: (h) => `https://threads.net/@${h}` },
+                      instagram: { iconClass: "fab fa-instagram", label: "Instagram", color: "#E1306C", buildUrl: (h) => `https://instagram.com/${h}` },
+                      tiktok: { iconClass: "fab fa-tiktok", label: "TikTok", color: "#fe2c55", buildUrl: (h) => `https://tiktok.com/@${h}` },
+                      twitter: { iconClass: "fab fa-x-twitter", label: "Twitter/X", color: "#000000", buildUrl: (h) => `https://twitter.com/${h}` },
+                      youtube: { iconClass: "fab fa-youtube", label: "YouTube", color: "#FF0000", buildUrl: (h) => `https://youtube.com/@${h}` },
+                      facebook: { iconClass: "fab fa-facebook-f", label: "Facebook", color: "#1877F2", buildUrl: (h) => `https://facebook.com/${h}` },
+                      twitch: { iconClass: "fab fa-twitch", label: "Twitch", color: "#9146ff", buildUrl: (h) => `https://twitch.tv/${h}` },
+                      snapchat: { iconClass: "fab fa-snapchat-ghost", label: "Snapchat", color: "#FFFC00", buildUrl: (h) => `https://snapchat.com/add/${h}` },
+                      pinterest: { iconClass: "fab fa-pinterest-p", label: "Pinterest", color: "#E60023", buildUrl: (h) => `https://pinterest.com/${h}` },
+                      linkedin: { iconClass: "fab fa-linkedin-in", label: "LinkedIn", color: "#0A66C2", buildUrl: (h) => `https://linkedin.com/in/${h}` },
+                      threads: { iconClass: "fab fa-threads", label: "Threads", color: "#000000", buildUrl: (h) => `https://threads.net/@${h}` },
                     };
                     const config = platformConfig[s.platform];
                     if (!config) return null;
@@ -1332,7 +1332,6 @@ export default function JuliusInfluencerLookup() {
                           color: "#ffffff",
                           textDecoration: "none",
                           fontSize: 18,
-                          fontWeight: 700,
                           transition: "all .2s",
                           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                           cursor: "pointer",
@@ -1346,7 +1345,7 @@ export default function JuliusInfluencerLookup() {
                           e.currentTarget.style.transform = "translateY(0)";
                         }}
                       >
-                        {config.icon}
+                        <i className={config.iconClass} style={{ fontSize: 18 }} />
                       </a>
                     );
                   })}
