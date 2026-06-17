@@ -233,10 +233,15 @@ export default async function handler(req, res) {
   let results = searchData.results || [];
   const total = searchData.total || 0;
 
-  // Apply client-side filtering for "all" platform mode
+  // Combine archive and Julius results, removing duplicates
+  const archivedSlugs = new Set(archiveResults.map(r => r.slug));
+  const apiOnlyResults = results.filter(r => !archivedSlugs.has(r.slug));
+  let combinedResults = [...archiveResults, ...apiOnlyResults];
+
+  // Apply client-side filtering for "all" platform mode to ALL results (archive + API)
   if (platform === "all") {
     if (minFollowers > 0 || maxFollowers > 0) {
-      results = results.filter(r => {
+      combinedResults = combinedResults.filter(r => {
         const count = r.social_total_count || 0;
         if (minFollowers > 0 && count < minFollowers) return false;
         if (maxFollowers > 0 && count > maxFollowers) return false;
@@ -245,10 +250,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // Combine archive and Julius results, removing duplicates
-  const archivedSlugs = new Set(archiveResults.map(r => r.slug));
-  const apiOnlyResults = results.filter(r => !archivedSlugs.has(r.slug));
-  const combinedResults = [...archiveResults, ...apiOnlyResults].slice(0, limit);
+  // Apply pagination after filtering
+  combinedResults = combinedResults.slice(0, limit);
 
   // hasMore is true if we got a full page of results (meaning there could be more)
   const hasMore = combinedResults.length === limit;
