@@ -235,8 +235,13 @@ export default async function handler(req, res) {
 
   // Apply client-side filtering for "all" platform mode
   if (platform === "all") {
-    if (minFollowers > 0) {
-      results = results.filter(r => (r.social_total_count || 0) >= minFollowers);
+    if (minFollowers > 0 || maxFollowers > 0) {
+      results = results.filter(r => {
+        const count = r.social_total_count || 0;
+        if (minFollowers > 0 && count < minFollowers) return false;
+        if (maxFollowers > 0 && count > maxFollowers) return false;
+        return true;
+      });
     }
   }
 
