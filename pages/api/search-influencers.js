@@ -225,9 +225,15 @@ export default async function handler(req, res) {
   // Combine archive and Julius results, removing duplicates
   const archivedSlugs = new Set(archiveResults.map(r => r.slug));
   const apiOnlyResults = results.filter(r => !archivedSlugs.has(r.slug));
-  const combinedResults = [...archiveResults, ...apiOnlyResults].slice(0, limit);
+  const allResults = [...archiveResults, ...apiOnlyResults];
 
-  const hasMore = archiveResults.length + apiOnlyResults.length > limit;
+  // Apply offset and limit to combined results
+  const startIndex = offset;
+  const endIndex = offset + limit;
+  const combinedResults = allResults.slice(startIndex, endIndex);
+
+  // hasMore is true if there are more results after this page
+  const hasMore = allResults.length > endIndex;
 
   // Bulk lookup for enriched data
   if (combinedResults.length === 0) {
