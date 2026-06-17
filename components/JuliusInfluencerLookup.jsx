@@ -1294,16 +1294,16 @@ export default function JuliusInfluencerLookup() {
                 <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                   {displayData.social_combined?.map(s => {
                     const platformConfig = {
-                      instagram: { iconClass: "fab fa-instagram", label: "Instagram", color: "#E1306C", buildUrl: (h) => `https://instagram.com/${h}` },
-                      tiktok: { iconClass: "fab fa-tiktok", label: "TikTok", color: "#fe2c55", buildUrl: (h) => `https://tiktok.com/@${h}` },
-                      twitter: { iconClass: "fab fa-x-twitter", label: "Twitter/X", color: "#000000", buildUrl: (h) => `https://twitter.com/${h}` },
-                      youtube: { iconClass: "fab fa-youtube", label: "YouTube", color: "#FF0000", buildUrl: (h) => `https://youtube.com/@${h}` },
-                      facebook: { iconClass: "fab fa-facebook-f", label: "Facebook", color: "#1877F2", buildUrl: (h) => `https://facebook.com/${h}` },
-                      twitch: { iconClass: "fab fa-twitch", label: "Twitch", color: "#9146ff", buildUrl: (h) => `https://twitch.tv/${h}` },
-                      snapchat: { iconClass: "fab fa-snapchat-ghost", label: "Snapchat", color: "#FFFC00", buildUrl: (h) => `https://snapchat.com/add/${h}` },
-                      pinterest: { iconClass: "fab fa-pinterest-p", label: "Pinterest", color: "#E60023", buildUrl: (h) => `https://pinterest.com/${h}` },
-                      linkedin: { iconClass: "fab fa-linkedin-in", label: "LinkedIn", color: "#0A66C2", buildUrl: (h) => `https://linkedin.com/in/${h}` },
-                      threads: { iconClass: "fab fa-threads", label: "Threads", color: "#000000", buildUrl: (h) => `https://threads.net/@${h}` },
+                      instagram: { label: "Instagram", color: "#E1306C", buildUrl: (h) => `https://instagram.com/${h}` },
+                      tiktok: { label: "TikTok", color: "#fe2c55", buildUrl: (h) => `https://tiktok.com/@${h}` },
+                      twitter: { label: "Twitter/X", color: "#000000", buildUrl: (h) => `https://twitter.com/${h}` },
+                      youtube: { label: "YouTube", color: "#FF0000", buildUrl: (h) => `https://youtube.com/@${h}` },
+                      facebook: { label: "Facebook", color: "#1877F2", buildUrl: (h) => `https://facebook.com/${h}` },
+                      twitch: { label: "Twitch", color: "#9146ff", buildUrl: (h) => `https://twitch.tv/${h}` },
+                      snapchat: { label: "Snapchat", color: "#FFFC00", buildUrl: (h) => `https://snapchat.com/add/${h}` },
+                      pinterest: { label: "Pinterest", color: "#E60023", buildUrl: (h) => `https://pinterest.com/${h}` },
+                      linkedin: { label: "LinkedIn", color: "#0A66C2", buildUrl: (h) => `https://linkedin.com/in/${h}` },
+                      threads: { label: "Threads", color: "#000000", buildUrl: (h) => `https://threads.net/@${h}` },
                     };
                     const config = platformConfig[s.platform];
                     if (!config) return null;
@@ -1322,30 +1322,21 @@ export default function JuliusInfluencerLookup() {
                         rel="noopener noreferrer"
                         title={config.label}
                         style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: 40,
-                          height: 40,
-                          borderRadius: "50%",
-                          background: config.color,
-                          color: "#ffffff",
+                          color: config.color,
                           textDecoration: "none",
-                          fontSize: 18,
-                          transition: "all .2s",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          fontSize: 14,
+                          fontWeight: 500,
+                          transition: "opacity .2s",
                           cursor: "pointer",
                         }}
                         onMouseEnter={e => {
-                          e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.opacity = "0.7";
                         }}
                         onMouseLeave={e => {
-                          e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.opacity = "1";
                         }}
                       >
-                        <i className={config.iconClass} style={{ fontSize: 18 }} />
+                        {config.label}
                       </a>
                     );
                   })}
