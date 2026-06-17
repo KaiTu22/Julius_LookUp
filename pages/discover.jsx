@@ -43,6 +43,7 @@ export default function DiscoverPage() {
   const [nameSearch, setNameSearch] = useState("");
   const [nameSearchResults, setNameSearchResults] = useState([]);
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
+  const [maxFollowers, setMaxFollowers] = useState("");
 
   const SORT_OPTIONS = [
     { value: "reach-instagram", label: "Followers (High to Low)" },
@@ -96,6 +97,7 @@ export default function DiscoverPage() {
         platform: platform,
         sort: sort,
         minFollowers: minFollowers || "0",
+        maxFollowers: maxFollowers || "",
         minAge: minAge || "",
         maxAge: maxAge || "",
         country: country || "",
@@ -545,7 +547,7 @@ export default function DiscoverPage() {
             </div>
           </div>
 
-          {/* Min Followers */}
+          {/* Min/Max Followers */}
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
@@ -557,27 +559,49 @@ export default function DiscoverPage() {
               color: "#6b7280",
               marginBottom: 8,
             }}>
-              Min Followers (optional)
+              Follower Range (optional)
             </label>
-            <input
-              type="number"
-              value={minFollowers}
-              onChange={e => setMinFollowers(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="e.g. 10000"
-              style={{
-                padding: "8px 12px",
-                borderRadius: 8,
-                fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
-                border: "1px solid #d1d5db",
-                width: "100%",
-                maxWidth: 200,
-                outline: "none",
-              }}
-            />
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+              <div>
+                <input
+                  type="number"
+                  value={minFollowers}
+                  onChange={e => setMinFollowers(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Min followers"
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "'DM Sans',sans-serif",
+                    border: "1px solid #d1d5db",
+                    width: 150,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <span style={{ color: "#9ca3af" }}>to</span>
+              <div>
+                <input
+                  type="number"
+                  value={maxFollowers}
+                  onChange={e => setMaxFollowers(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Max followers"
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "'DM Sans',sans-serif",
+                    border: "1px solid #d1d5db",
+                    width: 150,
+                    outline: "none",
+                  }}
+                />
+              </div>
+            </div>
             <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-              {minFollowers ? `Minimum: ${fmt(parseInt(minFollowers))}` : "No minimum"}
+              {minFollowers || maxFollowers ? `Followers: ${minFollowers ? fmt(parseInt(minFollowers)) : "any"} - ${maxFollowers ? fmt(parseInt(maxFollowers)) : "any"}` : "No follower filter"}
             </div>
           </div>
 
@@ -807,7 +831,7 @@ export default function DiscoverPage() {
                 {interests && ` · Interests: ${interests}`}
                 {causes && ` · Causes: ${causes}`}
                 {genders.length > 0 && ` · Gender: ${genders.map(g => GENDER_OPTIONS.find(x => x.id === g)?.label).join(", ")}`}
-                {minFollowers && ` · Min ${fmt(parseInt(minFollowers))} followers`}
+                {(minFollowers || maxFollowers) && ` · Followers: ${minFollowers ? fmt(parseInt(minFollowers)) : "any"}-${maxFollowers ? fmt(parseInt(maxFollowers)) : "any"}`}
                 {(minAge || maxAge) && ` · Age ${minAge || "any"}-${maxAge || "any"}`}
                 {country && ` · ${COUNTRY_OPTIONS.find(c => c.code === country)?.name}`}
                 {(minPrice || maxPrice) && ` · $${minPrice || "any"}-$${maxPrice || "any"}`}

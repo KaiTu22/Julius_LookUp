@@ -50,6 +50,7 @@ export default async function handler(req, res) {
   const platform = url.searchParams.get("platform") || "instagram";
   const sort = url.searchParams.get("sort") || "reach-instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
+  const maxFollowers = url.searchParams.get("maxFollowers") ? parseInt(url.searchParams.get("maxFollowers"), 10) : 0;
   const minAge = url.searchParams.get("minAge") ? parseInt(url.searchParams.get("minAge"), 10) : null;
   const maxAge = url.searchParams.get("maxAge") ? parseInt(url.searchParams.get("maxAge"), 10) : null;
   const country = url.searchParams.get("country") || "";
@@ -129,12 +130,13 @@ export default async function handler(req, res) {
   }
 
   // Add reach filter (only for specific platforms)
-  if (minFollowers > 0 && platform !== "all") {
+  if ((minFollowers > 0 || maxFollowers > 0) && platform !== "all") {
     queryFilters.push({
       type: "reach",
       platform: platform,
       value: {
-        min: minFollowers,
+        ...(minFollowers > 0 && { min: minFollowers }),
+        ...(maxFollowers > 0 && { max: maxFollowers }),
       },
     });
   }
@@ -151,6 +153,9 @@ export default async function handler(req, res) {
       if (minFollowers > 0) {
         countQuery += ` AND total_followers >= ${minFollowers}`;
       }
+      if (maxFollowers > 0) {
+        countQuery += ` AND total_followers <= ${maxFollowers}`;
+      }
       const countResult = await sql(countQuery);
       archiveTotal = countResult[0]?.count || 0;
 
@@ -159,6 +164,9 @@ export default async function handler(req, res) {
 
       if (minFollowers > 0) {
         archiveQuery += ` AND total_followers >= ${minFollowers}`;
+      }
+      if (maxFollowers > 0) {
+        archiveQuery += ` AND total_followers <= ${maxFollowers}`;
       }
 
       archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit}`;
@@ -246,7 +254,7 @@ export default async function handler(req, res) {
       total: archiveTotal + total,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: [],
       hasMore: false,
     });
@@ -272,7 +280,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, minAge, maxAge, country, minPrice, maxPrice },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
