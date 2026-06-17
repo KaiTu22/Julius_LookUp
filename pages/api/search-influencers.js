@@ -141,17 +141,27 @@ export default async function handler(req, res) {
 
   const ts = Math.floor(Date.now() / 1000);
 
-  // Search local archive first
+  // Search local archive first (with pagination)
   let archiveResults = [];
+  let archiveTotal = 0;
   if (sql) {
     try {
+      // First get total count for archive
+      let countQuery = `SELECT COUNT(*) as count FROM influencers WHERE 1=1`;
+      if (minFollowers > 0) {
+        countQuery += ` AND total_followers >= ${minFollowers}`;
+      }
+      const countResult = await sql(countQuery);
+      archiveTotal = countResult[0]?.count || 0;
+
+      // Then get paginated results
       let archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers WHERE 1=1`;
 
       if (minFollowers > 0) {
         archiveQuery += ` AND total_followers >= ${minFollowers}`;
       }
 
-      archiveQuery += ` ORDER BY total_followers DESC LIMIT 50`;
+      archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit}`;
 
       const rows = await sql(archiveQuery);
       archiveResults = rows.map(r => ({
@@ -225,20 +235,15 @@ export default async function handler(req, res) {
   // Combine archive and Julius results, removing duplicates
   const archivedSlugs = new Set(archiveResults.map(r => r.slug));
   const apiOnlyResults = results.filter(r => !archivedSlugs.has(r.slug));
-  const allResults = [...archiveResults, ...apiOnlyResults];
+  const combinedResults = [...archiveResults, ...apiOnlyResults].slice(0, limit);
 
-  // Apply offset and limit to combined results
-  const startIndex = offset;
-  const endIndex = offset + limit;
-  const combinedResults = allResults.slice(startIndex, endIndex);
-
-  // hasMore is true if there are more results after this page
-  const hasMore = allResults.length > endIndex;
+  // hasMore is true if we got a full page of results (meaning there could be more)
+  const hasMore = combinedResults.length === limit;
 
   // Bulk lookup for enriched data
   if (combinedResults.length === 0) {
     return res.status(200).json({
-      total: total + archiveResults.length,
+      total: archiveTotal + total,
       offset,
       limit,
       filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
@@ -311,7 +316,7 @@ export default async function handler(req, res) {
 
   res.setHeader("Content-Type", "application/json");
   return res.status(200).json({
-    total: archiveResults.length + total,
+    total: archiveTotal + total,
     offset,
     limit,
     filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
