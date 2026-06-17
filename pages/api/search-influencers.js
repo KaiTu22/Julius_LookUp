@@ -250,6 +250,9 @@ export default async function handler(req, res) {
     }
   }
 
+  // Calculate total from filtered results (not from API totals)
+  const filteredTotal = combinedResults.length;
+
   // Apply pagination after filtering
   combinedResults = combinedResults.slice(0, limit);
 
@@ -259,7 +262,7 @@ export default async function handler(req, res) {
   // Bulk lookup for enriched data
   if (combinedResults.length === 0) {
     return res.status(200).json({
-      total: archiveTotal + total,
+      total: filteredTotal,
       offset,
       limit,
       filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, minAge, maxAge, country, minPrice, maxPrice },
@@ -332,7 +335,7 @@ export default async function handler(req, res) {
 
   res.setHeader("Content-Type", "application/json");
   return res.status(200).json({
-    total: archiveTotal + total,
+    total: filteredTotal,
     offset,
     limit,
     filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
