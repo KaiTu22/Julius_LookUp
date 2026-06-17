@@ -169,7 +169,9 @@ export default async function handler(req, res) {
         archiveQuery += ` AND total_followers <= ${maxFollowers}`;
       }
 
-      archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit}`;
+      // Fetch more results than needed to account for filtering losses
+      const fetchMultiplier = 3;
+      archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit * fetchMultiplier}`;
 
       const rows = await sql(archiveQuery);
       archiveResults = rows.map(r => ({
