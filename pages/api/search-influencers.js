@@ -174,6 +174,7 @@ export default async function handler(req, res) {
       archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit * fetchMultiplier}`;
 
       const rows = await sql(archiveQuery);
+      console.log("Archive query returned", rows.length, "rows. Max followers filter:", maxFollowers);
       archiveResults = rows.map(r => ({
         id: r.slug,
         slug: r.slug,
