@@ -169,22 +169,33 @@ export default async function handler(req, res) {
         archiveQuery += ` AND total_followers <= ${maxFollowers}`;
       }
 
-      // Fetch more results than needed to account for filtering losses
-      const fetchMultiplier = 3;
-      archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit * fetchMultiplier}`;
+      // When filtering by follower range, don't use OFFSET (it breaks pagination with filtered results)
+      // Just fetch all matching results and handle pagination in code
+      const hasFollowerFilter = minFollowers > 0 || maxFollowers > 0;
+
+      if (hasFollowerFilter) {
+        // Fetch all matching results (pagination handled in code)
+        archiveQuery += ` ORDER BY total_followers DESC LIMIT 1000`;
+      } else {
+        // For non-filtered queries, use OFFSET and LIMIT as usual
+        const fetchMultiplier = 3;
+        archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit * fetchMultiplier}`;
+      }
 
       const rows = await sql(archiveQuery);
-      console.log("Archive query returned", rows.length, "rows. Max followers filter:", maxFollowers);
-      archiveResults = rows.map(r => ({
-        id: r.slug,
-        slug: r.slug,
-        display_name: r.display_name,
-        tagline: r.tagline,
-        avatar: r.avatar_url ? { url: r.avatar_url } : null,
-        social_total_count: r.total_followers,
-        social_total_engagement: 0,
-        _source: "archive",
-      }));
+      console.log("Archive query returned", rows.length, "rows. Follower filter:", { minFollowers, maxFollowers });
+      archiveResults = rows
+        .slice(hasFollowerFilter ? offset : 0) // Apply offset in code for filtered queries
+        .map(r => ({
+          id: r.slug,
+          slug: r.slug,
+          display_name: r.display_name,
+          tagline: r.tagline,
+          avatar: r.avatar_url ? { url: r.avatar_url } : null,
+          social_total_count: r.total_followers,
+          social_total_engagement: 0,
+          _source: "archive",
+        }));
     } catch (err) {
       console.warn("Archive search failed:", err.message);
     }
