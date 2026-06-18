@@ -158,6 +158,7 @@ export default async function handler(req, res) {
       }
       const countResult = await sql(countQuery);
       archiveTotal = countResult[0]?.count || 0;
+      console.log("Archive count query returned:", archiveTotal);
 
       // Then get paginated results
       let archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers WHERE 1=1`;
@@ -266,6 +267,7 @@ export default async function handler(req, res) {
 
   // Calculate total from filtered results (not from API totals)
   const filteredTotal = combinedResults.length;
+  console.log("Combined results before pagination:", filteredTotal, "| Archive:", archiveResults.length, "| API:", results.length);
 
   // Apply pagination after filtering
   combinedResults = combinedResults.slice(0, limit);
