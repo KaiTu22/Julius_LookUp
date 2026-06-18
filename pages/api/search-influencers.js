@@ -149,41 +149,31 @@ export default async function handler(req, res) {
   if (sql) {
     try {
       // First get total count for archive
-      let countQuery = `SELECT COUNT(*) as count FROM influencers WHERE 1=1`;
+      let countWhereClause = `WHERE 1=1`;
       if (minFollowers > 0) {
-        countQuery += ` AND total_followers >= ${minFollowers}`;
+        countWhereClause += ` AND total_followers >= ${minFollowers}`;
       }
       if (maxFollowers > 0) {
-        countQuery += ` AND total_followers <= ${maxFollowers}`;
+        countWhereClause += ` AND total_followers <= ${maxFollowers}`;
       }
-      const countResult = await sql(countQuery);
+      const countResult = await sql.query(`SELECT COUNT(*) as count FROM influencers ${countWhereClause}`);
       archiveTotal = countResult[0]?.count || 0;
       console.log("Archive count query returned:", archiveTotal);
 
       // Then get paginated results
-      let archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers WHERE 1=1`;
-
-      if (minFollowers > 0) {
-        archiveQuery += ` AND total_followers >= ${minFollowers}`;
-      }
-      if (maxFollowers > 0) {
-        archiveQuery += ` AND total_followers <= ${maxFollowers}`;
-      }
-
-      // When filtering by follower range, don't use OFFSET (it breaks pagination with filtered results)
-      // Just fetch all matching results and handle pagination in code
       const hasFollowerFilter = minFollowers > 0 || maxFollowers > 0;
+      let archiveQuery;
 
       if (hasFollowerFilter) {
         // Fetch all matching results (pagination handled in code)
-        archiveQuery += ` ORDER BY total_followers DESC LIMIT 1000`;
+        archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers ${countWhereClause} ORDER BY total_followers DESC LIMIT 1000`;
       } else {
         // For non-filtered queries, use OFFSET and LIMIT as usual
         const fetchMultiplier = 3;
-        archiveQuery += ` ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit * fetchMultiplier}`;
+        archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers WHERE 1=1 ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit * fetchMultiplier}`;
       }
 
-      const rows = await sql(archiveQuery);
+      const rows = await sql.query(archiveQuery);
       console.log("Archive query returned", rows.length, "rows. Follower filter:", { minFollowers, maxFollowers });
       archiveResults = rows
         .slice(hasFollowerFilter ? offset : 0) // Apply offset in code for filtered queries
