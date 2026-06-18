@@ -265,9 +265,16 @@ export default async function handler(req, res) {
     }
   }
 
-  // Calculate total from filtered results (not from API totals)
-  const filteredTotal = combinedResults.length;
-  console.log("Combined results before pagination:", filteredTotal, "| Archive:", archiveResults.length, "| API:", results.length);
+  // Calculate proper total depending on whether we filtered
+  let responseTotal;
+  if (platform === "all" && (minFollowers > 0 || maxFollowers > 0)) {
+    // For filtered queries, use count of filtered results
+    responseTotal = combinedResults.length;
+  } else {
+    // For unfiltered queries, use actual totals from archive and API
+    responseTotal = archiveTotal + total;
+  }
+  console.log("Combined results before pagination:", combinedResults.length, "| Archive:", archiveResults.length, "| API:", results.length, "| Response total:", responseTotal);
 
   // Apply pagination after filtering
   combinedResults = combinedResults.slice(0, limit);
@@ -278,7 +285,7 @@ export default async function handler(req, res) {
   // Bulk lookup for enriched data
   if (combinedResults.length === 0) {
     return res.status(200).json({
-      total: filteredTotal,
+      total: responseTotal,
       offset,
       limit,
       filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, minAge, maxAge, country, minPrice, maxPrice },
@@ -351,7 +358,7 @@ export default async function handler(req, res) {
 
   res.setHeader("Content-Type", "application/json");
   return res.status(200).json({
-    total: filteredTotal,
+    total: responseTotal,
     offset,
     limit,
     filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
