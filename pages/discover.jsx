@@ -26,7 +26,7 @@ export default function DiscoverPage() {
   const [interests, setInterests] = useState("");
   const [causes, setCauses] = useState("");
   const [genders, setGenders] = useState([]);
-  const [platform, setPlatform] = useState("all");
+  const [platform, setPlatform] = useState("instagram");
   const [sort, setSort] = useState("reach-instagram");
   const [minFollowers, setMinFollowers] = useState("");
   const [minAge, setMinAge] = useState("");
@@ -53,7 +53,6 @@ export default function DiscoverPage() {
   ];
 
   const PLATFORMS = [
-    { id: "all", label: "All Platforms", icon: "ALL" },
     { id: "instagram", label: "Instagram", icon: "IG" },
     { id: "tiktok", label: "TikTok", icon: "TT" },
     { id: "youtube", label: "YouTube", icon: "YT" },
@@ -826,7 +825,7 @@ export default function DiscoverPage() {
                 color: "#6b7280",
                 margin: "4px 0 0 0",
               }}>
-                {platform === "all" ? "Combined followers" : PLATFORMS.find(p => p.id === platform)?.label}
+                {PLATFORMS.find(p => p.id === platform)?.label}
                 {brands && ` · Brands: ${brands}`}
                 {interests && ` · Interests: ${interests}`}
                 {causes && ` · Causes: ${causes}`}
