@@ -44,6 +44,7 @@ export default function DiscoverPage() {
   const [nameSearchResults, setNameSearchResults] = useState([]);
   const [nameSearchLoading, setNameSearchLoading] = useState(false);
   const [maxFollowers, setMaxFollowers] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const SORT_OPTIONS = [
     { value: "reach-instagram", label: "Followers (High to Low)" },
@@ -214,16 +215,28 @@ export default function DiscoverPage() {
           Find and filter influencers by interests, followers, location, and engagement
         </p>
 
-        {/* Quick Name Search */}
+        {/* Quick Name Search - PROMINENT */}
         <div style={{
           position: "relative",
           marginBottom: 32,
         }}>
+          <label style={{
+            display: "block",
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 700,
+            fontSize: 13,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            color: "#6b7280",
+            marginBottom: 8,
+          }}>
+            Search by Name or Handle
+          </label>
           <input
             type="text"
             value={nameSearch}
             onChange={e => handleNameSearch(e.target.value)}
-            placeholder="Quick search by name... (e.g., Taylor Swift)"
+            placeholder="e.g., Taylor Swift, @taylorswift, Cristiano Ronaldo"
             style={{
               width: "100%",
               padding: "12px 16px",
@@ -300,7 +313,32 @@ export default function DiscoverPage() {
           )}
         </div>
 
-        {/* Filters */}
+        {/* Advanced Filters Toggle */}
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "transparent",
+            border: "none",
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 700,
+            fontSize: 13,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            color: ACCENT,
+            cursor: "pointer",
+            marginBottom: 24,
+            padding: 0,
+          }}
+        >
+          <span>{showAdvanced ? "−" : "+"}</span>
+          Advanced Filters
+        </button>
+
+        {/* Filters - Collapsible */}
+        {showAdvanced && (
         <div style={{
           background: "#ffffff",
           border: "1px solid #e5e7eb",
@@ -757,6 +795,7 @@ export default function DiscoverPage() {
           </div>
 
         </div>
+        )}
 
         {/* Search Button */}
         <div style={{ marginBottom: 32 }}>
