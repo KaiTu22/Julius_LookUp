@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import JuliusInfluencerLookup from '../components/JuliusInfluencerLookup';
+import DiscoverySearch from '../components/DiscoverySearch';
 
 const ACCENT = "#3b82f6";
 
