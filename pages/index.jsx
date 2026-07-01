@@ -27,6 +27,37 @@ export default function Home() {
   const [addingToList, setAddingToList] = useState(null);
   const [selectedListId, setSelectedListId] = useState(null);
 
+  // Advanced search state
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [platform, setPlatform] = useState("all");
+  const [interests, setInterests] = useState("");
+  const [minFollowers, setMinFollowers] = useState("");
+  const [maxFollowers, setMaxFollowers] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const handleDiscoverySearch = async () => {
+    setSearchLoading(true);
+    try {
+      const params = new URLSearchParams({
+        platform: platform,
+        interests: interests,
+        minFollowers: minFollowers || "0",
+        maxFollowers: maxFollowers || "",
+        sort: "reach-instagram",
+        limit: "50",
+        offset: "0",
+      });
+      const res = await fetch(`/api/search-influencers?${params}`);
+      const json = await res.json();
+      if (res.ok) setSearchResults(json);
+    } catch (err) {
+      console.error("Discovery search failed:", err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
