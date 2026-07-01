@@ -283,8 +283,145 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Quick Name Search - Hide when viewing profile */}
+      {/* Discovery Search Interface - NEW */}
       {!slug && (
+      <div style={{
+        background: "#f9fafb",
+        borderBottom: "1px solid #e5e7eb",
+        paddingBottom: "40px",
+      }}>
+        <DiscoverySearch
+          platform={platform}
+          setPlatform={setPlatform}
+          interests={interests}
+          setInterests={setInterests}
+          minFollowers={minFollowers}
+          setMinFollowers={setMinFollowers}
+          maxFollowers={maxFollowers}
+          setMaxFollowers={setMaxFollowers}
+          showAdvanced={showAdvanced}
+          setShowAdvanced={setShowAdvanced}
+          onSearch={handleDiscoverySearch}
+          loading={searchLoading}
+        />
+      </div>
+      )}
+
+      {/* Search Results */}
+      {!slug && searchResults && (
+      <div style={{
+        background: "#ffffff",
+        padding: "40px 24px",
+        borderBottom: "1px solid #e5e7eb",
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <h2 style={{
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 700,
+            fontSize: 20,
+            color: "#111827",
+            marginBottom: 24,
+          }}>
+            {searchResults.total?.toLocaleString() || "?"} Results Found
+          </h2>
+
+          {searchResults.influencers && searchResults.influencers.length > 0 ? (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 16,
+            }}>
+              {searchResults.influencers.map(inf => (
+                <div
+                  key={inf.slug}
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 12,
+                    padding: "18px 20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {inf.avatar?.url ? (
+                      <img
+                        src={inf.avatar.url}
+                        alt={inf.display_name}
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "1px solid #e5e7eb",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
+                        background: "#e5e7eb",
+                        flexShrink: 0,
+                      }} />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontFamily: "'Syne',sans-serif",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        color: "#111827",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}>
+                        {inf.display_name}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
+                    style={{
+                      padding: "8px 0",
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontFamily: "'Syne',sans-serif",
+                      fontWeight: 600,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                      border: `1px solid #d1d5db`,
+                      background: "transparent",
+                      color: "#374151",
+                      cursor: "pointer",
+                      transition: "all .2s",
+                    }}
+                  >
+                    View Profile →
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
+              padding: 32,
+              textAlign: "center",
+              color: "#6b7280",
+            }}>
+              No influencers found. Try adjusting your search criteria.
+            </div>
+          )}
+        </div>
+      </div>
+      )}
+
+      {/* Original Quick Name Search - REMOVED, kept for reference */}
+      {false && (
       <div style={{
         background: "#f9fafb",
         borderBottom: "1px solid #e5e7eb",
