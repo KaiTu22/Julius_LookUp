@@ -59,6 +59,10 @@ export default function Home() {
     }
   };
 
+  const handleNameSearchSelect = (influencer) => {
+    window.open(`/?slug=${encodeURIComponent(influencer.slug)}`, '_blank');
+  };
+
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
@@ -303,6 +307,7 @@ export default function Home() {
           setShowAdvanced={setShowAdvanced}
           onSearch={handleDiscoverySearch}
           loading={searchLoading}
+          onNameSearchSelect={handleNameSearchSelect}
         />
       </div>
       )}

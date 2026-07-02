@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 const ACCENT = "#3b82f6";
 
 export default function DiscoverySearch({
@@ -9,8 +11,39 @@ export default function DiscoverySearch({
   maxFollowers, setMaxFollowers,
   showAdvanced, setShowAdvanced,
   onSearch,
-  loading
+  loading,
+  onNameSearchSelect // optional callback when user selects from autocomplete
 }) {
+  const [nameSearch, setNameSearch] = useState("");
+  const [nameSearchResults, setNameSearchResults] = useState([]);
+  const [nameSearchLoading, setNameSearchLoading] = useState(false);
+
+  const handleNameSearch = async (term) => {
+    setNameSearch(term);
+    if (term.length < 2) {
+      setNameSearchResults([]);
+      return;
+    }
+    setNameSearchLoading(true);
+    try {
+      const res = await fetch(`/api/typeahead?term=${encodeURIComponent(term)}`);
+      const json = await res.json();
+      if (res.ok) setNameSearchResults(json.results || []);
+    } catch (err) {
+      setNameSearchResults([]);
+    } finally {
+      setNameSearchLoading(false);
+    }
+  };
+
+  const handleNameSearchSelect = (influencer) => {
+    if (onNameSearchSelect) {
+      onNameSearchSelect(influencer);
+    }
+    setNameSearch("");
+    setNameSearchResults([]);
+  };
+
   const PLATFORMS = [
     { id: "all", label: "All Platforms", icon: "ALL" },
     { id: "instagram", label: "Instagram", icon: "IG" },
@@ -22,7 +55,7 @@ export default function DiscoverySearch({
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
-      {/* Quick Search */}
+      {/* Quick Search with Autocomplete */}
       <div style={{ marginBottom: 24 }}>
         <label style={{
           display: "block",
@@ -36,19 +69,87 @@ export default function DiscoverySearch({
         }}>
           Search by Name or Handle
         </label>
-        <input
-          type="text"
-          placeholder="e.g., Taylor Swift, @taylorswift, Cristiano Ronaldo"
-          style={{
-            width: "100%",
-            padding: "12px 16px",
-            borderRadius: 12,
-            border: "2px solid #3b82f6",
-            fontSize: 14,
-            fontFamily: "'DM Sans',sans-serif",
-            boxSizing: "border-box",
-          }}
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            type="text"
+            value={nameSearch}
+            onChange={e => handleNameSearch(e.target.value)}
+            placeholder="e.g., Taylor Swift, @taylorswift, Cristiano Ronaldo"
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: 12,
+              border: "2px solid #3b82f6",
+              fontSize: 14,
+              fontFamily: "'DM Sans',sans-serif",
+              boxSizing: "border-box",
+            }}
+          />
+          {nameSearchResults.length > 0 && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              marginTop: 4,
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              zIndex: 10,
+              maxHeight: 300,
+              overflowY: "auto",
+            }}>
+              {nameSearchResults.map(influencer => (
+                <button
+                  key={influencer.slug}
+                  onClick={() => handleNameSearchSelect(influencer)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: 0,
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    textAlign: "left",
+                    transition: "background .2s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  {influencer.avatar?.url && (
+                    <img
+                      src={influencer.avatar.url}
+                      alt={influencer.display_name}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontFamily: "'Syne',sans-serif",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      color: "#111827",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}>
+                      {influencer.display_name}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Advanced Filters Toggle */}
