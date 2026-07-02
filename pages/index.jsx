@@ -162,21 +162,6 @@ export default function Home() {
     }
   };
 
-  const handleNameSearchSelect = async (influencer) => {
-    setNameSearch("");
-    setNameSearchResults([]);
-    // Archive and navigate to profile
-    try {
-      await fetch(`/api/archive-influencer`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: influencer.slug }),
-      });
-    } catch (err) {
-      console.error("Archive failed:", err);
-    }
-    window.location.href = `/?slug=${encodeURIComponent(influencer.slug)}`;
-  };
 
   return (
     <div>
