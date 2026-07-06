@@ -107,10 +107,16 @@ export default function Home() {
           const res = await fetch(`/api/typeahead?term=${encodeURIComponent(slug)}`);
           const json = await res.json();
           const results = json.results || [];
-          const influencer = results.find(r => r.slug === slug);
+          let influencer = results.find(r => r.slug === slug);
 
-          console.log("Adding to recently viewed:", influencer);
           if (influencer) {
+            // Ensure required fields have defaults
+            influencer = {
+              ...influencer,
+              social_total_count: influencer.social_total_count || 0,
+              tagline: influencer.tagline || "",
+            };
+
             const stored = localStorage.getItem("recentlyViewed");
             let recent = stored ? JSON.parse(stored) : [];
 
@@ -119,7 +125,6 @@ export default function Home() {
             recent.unshift(influencer);
             recent = recent.slice(0, 10);
 
-            console.log("Storing to localStorage:", recent);
             localStorage.setItem("recentlyViewed", JSON.stringify(recent));
             setRecentlyViewed(recent);
           }
