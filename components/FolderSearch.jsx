@@ -44,7 +44,7 @@ export default function FolderSearch({ onSelectItem }) {
             padding: "8px 12px",
             borderRadius: 6,
             border: `1px solid #d1d5db`,
-            fontFamily: "'DM Sans',sans-serif",
+            fontFamily: "'Inter',sans-serif",
             fontSize: 12,
             boxSizing: "border-box",
           }}

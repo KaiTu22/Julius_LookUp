@@ -98,7 +98,7 @@ function ContentPanel({ folder, lists, subfolders, onSelectFolder, onCreateChild
               cursor: "pointer",
               fontSize: 11,
               fontWeight: 600,
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
             }}
           >
             + New Folder
@@ -121,7 +121,7 @@ function ContentPanel({ folder, lists, subfolders, onSelectFolder, onCreateChild
               padding: "8px 12px",
               borderRadius: 6,
               border: "1px solid #d1d5db",
-              fontFamily: "'DM Sans',sans-serif",
+              fontFamily: "'Inter',sans-serif",
               fontSize: 13,
               marginBottom: 8,
               boxSizing: "border-box",
@@ -181,7 +181,7 @@ function ContentPanel({ folder, lists, subfolders, onSelectFolder, onCreateChild
               padding: "8px 12px",
               borderRadius: 6,
               border: "1px solid #d1d5db",
-              fontFamily: "'DM Sans',sans-serif",
+              fontFamily: "'Inter',sans-serif",
               fontSize: 13,
               marginBottom: 8,
               boxSizing: "border-box",

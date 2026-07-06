@@ -12,7 +12,7 @@ const fontLink = typeof document !== "undefined" && (() => {
     const l = document.createElement("link");
     l.id = "julius-fonts";
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap";
     document.head.appendChild(l);
   }
 })();
@@ -267,20 +267,20 @@ const Card = ({ children, style }) => (
 );
 
 const SectionTitle = ({ children }) => (
-  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:11, letterSpacing:3, textTransform:"uppercase", color:"#6b7280", marginBottom:14 }}>
+  <div style={{ fontFamily:"'Instrument Sans',sans-serif", fontWeight:700, fontSize:11, letterSpacing:3, textTransform:"uppercase", color:"#6b7280", marginBottom:14 }}>
     {children}
   </div>
 );
 
 const StatPill = ({ label, value, color="#a78bfa" }) => (
   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:"1px solid #e5e7eb" }}>
-    <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#374151" }}>{label}</span>
+    <span style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:"#374151", lineHeight:1.6 }}>{label}</span>
     <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color, fontWeight:500 }}>{value}</span>
   </div>
 );
 
 const Tag = ({ children, color="#3b82f622", textColor="#a78bfa" }) => (
-  <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:20, background:color, color:textColor, fontSize:11, fontFamily:"'DM Sans',sans-serif", fontWeight:500, margin:"3px 3px 3px 0", border:`1px solid ${textColor}33` }}>
+  <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:20, background:color, color:textColor, fontSize:11, fontFamily:"'Inter',sans-serif", fontWeight:500, margin:"3px 3px 3px 0", border:`1px solid ${textColor}33` }}>
     {children}
   </span>
 );
@@ -292,7 +292,7 @@ const HBar = ({ data, color=ACCENT, max }) => {
       {data.map((d,i) => (
         <div key={i} style={{ marginBottom:6 }}>
           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-            <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#374151" }}>{d.label}</span>
+            <span style={{ fontFamily:"'Inter',sans-serif", fontSize:12, color:"#374151" }}>{d.label}</span>
             <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:PALETTE[i%PALETTE.length] }}>{fmtPct(d.percentage)}</span>
           </div>
           <div style={{ height:5, background:"#e5e7eb", borderRadius:3, overflow:"hidden" }}>
@@ -308,7 +308,7 @@ const TabBar = ({ tabs, active, onChange }) => (
   <div style={{ display:"flex", gap:4, borderBottom:"1px solid #e5e7eb", marginBottom:24, overflowX:"auto", paddingBottom:1 }}>
     {tabs.map(t => (
       <button key={t.id} onClick={() => onChange(t.id)} style={{
-        padding:"8px 16px", fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:600,
+        padding:"8px 16px", fontSize:12, fontFamily:"'Instrument Sans',sans-serif", fontWeight:600,
         letterSpacing:1, textTransform:"uppercase", background:"none", border:"none",
         borderBottom: active===t.id ? `2px solid ${ACCENT}` : "2px solid transparent",
         color: active===t.id ? ACCENT : "#6b7280", cursor:"pointer", whiteSpace:"nowrap",
@@ -324,7 +324,7 @@ const PlatformPicker = ({ platforms, active, onChange }) => (
       const meta = PLATFORM_META[p] || { color:"#374151", label:p };
       return (
         <button key={p} onClick={() => onChange(p)} style={{
-          padding:"5px 12px", borderRadius:20, fontSize:11, fontFamily:"'DM Sans',sans-serif", fontWeight:500,
+          padding:"5px 12px", borderRadius:20, fontSize:11, fontFamily:"'Inter',sans-serif", fontWeight:500,
           border:`1px solid ${active===p ? meta.color : "#d1d5db"}`,
           background: active===p ? meta.color+"22" : "transparent",
           color: active===p ? meta.color : "#6b7280", cursor:"pointer", transition:"all .2s"
@@ -359,12 +359,12 @@ function OverviewTab({ d }) {
         <SectionTitle>Combined Reach</SectionTitle>
         <div style={{ textAlign:"center", padding:"12px 0" }}>
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:36, fontWeight:500, color:ACCENT, letterSpacing:-1 }}>{fmt(d.social_total_count)}</div>
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Total Followers</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Total Followers</div>
         </div>
         <div style={{ height:1, background:"#e5e7eb", margin:"12px 0" }} />
         <div style={{ textAlign:"center", padding:"8px 0" }}>
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:500, color:ACCENT2 }}>{fmt(d.social_total_engagement)}</div>
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Total Avg. Engagement</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Total Avg. Engagement</div>
         </div>
         <div style={{ height:1, background:"#e5e7eb", margin:"12px 0" }} />
         <div style={{ textAlign:"center", padding:"8px 0" }}>
@@ -373,7 +373,7 @@ function OverviewTab({ d }) {
               ? fmtPct((d.social_total_engagement / d.social_total_count) * 100)
               : "—"}
           </div>
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Overall Engagement Rate</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:12, color:"#6b7280", marginTop:4 }}>Overall Engagement Rate</div>
         </div>
       </Card>
 
@@ -409,7 +409,7 @@ function DemographicsTab({ d }) {
           <SectionTitle>Age Distribution</SectionTitle>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={sortByLabel(dem.age)} margin={{top:0,right:0,bottom:0,left:-20}}>
-              <XAxis dataKey="label" tick={{ fill:"#6b7280", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="label" tick={{ fill:"#6b7280", fontSize:10, fontFamily:"Inter" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill:"#6b7280", fontSize:10, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
               <Tooltip
                 contentStyle={{ background:"#ffffff", border:"1px solid #d1d5db", borderRadius:8, fontFamily:"DM Mono", fontSize:12, color:"#111827" }}
@@ -433,7 +433,7 @@ function DemographicsTab({ d }) {
                 {dem.gender.map((_,i) => <Cell key={i} fill={i===0 ? "#f472b6" : "#60a5fa"} />)}
               </Pie>
               <Tooltip contentStyle={{ background:"#ffffff", border:"1px solid #9ca3af", borderRadius:8, fontFamily:"DM Mono", fontSize:11 }} formatter={v=>[fmtPct(v)]} />
-              <Legend formatter={(v,e) => <span style={{ fontFamily:"DM Sans", fontSize:12, color:"#374151" }}>{v}: {fmtPct(e.payload.percentage)}</span>} />
+              <Legend formatter={(v,e) => <span style={{ fontFamily:"Inter", fontSize:12, color:"#374151" }}>{v}: {fmtPct(e.payload.percentage)}</span>} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
@@ -450,7 +450,7 @@ function DemographicsTab({ d }) {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={sortByLabel(dem.income)} layout="vertical" margin={{top:0,right:10,bottom:0,left:10}}>
               <XAxis type="number" tick={{ fill:"#6b7280", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
-              <YAxis type="category" dataKey="label" width={75} tick={{ fill:"#111827", fontSize:10, fontFamily:"DM Sans" }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="label" width={75} tick={{ fill:"#111827", fontSize:10, fontFamily:"Inter" }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{ background:"#ffffff", border:"1px solid #d1d5db", borderRadius:8, fontFamily:"DM Mono", fontSize:12, color:"#111827" }}
                 labelStyle={{ color:"#374151", fontWeight:600, marginBottom:4 }}
@@ -499,7 +499,7 @@ function InterestsTab({ d }) {
           <ResponsiveContainer width="100%" height={560}>
             <BarChart data={list} layout="vertical" margin={{top:8,right:55,bottom:8,left:0}}>
               <XAxis type="number" tick={{ fill:"#374151", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
-              <YAxis type="category" dataKey="label" width={185} tick={{ fill:"#111827", fontSize:11, fontFamily:"DM Sans", fontWeight:400 }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="label" width={185} tick={{ fill:"#111827", fontSize:11, fontFamily:"Inter", fontWeight:400 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ background:"#ffffff", border:"1px solid #d1d5db", borderRadius:8, fontFamily:"DM Mono", fontSize:11, color:"#111827" }} formatter={v=>[fmtPct(v),"Audience"]} />
               <Bar dataKey="percentage" radius={[0,4,4,0]} barSize={16}>
                 {list.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
@@ -532,7 +532,7 @@ function BrandsAudienceTab({ d }) {
         <ResponsiveContainer width="100%" height={560}>
           <BarChart data={list} layout="vertical" margin={{top:8,right:55,bottom:8,left:0}}>
             <XAxis type="number" tick={{ fill:"#374151", fontSize:9, fontFamily:"DM Mono" }} axisLine={false} tickLine={false} tickFormatter={v=>v+"%"} />
-            <YAxis type="category" dataKey="label" width={185} tick={{ fill:"#111827", fontSize:11, fontFamily:"DM Sans", fontWeight:400 }} axisLine={false} tickLine={false} />
+            <YAxis type="category" dataKey="label" width={185} tick={{ fill:"#111827", fontSize:11, fontFamily:"Inter", fontWeight:400 }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={{ background:"#ffffff", border:"1px solid #d1d5db", borderRadius:8, fontFamily:"DM Mono", fontSize:11, color:"#111827" }} formatter={v=>[fmtPct(v),"Audience"]} />
             <Bar dataKey="percentage" radius={[0,4,4,0]} barSize={16}>
               {list.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]} />)}
@@ -588,7 +588,7 @@ function ProfileTab({ d }) {
           {items.map((b,i) => (
             <span key={i} style={{
               padding:"4px 12px", borderRadius:20, fontSize:12,
-              fontFamily:"'DM Sans',sans-serif", fontWeight:500,
+              fontFamily:"'Inter',sans-serif", fontWeight:500,
               background:bg, color, border:`1px solid ${color}33`
             }}>{getName(b)}</span>
           ))}
@@ -628,7 +628,7 @@ function ProfileTab({ d }) {
         <Card>
           <SectionTitle>Estimated Pricing</SectionTitle>
           {d.prices.map((p,i) => <StatPill key={i} label={p.type?.name} value={fmtUSD(p.amount)} color={ACCENT2} />)}
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#9ca3af", marginTop:10 }}>Pricing is estimated and may not reflect current rates.</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#9ca3af", marginTop:10 }}>Pricing is estimated and may not reflect current rates.</div>
         </Card>
       )}
     </div>
@@ -664,46 +664,46 @@ function BrandResultCard({ inf, onViewProfile }) {
           : <div style={{ width:48, height:48, borderRadius:"50%", background:"#e5e7eb", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}></div>
         }
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#111827", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{inf.display_name}</div>
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>{inf.tagline || inf.current_location?.display_name || "-"}</div>
+          <div style={{ fontFamily:"'Instrument Sans',sans-serif", fontWeight:700, fontSize:14, color:"#111827", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{inf.display_name}</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>{inf.tagline || inf.current_location?.display_name || "-"}</div>
         </div>
       </div>
 
       {/* Relationship badge */}
       <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:20, background:rel.bg, border:`1px solid ${rel.color}44`, alignSelf:"flex-start" }}>
         <span style={{ fontSize:13 }}>{rel.icon}</span>
-        <span style={{ fontFamily:"'Syne',sans-serif", fontSize:10, fontWeight:700, letterSpacing:1, color:rel.color, textTransform:"uppercase" }}>{rel.label}</span>
+        <span style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:10, fontWeight:700, letterSpacing:1, color:rel.color, textTransform:"uppercase" }}>{rel.label}</span>
       </div>
 
       {/* Stats row */}
       <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
         <div>
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:15, fontWeight:500, color:ACCENT }}>{fmt(inf.social_total_count)}</div>
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:10, color:"#6b7280" }}>Total Followers</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:10, color:"#6b7280" }}>Total Followers</div>
         </div>
         {plat && (
           <div>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:15, fontWeight:500, color:plat.color || "#374151" }}>{fmt(inf.topPlatformCount)}</div>
-            <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:10, color:"#6b7280" }}>{plat.icon} {plat.label}</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:10, color:"#6b7280" }}>{plat.icon} {plat.label}</div>
           </div>
         )}
       </div>
 
       {/* Source link if available */}
       {inf.sourceUrl && (
-        <a href={inf.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#3b82f6", textDecoration:"none", wordBreak:"break-all" }}>
+        <a href={inf.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#3b82f6", textDecoration:"none", wordBreak:"break-all" }}>
            Source post
         </a>
       )}
 
       {/* View profile button */}
       <button onClick={() => onViewProfile(inf.slug)} style={{
-        marginTop:4, padding:"7px 0", borderRadius:8, fontSize:11, fontFamily:"'Syne',sans-serif",
+        marginTop:4, padding:"7px 0", borderRadius:12, fontSize:11, fontFamily:"'Instrument Sans',sans-serif",
         fontWeight:600, letterSpacing:1, textTransform:"uppercase", border:`1px solid #d1d5db`,
-        background:"transparent", color:"#374151", cursor:"pointer", transition:"all .2s",
+        background:"transparent", color:"#374151", cursor:"pointer", transition:"all .3s ease",
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = "#e5e7eb"; e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.color = "#374151"; }}
+      onMouseEnter={e => { e.currentTarget.style.background = "#e5e7eb"; e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; e.currentTarget.style.boxShadow = "0 2px 8px rgba(59, 130, 246, 0.1)"; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.color = "#374151"; e.currentTarget.style.boxShadow = "none"; }}
       >View Full Profile {"->"}
       </button>
     </div>
@@ -790,22 +790,30 @@ function BrandSearchPanel({ onViewProfile }) {
           onKeyDown={e => e.key === "Enter" && searchBrand()}
           placeholder="e.g. Nike, Coca-Cola, Victoria's Secret"
           style={{
-            flex:1, minWidth:200, padding:"8px 16px", borderRadius:20, fontSize:13,
-            fontFamily:"'DM Sans',sans-serif", background:"#ffffff", border:"1px solid #d1d5db",
-            color:"#111827", outline:"none"
+            flex:1, minWidth:200, padding:"10px 16px", borderRadius:8, fontSize:13,
+            fontFamily:"'Inter',sans-serif", background:"#ffffff", border:"1px solid #d1d5db",
+            color:"#111827", outline:"none", transition:"all .2s ease"
           }}
+          onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.1)"; }}
+          onBlur={e => { e.target.style.borderColor = "#d1d5db"; e.target.style.boxShadow = "none"; }}
         />
         <select value={sortField} onChange={e => setSortField(e.target.value)} style={{
-          padding:"8px 14px", borderRadius:20, fontSize:12, fontFamily:"'DM Sans',sans-serif",
-          background:"#ffffff", border:"1px solid #d1d5db", color:"#374151", cursor:"pointer", outline:"none"
-        }}>
+          padding:"10px 14px", borderRadius:8, fontSize:12, fontFamily:"'Inter',sans-serif",
+          background:"#ffffff", border:"1px solid #d1d5db", color:"#374151", cursor:"pointer", outline:"none", transition:"all .2s ease"
+        }}
+        onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.1)"; }}
+        onBlur={e => { e.target.style.borderColor = "#d1d5db"; e.target.style.boxShadow = "none"; }}
+        >
           {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <button onClick={searchBrand} disabled={isLoading} style={{
-          padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif", fontWeight:700,
+          padding:"10px 24px", borderRadius:8, fontSize:12, fontFamily:"'Instrument Sans',sans-serif", fontWeight:700,
           letterSpacing:1, textTransform:"uppercase", background: isLoading ? "#d1d5db" : ACCENT,
-          border:"none", color:"#fff", cursor: isLoading ? "default" : "pointer"
-        }}>{brandLoading ? "Searching..." : "Search"}</button>
+          border:"none", color:"#fff", cursor: isLoading ? "default" : "pointer", transition:"all .3s ease"
+        }}
+        onMouseEnter={e => !isLoading && (e.currentTarget.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.3)")}
+        onMouseLeave={e => (e.currentTarget.style.boxShadow = "none")}
+        >{brandLoading ? "Searching..." : "Search"}</button>
       </div>
 
       {brandError && (
@@ -819,7 +827,7 @@ function BrandSearchPanel({ onViewProfile }) {
           {/* Summary bar */}
           <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:24, padding:"14px 20px", background:"#ffffff", borderRadius:12, border:"1px solid #e5e7eb", flexWrap:"wrap" }}>
             <div style={{ flex:1 }}>
-              <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:16, color:"#111827" }}>{brandResults.brand}</span>
+              <span style={{ fontFamily:"'Instrument Sans',sans-serif", fontWeight:700, fontSize:16, color:"#111827" }}>{brandResults.brand}</span>
               <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#6b7280", marginLeft:10 }}>{brandResults.brandSlug}</span>
             </div>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:"#6b7280" }}>
@@ -827,23 +835,23 @@ function BrandSearchPanel({ onViewProfile }) {
             </div>
             {relCounts && (
               <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                {relCounts.current   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#d1fae5", border:"1px solid #34d39944", color:"#34d399", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Active {relCounts.current}</span>}
-                {relCounts.mention   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#dbeafe", border:"1px solid #60a5fa44", color:"#60a5fa", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Mentions {relCounts.mention}</span>}
-                {relCounts.prior     > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#f3f4f6", border:"1px solid #94a3b844", color:"#94a3b8", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Past {relCounts.prior}</span>}
-                {relCounts.supported > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#fce7f3", border:"1px solid #f472b644", color:"#f472b6", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>Supporter {relCounts.supported}</span>}
+                {relCounts.current   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#d1fae5", border:"1px solid #34d39944", color:"#34d399", fontSize:11, fontFamily:"'Inter',sans-serif" }}>Active {relCounts.current}</span>}
+                {relCounts.mention   > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#dbeafe", border:"1px solid #60a5fa44", color:"#60a5fa", fontSize:11, fontFamily:"'Inter',sans-serif" }}>Mentions {relCounts.mention}</span>}
+                {relCounts.prior     > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#f3f4f6", border:"1px solid #94a3b844", color:"#94a3b8", fontSize:11, fontFamily:"'Inter',sans-serif" }}>Past {relCounts.prior}</span>}
+                {relCounts.supported > 0 && <span style={{ padding:"3px 10px", borderRadius:20, background:"#fce7f3", border:"1px solid #f472b644", color:"#f472b6", fontSize:11, fontFamily:"'Inter',sans-serif" }}>Supporter {relCounts.supported}</span>}
               </div>
             )}
           </div>
 
           {/* Loading overlay for page turns */}
           {pageLoading && (
-            <div style={{ textAlign:"center", padding:"48px", color:"#6b7280", fontFamily:"'DM Sans',sans-serif" }}>
+            <div style={{ textAlign:"center", padding:"48px", color:"#6b7280", fontFamily:"'Inter',sans-serif" }}>
               Loading page {currentPage}...
             </div>
           )}
 
           {!pageLoading && allResults.length === 0 && (
-            <div style={{ textAlign:"center", padding:"48px 24px", color:"#6b7280", fontFamily:"'DM Sans',sans-serif" }}>
+            <div style={{ textAlign:"center", padding:"48px 24px", color:"#6b7280", fontFamily:"'Inter',sans-serif" }}>
               No influencers found for <strong style={{ color:"#374151" }}>{brandResults.brand}</strong>.
             </div>
           )}
@@ -863,7 +871,7 @@ function BrandSearchPanel({ onViewProfile }) {
                 onClick={goPrevPage}
                 disabled={currentPage <= 1 || isLoading}
                 style={{
-                  padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif",
+                  padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Instrument Sans',sans-serif",
                   fontWeight:600, letterSpacing:1, textTransform:"uppercase",
                   border:`1px solid ${currentPage <= 1 ? "#e5e7eb" : "#d1d5db"}`,
                   background:"transparent",
@@ -881,7 +889,7 @@ function BrandSearchPanel({ onViewProfile }) {
                 onClick={goNextPage}
                 disabled={!brandResults.hasMore || isLoading}
                 style={{
-                  padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Syne',sans-serif",
+                  padding:"8px 24px", borderRadius:20, fontSize:12, fontFamily:"'Instrument Sans',sans-serif",
                   fontWeight:600, letterSpacing:1, textTransform:"uppercase",
                   border:`1px solid ${!brandResults.hasMore ? "#e5e7eb" : ACCENT}`,
                   background: !brandResults.hasMore ? "transparent" : ACCENT+"22",
@@ -897,8 +905,8 @@ function BrandSearchPanel({ onViewProfile }) {
       {!brandResults && !brandLoading && (
         <div style={{ textAlign:"center", padding:"64px 24px", color:"#6b7280" }}>
           <div style={{ fontSize:40, marginBottom:16 }}>[ ]</div>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:600, color:"#374151", marginBottom:8 }}>Search by Brand</div>
-          <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13 }}>Enter a brand name to find influencers who have active partnerships, mentions, or past deals.</div>
+          <div style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:16, fontWeight:600, color:"#374151", marginBottom:8 }}>Search by Brand</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:13 }}>Enter a brand name to find influencers who have active partnerships, mentions, or past deals.</div>
         </div>
       )}
     </div>
@@ -957,7 +965,7 @@ function PostsTab({ slug }) {
           const meta = PLATFORM_META[p] || { color:"#374151", label:p };
           return (
             <button key={p} onClick={() => handlePlatform(p)} style={{
-              padding:"6px 16px", borderRadius:20, fontSize:11, fontFamily:"'DM Sans',sans-serif", fontWeight:500,
+              padding:"6px 16px", borderRadius:20, fontSize:11, fontFamily:"'Inter',sans-serif", fontWeight:500,
               border:`1px solid ${platform===p ? meta.color : "#d1d5db"}`,
               background: platform===p ? meta.color+"22" : "transparent",
               color: platform===p ? meta.color : "#6b7280", cursor:"pointer", transition:"all .2s"
@@ -967,7 +975,7 @@ function PostsTab({ slug }) {
       </div>
 
       {isLoading && (
-        <div style={{ textAlign:"center", padding:"48px", color:"#6b7280", fontFamily:"'DM Sans',sans-serif" }}>
+        <div style={{ textAlign:"center", padding:"48px", color:"#6b7280", fontFamily:"'Inter',sans-serif" }}>
           Loading {platform} posts...
         </div>
       )}
@@ -979,7 +987,7 @@ function PostsTab({ slug }) {
       )}
 
       {!isLoading && !error && currentPosts?.length === 0 && (
-        <div style={{ textAlign:"center", padding:"48px", color:"#6b7280", fontFamily:"'DM Sans',sans-serif" }}>
+        <div style={{ textAlign:"center", padding:"48px", color:"#6b7280", fontFamily:"'Inter',sans-serif" }}>
           No {platform} posts found for this influencer.
         </div>
       )}
@@ -1007,7 +1015,7 @@ function PostsTab({ slug }) {
                 <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:8, alignItems:"center" }}>
                   <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#6b7280" }}>{fmtDate(post.posted_at)}</span>
                   {post.is_ad && (
-                    <span style={{ padding:"2px 8px", borderRadius:10, background:"#fef3c7", border:"1px solid #fbbf2444", color:"#fbbf24", fontSize:10, fontFamily:"'DM Sans',sans-serif" }}>Sponsored</span>
+                    <span style={{ padding:"2px 8px", borderRadius:10, background:"#fef3c7", border:"1px solid #fbbf2444", color:"#fbbf24", fontSize:10, fontFamily:"'Inter',sans-serif" }}>Sponsored</span>
                   )}
                   {post.url && (
                     <a href={post.url} target="_blank" rel="noopener noreferrer" style={{
@@ -1020,7 +1028,7 @@ function PostsTab({ slug }) {
 
                 {/* Caption */}
                 {post.caption && (
-                  <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"#4b5563", margin:"0 0 10px", lineHeight:1.5 }}>
+                  <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:"#4b5563", margin:"0 0 10px", lineHeight:1.5 }}>
                     {truncate(post.caption, 200)}
                   </p>
                 )}
@@ -1029,18 +1037,18 @@ function PostsTab({ slug }) {
                 <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
                   <div>
                     <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:ACCENT, fontWeight:500 }}>{fmt(post.engagement)}</span>
-                    <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginLeft:4 }}>engagement</span>
+                    <span style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#6b7280", marginLeft:4 }}>engagement</span>
                   </div>
                   {post.likes > 0 && (
                     <div>
                       <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:"#f472b6", fontWeight:500 }}>{fmt(post.likes)}</span>
-                      <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginLeft:4 }}>likes</span>
+                      <span style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#6b7280", marginLeft:4 }}>likes</span>
                     </div>
                   )}
                   {post.comments > 0 && (
                     <div>
                       <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:"#60a5fa", fontWeight:500 }}>{fmt(post.comments)}</span>
-                      <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginLeft:4 }}>comments</span>
+                      <span style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#6b7280", marginLeft:4 }}>comments</span>
                     </div>
                   )}
                 </div>
@@ -1249,7 +1257,7 @@ export default function JuliusInfluencerLookup() {
   ];
 
   return (
-    <div style={{ minHeight:"100vh", background:"#f3f4f6", color:"#111827", fontFamily:"'DM Sans',sans-serif", padding:"32px 24px" }}>
+    <div style={{ minHeight:"100vh", background:"#f3f4f6", color:"#111827", fontFamily:"'Inter',sans-serif", padding:"32px 24px" }}>
       <style>{`* { box-sizing:border-box; } ::-webkit-scrollbar { width:4px; height:4px; background:#f3f4f6; } ::-webkit-scrollbar-thumb { background:#9ca3af; border-radius:4px; }`}</style>
 
       <div style={{ maxWidth:1200, margin:"0 auto" }}>
@@ -1265,10 +1273,10 @@ export default function JuliusInfluencerLookup() {
                 )}
               </div>
               <div style={{ flex:1 }}>
-                <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:32, fontWeight:800, margin:"0 0 8px 0", color:"#111827" }}>
+                <h1 style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:32, fontWeight:800, margin:"0 0 8px 0", color:"#111827" }}>
                   {displayData.display_name}
                 </h1>
-                <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:14, color:"#6b7280", margin:"0 0 16px 0" }}>
+                <p style={{ fontFamily:"'Inter',sans-serif", fontSize:14, color:"#6b7280", margin:"0 0 16px 0" }}>
                   {displayData.tagline || displayData.current_location?.display_name || "—"}
                 </p>
                 <div style={{ display:"flex", gap:16, marginBottom:16 }}>
@@ -1276,7 +1284,7 @@ export default function JuliusInfluencerLookup() {
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:700, color:"#3b82f6" }}>
                       {fmt(displayData.social_total_count)}
                     </div>
-                    <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>
+                    <div style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>
                       Followers
                     </div>
                   </div>
@@ -1284,7 +1292,7 @@ export default function JuliusInfluencerLookup() {
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:700, color:"#3b82f6" }}>
                       {fmt(displayData.social_total_engagement)}
                     </div>
-                    <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>
+                    <div style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:"#6b7280", marginTop:2 }}>
                       Engagement
                     </div>
                   </div>
@@ -1346,12 +1354,12 @@ export default function JuliusInfluencerLookup() {
 
             <div style={{ display:"flex", alignItems:"center", marginBottom:24, gap:16 }}>
               <button onClick={refresh} style={{
-                fontFamily:"'Syne',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
+                fontFamily:"'Instrument Sans',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
                 background: refreshing ? "#d1d5db" : ACCENT, color:"#fff", border:"none", borderRadius:20,
                 cursor: refreshing ? "default" : "pointer"
               }}>🔄 {refreshing ? "…" : "Refresh"}</button>
               <button onClick={() => window.location.href = "/"} style={{
-                fontFamily:"'Syne',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
+                fontFamily:"'Instrument Sans',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
                 background:"transparent", color:ACCENT, border:`1px solid ${ACCENT}`, borderRadius:20, cursor:"pointer"
               }}>← Back to Search</button>
             </div>
@@ -1359,14 +1367,14 @@ export default function JuliusInfluencerLookup() {
             {/* Add to Lists */}
             {allLists.length > 0 && (
               <div style={{ marginBottom:24, padding:16, background:"#fff", border:`1px solid #e5e7eb`, borderRadius:12 }}>
-                <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, margin:"0 0 12px 0" }}>Add to List</h3>
+                <h3 style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:13, fontWeight:700, margin:"0 0 12px 0" }}>Add to List</h3>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
                   {allLists.map(list => (
                     <button
                       key={list.id}
                       onClick={() => toggleListMembership(list.id)}
                       style={{
-                        fontFamily:"'DM Sans',sans-serif", fontSize:12, padding:"8px 12px", borderRadius:8,
+                        fontFamily:"'Inter',sans-serif", fontSize:12, padding:"8px 12px", borderRadius:8,
                         border: memberOf.has(list.id) ? `2px solid ${ACCENT}` : `1px solid #d1d5db`,
                         background: memberOf.has(list.id) ? ACCENT+"22" : "transparent",
                         color: memberOf.has(list.id) ? ACCENT : "#6b7280",
@@ -1382,7 +1390,7 @@ export default function JuliusInfluencerLookup() {
 
             {/* Create New List */}
             <div style={{ marginBottom:24, padding:16, background:"#fff", border:`1px solid #e5e7eb`, borderRadius:12 }}>
-              <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, margin:"0 0 12px 0" }}>Create New List</h3>
+              <h3 style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:13, fontWeight:700, margin:"0 0 12px 0" }}>Create New List</h3>
               <div style={{ display:"flex", gap:8 }}>
                 <input
                   type="text"
@@ -1390,14 +1398,14 @@ export default function JuliusInfluencerLookup() {
                   value={newListName}
                   onChange={e => setNewListName(e.target.value)}
                   style={{
-                    flex:1, fontFamily:"'DM Sans',sans-serif", fontSize:12, padding:"8px 12px",
+                    flex:1, fontFamily:"'Inter',sans-serif", fontSize:12, padding:"8px 12px",
                     border:`1px solid #d1d5db`, borderRadius:6, outline:"none"
                   }}
                 />
                 <button
                   onClick={createListAndAdd}
                   style={{
-                    fontFamily:"'Syne',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
+                    fontFamily:"'Instrument Sans',sans-serif", fontSize:12, fontWeight:700, padding:"8px 16px",
                     background:ACCENT, color:"#fff", border:"none", borderRadius:6, cursor:"pointer"
                   }}
                 >

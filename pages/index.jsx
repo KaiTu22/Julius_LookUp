@@ -179,7 +179,7 @@ export default function Home() {
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h1 style={{
-            fontFamily: "'Syne',sans-serif",
+            fontFamily: "'Instrument Sans',sans-serif",
             fontWeight: 800,
             fontSize: 24,
             color: "#111827",
@@ -198,7 +198,7 @@ export default function Home() {
                   borderRadius: 6,
                   padding: "8px 12px",
                   fontSize: 12,
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Instrument Sans',sans-serif",
                   fontWeight: 600,
                   cursor: "pointer",
                   color: "#6b7280",
@@ -244,7 +244,7 @@ export default function Home() {
                         textDecoration: "none",
                         color: ACCENT,
                         fontSize: 12,
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Instrument Sans',sans-serif",
                         fontWeight: 600,
                         transition: "background .2s",
                       }}
@@ -264,7 +264,7 @@ export default function Home() {
                 style={{
                   color: ACCENT,
                   textDecoration: "none",
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Instrument Sans',sans-serif",
                   fontWeight: 600,
                   fontSize: 12,
                   cursor: "pointer",
@@ -311,7 +311,7 @@ export default function Home() {
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <h2 style={{
-            fontFamily: "'Syne',sans-serif",
+            fontFamily: "'Instrument Sans',sans-serif",
             fontWeight: 700,
             fontSize: 20,
             color: "#111827",
@@ -364,7 +364,7 @@ export default function Home() {
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Instrument Sans',sans-serif",
                         fontWeight: 700,
                         fontSize: 14,
                         color: "#111827",
@@ -383,7 +383,7 @@ export default function Home() {
                       padding: "8px 0",
                       borderRadius: 8,
                       fontSize: 11,
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       fontWeight: 600,
                       letterSpacing: 1,
                       textTransform: "uppercase",
@@ -439,7 +439,7 @@ export default function Home() {
                 borderRadius: 12,
                 border: "2px solid #3b82f6",
                 fontSize: 14,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 boxSizing: "border-box",
               }}
             />
@@ -495,7 +495,7 @@ export default function Home() {
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Instrument Sans',sans-serif",
                         fontWeight: 600,
                         fontSize: 13,
                         color: "#111827",
@@ -506,7 +506,7 @@ export default function Home() {
                         {influencer.display_name}
                       </div>
                       <div style={{
-                        fontFamily: "'DM Sans',sans-serif",
+                        fontFamily: "'Inter',sans-serif",
                         fontSize: 11,
                         color: "#3b82f6",
                         marginTop: 2,
@@ -530,7 +530,7 @@ export default function Home() {
               style={{
                 color: ACCENT,
                 textDecoration: "none",
-                fontFamily: "'Syne',sans-serif",
+                fontFamily: "'Instrument Sans',sans-serif",
                 fontWeight: 600,
                 fontSize: 12,
                 cursor: "pointer",
@@ -552,7 +552,7 @@ export default function Home() {
         }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <h2 style={{
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 24,
               color: "#111827",
@@ -623,7 +623,7 @@ export default function Home() {
                     <div
                       onClick={() => window.location.href = `/?slug=${encodeURIComponent(inf.slug)}`}
                       style={{
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Instrument Sans',sans-serif",
                         fontWeight: 700,
                         fontSize: 15,
                         color: "#111827",
@@ -634,7 +634,7 @@ export default function Home() {
                       {inf.display_name}
                     </div>
                     <div style={{
-                      fontFamily: "'DM Sans',sans-serif",
+                      fontFamily: "'Inter',sans-serif",
                       fontSize: 11,
                       color: "#6b7280",
                       marginBottom: 10,
@@ -666,7 +666,7 @@ export default function Home() {
                         cursor: "pointer",
                         fontSize: 11,
                         fontWeight: 600,
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Instrument Sans',sans-serif",
                         transition: "all .2s",
                       }}
                       onMouseEnter={e => {
@@ -697,7 +697,7 @@ export default function Home() {
         }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <h2 style={{
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 24,
               color: "#111827",
@@ -760,7 +760,7 @@ export default function Home() {
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Instrument Sans',sans-serif",
                         fontWeight: 700,
                         fontSize: 14,
                         color: "#111827",
@@ -771,7 +771,7 @@ export default function Home() {
                         {inf.display_name}
                       </div>
                       <div style={{
-                        fontFamily: "'DM Sans',sans-serif",
+                        fontFamily: "'Inter',sans-serif",
                         fontSize: 11,
                         color: "#6b7280",
                         marginTop: 2,
@@ -791,7 +791,7 @@ export default function Home() {
                         {fmt(inf.social_total_count)}
                       </div>
                       <div style={{
-                        fontFamily: "'DM Sans',sans-serif",
+                        fontFamily: "'Inter',sans-serif",
                         fontSize: 10,
                         color: "#6b7280",
                       }}>
@@ -815,7 +815,7 @@ export default function Home() {
                       cursor: "pointer",
                       fontSize: 10,
                       fontWeight: 600,
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       transition: "all .2s",
                     }}
                     onMouseEnter={e => {
@@ -856,7 +856,7 @@ export default function Home() {
             boxShadow: "0 20px 25px rgba(0,0,0,0.15)",
           }} onClick={e => e.stopPropagation()}>
             <div style={{
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 18,
               color: "#111827",
@@ -958,7 +958,7 @@ export default function Home() {
                   cursor: "pointer",
                   fontSize: 12,
                   fontWeight: 600,
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Instrument Sans',sans-serif",
                 }}
               >
                 Go to Lists
@@ -975,7 +975,7 @@ export default function Home() {
                   cursor: "pointer",
                   fontSize: 12,
                   fontWeight: 600,
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Instrument Sans',sans-serif",
                 }}
               >
                 Close

@@ -59,7 +59,7 @@ export default function DiscoverySearch({
       <div style={{ marginBottom: 24 }}>
         <label style={{
           display: "block",
-          fontFamily: "'Syne',sans-serif",
+          fontFamily: "'Instrument Sans',sans-serif",
           fontWeight: 700,
           fontSize: 13,
           letterSpacing: 1,
@@ -81,7 +81,7 @@ export default function DiscoverySearch({
               borderRadius: 12,
               border: "2px solid #3b82f6",
               fontSize: 14,
-              fontFamily: "'DM Sans',sans-serif",
+              fontFamily: "'Inter',sans-serif",
               boxSizing: "border-box",
             }}
           />
@@ -134,7 +134,7 @@ export default function DiscoverySearch({
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       fontWeight: 600,
                       fontSize: 13,
                       color: "#111827",
@@ -161,7 +161,7 @@ export default function DiscoverySearch({
           gap: 8,
           background: "transparent",
           border: "none",
-          fontFamily: "'Syne',sans-serif",
+          fontFamily: "'Instrument Sans',sans-serif",
           fontWeight: 700,
           fontSize: 13,
           letterSpacing: 1,
@@ -189,7 +189,7 @@ export default function DiscoverySearch({
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -208,7 +208,7 @@ export default function DiscoverySearch({
                     padding: "7px 14px",
                     borderRadius: 20,
                     fontSize: 12,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     fontWeight: 500,
                     border: platform === p.id ? `1px solid ${ACCENT}` : "1px solid #d1d5db",
                     background: platform === p.id ? ACCENT + "22" : "transparent",
@@ -227,7 +227,7 @@ export default function DiscoverySearch({
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -248,7 +248,7 @@ export default function DiscoverySearch({
                 borderRadius: 8,
                 border: "1px solid #d1d5db",
                 fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 boxSizing: "border-box",
               }}
             />
@@ -258,7 +258,7 @@ export default function DiscoverySearch({
           <div style={{ marginBottom: 0 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -279,7 +279,7 @@ export default function DiscoverySearch({
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 150,
                     outline: "none",
@@ -297,7 +297,7 @@ export default function DiscoverySearch({
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 150,
                     outline: "none",
@@ -317,7 +317,7 @@ export default function DiscoverySearch({
           padding: "12px 32px",
           borderRadius: 8,
           fontSize: 13,
-          fontFamily: "'Syne',sans-serif",
+          fontFamily: "'Instrument Sans',sans-serif",
           fontWeight: 700,
           letterSpacing: 1,
           textTransform: "uppercase",

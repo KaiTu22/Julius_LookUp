@@ -9,7 +9,7 @@ const fontLink = typeof document !== "undefined" && (() => {
     const l = document.createElement("link");
     l.id = "julius-fonts";
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap";
     document.head.appendChild(l);
   }
 })();
@@ -41,7 +41,7 @@ export default function CacheDashboard() {
   return (
     <div style={{
       minHeight: "100vh", background: "#f9fafb",
-      fontFamily: "'DM Sans',sans-serif", padding: "40px 24px",
+      fontFamily: "'Inter',sans-serif", padding: "40px 24px",
     }}>
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
 
@@ -54,7 +54,7 @@ export default function CacheDashboard() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
           <div>
             <h1 style={{
-              fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 32,
+              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 800, fontSize: 32,
               letterSpacing: -0.5, color: "#111827", margin: 0,
             }}>
               Cache Dashboard
@@ -73,7 +73,7 @@ export default function CacheDashboard() {
               border: "1px solid #e5e7eb",
               background: loading ? "#f3f4f6" : "#ffffff",
               color: loading ? "#9ca3af" : "#374151",
-              fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 12,
+              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 12,
               letterSpacing: 1, textTransform: "uppercase",
               cursor: loading ? "not-allowed" : "pointer", transition: "all .2s",
             }}
@@ -102,7 +102,7 @@ export default function CacheDashboard() {
           borderRadius: 12, padding: "20px 24px",
         }}>
           <div style={{
-            fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+            fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 11,
             letterSpacing: 3, textTransform: "uppercase",
             color: "#6b7280", marginBottom: 16,
           }}>
@@ -140,7 +140,7 @@ function StatCard({ label, value, hint }) {
       borderRadius: 12, padding: "20px 24px",
     }}>
       <div style={{
-        fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+        fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 11,
         letterSpacing: 3, textTransform: "uppercase",
         color: "#6b7280", marginBottom: 12,
       }}>
@@ -153,7 +153,7 @@ function StatCard({ label, value, hint }) {
         {value ?? "—"}
       </div>
       <div style={{
-        fontFamily: "'DM Sans',sans-serif", fontSize: 12,
+        fontFamily: "'Inter',sans-serif", fontSize: 12,
         color: "#9ca3af", marginTop: 10,
       }}>
         {hint}

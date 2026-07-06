@@ -20,7 +20,7 @@ function FolderNode({ folder, lists, subfolders, onSelectFolder, level = 0 }) {
           border: "none",
           background: "transparent",
           color: "#111827",
-          fontFamily: "'DM Sans',sans-serif",
+          fontFamily: "'Inter',sans-serif",
           fontSize: 13,
           cursor: "pointer",
           width: "100%",

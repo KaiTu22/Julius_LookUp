@@ -10,7 +10,7 @@ const fontLink = typeof document !== "undefined" && (() => {
     const l = document.createElement("link");
     l.id = "julius-fonts";
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap";
     document.head.appendChild(l);
   }
 })();
@@ -58,7 +58,7 @@ export default function ProfileFieldsPage() {
   return (
     <div style={{
       minHeight: "100vh", background: "#f9fafb",
-      fontFamily: "'DM Sans',sans-serif", padding: "40px 24px",
+      fontFamily: "'Inter',sans-serif", padding: "40px 24px",
     }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
@@ -67,7 +67,7 @@ export default function ProfileFieldsPage() {
             ← Back to Archive
           </Link>
           <h1 style={{
-            fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 32,
+            fontFamily: "'Instrument Sans',sans-serif", fontWeight: 800, fontSize: 32,
             letterSpacing: -0.5, color: "#111827", margin: "10px 0 6px",
           }}>
             Field Structure
@@ -100,7 +100,7 @@ export default function ProfileFieldsPage() {
           }}>
             <div style={{
               padding: "14px 24px",
-              fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 11,
               letterSpacing: 3, textTransform: "uppercase",
               color: "#374151",
               borderBottom: "1px solid #e5e7eb",
@@ -162,7 +162,7 @@ function Th({ children }) {
   return (
     <th style={{
       textAlign: "left", padding: "10px 16px",
-      fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 10,
+      fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 10,
       letterSpacing: 2, textTransform: "uppercase",
       color: "#9ca3af",
     }}>{children}</th>

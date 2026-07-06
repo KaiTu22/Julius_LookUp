@@ -85,7 +85,7 @@ export default function ListFolderPicker({ listId, currentFolderId, onMove, onCl
       border: `1px solid #e5e7eb`,
     }}>
       <h3 style={{
-        fontFamily: "'Syne',sans-serif",
+        fontFamily: "'Instrument Sans',sans-serif",
         fontSize: 14,
         fontWeight: 700,
         margin: "0 0 12px 0",
@@ -105,7 +105,7 @@ export default function ListFolderPicker({ listId, currentFolderId, onMove, onCl
               padding: "8px 12px",
               borderRadius: 6,
               border: `1px solid #d1d5db`,
-              fontFamily: "'DM Sans',sans-serif",
+              fontFamily: "'Inter',sans-serif",
               fontSize: 13,
               marginBottom: 12,
               boxSizing: "border-box",

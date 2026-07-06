@@ -13,7 +13,7 @@ const fontLink = typeof document !== "undefined" && (() => {
     const l = document.createElement("link");
     l.id = "julius-fonts";
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap";
     document.head.appendChild(l);
   }
 })();
@@ -115,7 +115,7 @@ export default function ListsPage() {
   return (
     <div style={{
       minHeight: "100vh", background: "#f9fafb",
-      fontFamily: "'DM Sans',sans-serif", padding: "40px 24px",
+      fontFamily: "'Inter',sans-serif", padding: "40px 24px",
     }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
@@ -128,7 +128,7 @@ export default function ListsPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
           <div>
             <h1 style={{
-              fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 32,
+              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 800, fontSize: 32,
               letterSpacing: -0.5, color: "#111827", margin: 0,
             }}>
               Lists & Projects
@@ -149,7 +149,7 @@ export default function ListsPage() {
             style={{
               padding: "10px 20px", borderRadius: 8,
               border: "none", background: ACCENT, color: "#ffffff",
-              fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 12,
+              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 12,
               letterSpacing: 1, textTransform: "uppercase",
               cursor: "pointer",
             }}
@@ -173,7 +173,7 @@ export default function ListsPage() {
             borderRadius: 12, padding: 24, marginBottom: 24,
           }}>
             <div style={{
-              fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 11,
               letterSpacing: 3, textTransform: "uppercase",
               color: "#6b7280", marginBottom: 14,
             }}>
@@ -187,7 +187,7 @@ export default function ListsPage() {
               placeholder="List name (e.g. Q3 Beauty Campaign)"
               style={{
                 width: "100%", padding: "10px 14px", borderRadius: 8,
-                border: "1px solid #d1d5db", fontFamily: "'DM Sans',sans-serif",
+                border: "1px solid #d1d5db", fontFamily: "'Inter',sans-serif",
                 fontSize: 14, marginBottom: 10, outline: "none",
               }}
             />
@@ -198,7 +198,7 @@ export default function ListsPage() {
               placeholder="Description (optional)"
               style={{
                 width: "100%", padding: "10px 14px", borderRadius: 8,
-                border: "1px solid #d1d5db", fontFamily: "'DM Sans',sans-serif",
+                border: "1px solid #d1d5db", fontFamily: "'Inter',sans-serif",
                 fontSize: 13, marginBottom: 14, outline: "none", color: "#374151",
               }}
             />
@@ -208,7 +208,7 @@ export default function ListsPage() {
                 style={{
                   padding: "8px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
                   background: "#ffffff", color: "#6b7280", cursor: "pointer",
-                  fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 11,
+                  fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 11,
                   letterSpacing: 1, textTransform: "uppercase",
                 }}
               >
@@ -221,7 +221,7 @@ export default function ListsPage() {
                   padding: "8px 18px", borderRadius: 8, border: "none",
                   background: !newName.trim() || creating ? "#d1d5db" : ACCENT,
                   color: "#ffffff", cursor: !newName.trim() || creating ? "not-allowed" : "pointer",
-                  fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+                  fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 11,
                   letterSpacing: 1, textTransform: "uppercase",
                 }}
               >
@@ -237,7 +237,7 @@ export default function ListsPage() {
             borderRadius: 12, padding: 24, marginBottom: 24,
           }}>
             <div style={{
-              fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 11,
               letterSpacing: 3, textTransform: "uppercase",
               color: "#6b7280", marginBottom: 14,
             }}>
@@ -251,7 +251,7 @@ export default function ListsPage() {
               placeholder="List name"
               style={{
                 width: "100%", padding: "10px 14px", borderRadius: 8,
-                border: "1px solid #d1d5db", fontFamily: "'DM Sans',sans-serif",
+                border: "1px solid #d1d5db", fontFamily: "'Inter',sans-serif",
                 fontSize: 14, marginBottom: 10, outline: "none",
               }}
             />
@@ -262,7 +262,7 @@ export default function ListsPage() {
               placeholder="Description (optional)"
               style={{
                 width: "100%", padding: "10px 14px", borderRadius: 8,
-                border: "1px solid #d1d5db", fontFamily: "'DM Sans',sans-serif",
+                border: "1px solid #d1d5db", fontFamily: "'Inter',sans-serif",
                 fontSize: 13, marginBottom: 14, outline: "none", color: "#374151",
                 minHeight: 80, resize: "none",
               }}
@@ -273,7 +273,7 @@ export default function ListsPage() {
                 style={{
                   padding: "8px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
                   background: "#ffffff", color: "#6b7280", cursor: "pointer",
-                  fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 11,
+                  fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 11,
                   letterSpacing: 1, textTransform: "uppercase",
                 }}
               >
@@ -284,7 +284,7 @@ export default function ListsPage() {
                 style={{
                   padding: "8px 18px", borderRadius: 8, border: "none",
                   background: ACCENT, color: "#ffffff", cursor: "pointer",
-                  fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11,
+                  fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 11,
                   letterSpacing: 1, textTransform: "uppercase",
                 }}
               >
@@ -312,7 +312,7 @@ export default function ListsPage() {
             <FolderStats />
             <FolderSearch onSelectItem={setSelectedFolder} />
             <h2 style={{
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontSize: 13,
               fontWeight: 700,
               margin: "0 0 12px 0",
@@ -376,7 +376,7 @@ export default function ListsPage() {
                     cursor: "pointer",
                     fontSize: 11,
                     fontWeight: 600,
-                    fontFamily: "'Syne',sans-serif",
+                    fontFamily: "'Instrument Sans',sans-serif",
                   }}
                 >
                   All
@@ -392,7 +392,7 @@ export default function ListsPage() {
                     cursor: "pointer",
                     fontSize: 11,
                     fontWeight: 600,
-                    fontFamily: "'Syne',sans-serif",
+                    fontFamily: "'Instrument Sans',sans-serif",
                   }}
                 >
                   Ungrouped
@@ -408,7 +408,7 @@ export default function ListsPage() {
                     cursor: "pointer",
                     fontSize: 11,
                     fontWeight: 600,
-                    fontFamily: "'Syne',sans-serif",
+                    fontFamily: "'Instrument Sans',sans-serif",
                   }}
                 >
                   Grouped
@@ -423,7 +423,7 @@ export default function ListsPage() {
                 {/* View Title */}
                 <div style={{ marginBottom: 16 }}>
                   <h2 style={{
-                    fontFamily: "'Syne',sans-serif",
+                    fontFamily: "'Instrument Sans',sans-serif",
                     fontSize: 16,
                     fontWeight: 700,
                     color: "#111827",
@@ -483,7 +483,7 @@ export default function ListsPage() {
                   }}>
                     <Link href={`/lists/${l.id}`} style={{ textDecoration: "none", color: "inherit", flex: 1 }}>
                       <div style={{
-                        fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 18,
+                        fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 18,
                         color: "#111827", marginBottom: 4,
                       }}>
                         {l.name}
@@ -543,7 +543,7 @@ export default function ListsPage() {
                             style={{
                               padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
                               background: "transparent", color: "#6b7280", cursor: "pointer",
-                              fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 10,
                               letterSpacing: 1, textTransform: "uppercase",
                             }}
                           >Edit</button>
@@ -552,7 +552,7 @@ export default function ListsPage() {
                             style={{
                               padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
                               background: "transparent", color: ACCENT, cursor: "pointer",
-                              fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                              fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 10,
                               letterSpacing: 1, textTransform: "uppercase",
                             }}
                           >Move</button>
@@ -563,7 +563,7 @@ export default function ListsPage() {
                                 style={{
                                   padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
                                   background: "#ffffff", color: "#6b7280", cursor: "pointer",
-                                  fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                                  fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 10,
                                   letterSpacing: 1, textTransform: "uppercase",
                                 }}
                               >Cancel</button>
@@ -572,7 +572,7 @@ export default function ListsPage() {
                                 style={{
                                   padding: "4px 10px", borderRadius: 6, border: "none",
                                   background: "#ef4444", color: "#ffffff", cursor: "pointer",
-                                  fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 10,
+                                  fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 10,
                                   letterSpacing: 1, textTransform: "uppercase",
                                 }}
                               >Confirm Delete</button>
@@ -583,7 +583,7 @@ export default function ListsPage() {
                               style={{
                                 padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
                                 background: "transparent", color: "#9ca3af", cursor: "pointer",
-                                fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                                fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 10,
                                 letterSpacing: 1, textTransform: "uppercase",
                               }}
                             >Delete</button>

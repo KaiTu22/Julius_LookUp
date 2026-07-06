@@ -10,7 +10,7 @@ const fontLink = typeof document !== "undefined" && (() => {
     const l = document.createElement("link");
     l.id = "julius-fonts";
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap";
     document.head.appendChild(l);
   }
 })();
@@ -72,7 +72,7 @@ export default function ListDetailPage() {
   return (
     <div style={{
       minHeight: "100vh", background: "#f9fafb",
-      fontFamily: "'DM Sans',sans-serif", padding: "40px 24px",
+      fontFamily: "'Inter',sans-serif", padding: "40px 24px",
     }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
@@ -97,7 +97,7 @@ export default function ListDetailPage() {
           <>
             <div style={{ marginBottom: 28 }}>
               <h1 style={{
-                fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 32,
+                fontFamily: "'Instrument Sans',sans-serif", fontWeight: 800, fontSize: 32,
                 letterSpacing: -0.5, color: "#111827", margin: 0,
               }}>
                 {list.name}
@@ -137,7 +137,7 @@ export default function ListDetailPage() {
                       <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f3f4f6", flexShrink: 0 }} />
                     )}
                     <Link href={`/?slug=${encodeURIComponent(m.slug)}`} style={{ flex: 1, minWidth: 0, textDecoration: "none", color: "inherit" }}>
-                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 15, fontWeight: 500, color: "#111827" }}>
+                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 500, color: "#111827" }}>
                         {m.display_name}
                       </div>
                       <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
@@ -154,7 +154,7 @@ export default function ListDetailPage() {
                           style={{
                             padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
                             background: "#ffffff", color: "#6b7280", cursor: "pointer",
-                            fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                            fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 10,
                             letterSpacing: 1, textTransform: "uppercase",
                           }}
                         >Cancel</button>
@@ -163,7 +163,7 @@ export default function ListDetailPage() {
                           style={{
                             padding: "4px 10px", borderRadius: 6, border: "none",
                             background: "#ef4444", color: "#ffffff", cursor: "pointer",
-                            fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 10,
+                            fontFamily: "'Instrument Sans',sans-serif", fontWeight: 700, fontSize: 10,
                             letterSpacing: 1, textTransform: "uppercase",
                           }}
                         >Confirm Remove</button>
@@ -174,7 +174,7 @@ export default function ListDetailPage() {
                         style={{
                           padding: "4px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
                           background: "transparent", color: "#9ca3af", cursor: "pointer",
-                          fontFamily: "'Syne',sans-serif", fontWeight: 600, fontSize: 10,
+                          fontFamily: "'Instrument Sans',sans-serif", fontWeight: 600, fontSize: 10,
                           letterSpacing: 1, textTransform: "uppercase",
                           flexShrink: 0,
                         }}

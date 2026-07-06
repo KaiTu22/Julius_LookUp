@@ -9,7 +9,7 @@ const fontLink = typeof document !== "undefined" && (() => {
     const l = document.createElement("link");
     l.id = "julius-fonts";
     l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap";
     document.head.appendChild(l);
   }
 })();
@@ -183,7 +183,7 @@ export default function DiscoverPage() {
     <div style={{
       minHeight: "100vh",
       background: "#f9fafb",
-      fontFamily: "'DM Sans',sans-serif",
+      fontFamily: "'Inter',sans-serif",
       padding: "40px 24px",
     }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -197,7 +197,7 @@ export default function DiscoverPage() {
 
         {/* Header */}
         <h1 style={{
-          fontFamily: "'Syne',sans-serif",
+          fontFamily: "'Instrument Sans',sans-serif",
           fontWeight: 800,
           fontSize: 32,
           letterSpacing: -0.5,
@@ -207,7 +207,7 @@ export default function DiscoverPage() {
           Discover Influencers
         </h1>
         <p style={{
-          fontFamily: "'DM Sans',sans-serif",
+          fontFamily: "'Inter',sans-serif",
           fontSize: 14,
           color: "#6b7280",
           margin: "0 0 32px 0",
@@ -222,7 +222,7 @@ export default function DiscoverPage() {
         }}>
           <label style={{
             display: "block",
-            fontFamily: "'Syne',sans-serif",
+            fontFamily: "'Instrument Sans',sans-serif",
             fontWeight: 700,
             fontSize: 13,
             letterSpacing: 1,
@@ -243,7 +243,7 @@ export default function DiscoverPage() {
               borderRadius: 12,
               border: "2px solid #3b82f6",
               fontSize: 14,
-              fontFamily: "'DM Sans',sans-serif",
+              fontFamily: "'Inter',sans-serif",
               boxSizing: "border-box",
             }}
           />
@@ -296,7 +296,7 @@ export default function DiscoverPage() {
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       fontWeight: 600,
                       fontSize: 13,
                       color: "#111827",
@@ -322,7 +322,7 @@ export default function DiscoverPage() {
             gap: 8,
             background: "transparent",
             border: "none",
-            fontFamily: "'Syne',sans-serif",
+            fontFamily: "'Instrument Sans',sans-serif",
             fontWeight: 700,
             fontSize: 13,
             letterSpacing: 1,
@@ -351,7 +351,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -370,7 +370,7 @@ export default function DiscoverPage() {
                     padding: "7px 14px",
                     borderRadius: 20,
                     fontSize: 12,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     fontWeight: 500,
                     border: platform === p.id
                       ? `1px solid ${ACCENT}`
@@ -403,7 +403,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -420,7 +420,7 @@ export default function DiscoverPage() {
                 padding: "8px 12px",
                 borderRadius: 8,
                 fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 border: "1px solid #d1d5db",
                 width: "100%",
                 maxWidth: 300,
@@ -439,7 +439,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -460,7 +460,7 @@ export default function DiscoverPage() {
                 borderRadius: 8,
                 border: "1px solid #d1d5db",
                 fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 boxSizing: "border-box",
               }}
             />
@@ -470,7 +470,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -491,7 +491,7 @@ export default function DiscoverPage() {
                 borderRadius: 8,
                 border: "1px solid #d1d5db",
                 fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 boxSizing: "border-box",
               }}
             />
@@ -501,7 +501,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -522,7 +522,7 @@ export default function DiscoverPage() {
                 borderRadius: 8,
                 border: "1px solid #d1d5db",
                 fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 boxSizing: "border-box",
               }}
             />
@@ -532,7 +532,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -555,7 +555,7 @@ export default function DiscoverPage() {
                     padding: "7px 14px",
                     borderRadius: 20,
                     fontSize: 12,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     fontWeight: 500,
                     border: genders.includes(g.id)
                       ? `1px solid ${ACCENT}`
@@ -588,7 +588,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -610,7 +610,7 @@ export default function DiscoverPage() {
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 150,
                     outline: "none",
@@ -629,7 +629,7 @@ export default function DiscoverPage() {
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 150,
                     outline: "none",
@@ -646,7 +646,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -668,7 +668,7 @@ export default function DiscoverPage() {
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 100,
                     outline: "none",
@@ -687,7 +687,7 @@ export default function DiscoverPage() {
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 100,
                     outline: "none",
@@ -704,7 +704,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -721,7 +721,7 @@ export default function DiscoverPage() {
                 padding: "8px 12px",
                 borderRadius: 8,
                 fontSize: 13,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 border: "1px solid #d1d5db",
                 width: "100%",
                 maxWidth: 250,
@@ -740,7 +740,7 @@ export default function DiscoverPage() {
           <div style={{ marginBottom: 0 }}>
             <label style={{
               display: "block",
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               fontSize: 11,
               letterSpacing: 3,
@@ -762,7 +762,7 @@ export default function DiscoverPage() {
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 130,
                     outline: "none",
@@ -781,7 +781,7 @@ export default function DiscoverPage() {
                     padding: "8px 12px",
                     borderRadius: 8,
                     fontSize: 13,
-                    fontFamily: "'DM Sans',sans-serif",
+                    fontFamily: "'Inter',sans-serif",
                     border: "1px solid #d1d5db",
                     width: 130,
                     outline: "none",
@@ -806,7 +806,7 @@ export default function DiscoverPage() {
               padding: "12px 32px",
               borderRadius: 8,
               fontSize: 13,
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
               letterSpacing: 1,
               textTransform: "uppercase",
@@ -850,7 +850,7 @@ export default function DiscoverPage() {
           <div>
             <div style={{ marginBottom: 16 }}>
               <h2 style={{
-                fontFamily: "'Syne',sans-serif",
+                fontFamily: "'Instrument Sans',sans-serif",
                 fontWeight: 700,
                 fontSize: 16,
                 color: "#111827",
@@ -859,7 +859,7 @@ export default function DiscoverPage() {
                 {results.total?.toLocaleString() || "?"} Results Found
               </h2>
               <p style={{
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: "'Inter',sans-serif",
                 fontSize: 12,
                 color: "#6b7280",
                 margin: "4px 0 0 0",
@@ -943,7 +943,7 @@ export default function DiscoverPage() {
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
-                          fontFamily: "'Syne',sans-serif",
+                          fontFamily: "'Instrument Sans',sans-serif",
                           fontWeight: 700,
                           fontSize: 14,
                           color: "#111827",
@@ -954,7 +954,7 @@ export default function DiscoverPage() {
                           {inf.display_name}
                         </div>
                         <div style={{
-                          fontFamily: "'DM Sans',sans-serif",
+                          fontFamily: "'Inter',sans-serif",
                           fontSize: 11,
                           color: "#6b7280",
                           marginTop: 2,
@@ -975,7 +975,7 @@ export default function DiscoverPage() {
                           {fmt(inf.social_total_count)}
                         </div>
                         <div style={{
-                          fontFamily: "'DM Sans',sans-serif",
+                          fontFamily: "'Inter',sans-serif",
                           fontSize: 10,
                           color: "#6b7280",
                         }}>
@@ -993,7 +993,7 @@ export default function DiscoverPage() {
                             {((inf.social_total_engagement / inf.social_total_count) * 100).toFixed(2)}%
                           </div>
                           <div style={{
-                            fontFamily: "'DM Sans',sans-serif",
+                            fontFamily: "'Inter',sans-serif",
                             fontSize: 10,
                             color: "#6b7280",
                           }}>
@@ -1013,7 +1013,7 @@ export default function DiscoverPage() {
                           padding: "7px 0",
                           borderRadius: 8,
                           fontSize: 11,
-                          fontFamily: "'Syne',sans-serif",
+                          fontFamily: "'Instrument Sans',sans-serif",
                           fontWeight: 600,
                           letterSpacing: 1,
                           textTransform: "uppercase",
@@ -1044,7 +1044,7 @@ export default function DiscoverPage() {
                           padding: "7px 0",
                           borderRadius: 8,
                           fontSize: 11,
-                          fontFamily: "'Syne',sans-serif",
+                          fontFamily: "'Instrument Sans',sans-serif",
                           fontWeight: 600,
                           letterSpacing: 1,
                           textTransform: "uppercase",
@@ -1090,7 +1090,7 @@ export default function DiscoverPage() {
                       border: "1px solid #3b82f6",
                       background: loading ? "#f3f4f6" : "#ffffff",
                       color: loading ? "#9ca3af" : "#3b82f6",
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Instrument Sans',sans-serif",
                       fontWeight: 600,
                       fontSize: 14,
                       cursor: loading ? "not-allowed" : "pointer",
