@@ -6,18 +6,25 @@ export default async function handler(req, res) {
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000';
 
+    console.log("Featured: calling search endpoint with baseUrl:", baseUrl);
+
     const searchRes = await fetch(
       `${baseUrl}/api/search-influencers?platform=instagram&limit=12&offset=0`,
       { cache: 'no-store' }
     );
 
+    console.log("Featured: search response status:", searchRes.status);
+
     if (!searchRes.ok) {
-      console.error("Search failed for featured:", searchRes.status);
+      const errText = await searchRes.text();
+      console.error("Search failed for featured:", searchRes.status, errText);
       return res.status(200).json({ influencers: [] });
     }
 
     const searchData = await searchRes.json();
+    console.log("Featured: search data:", JSON.stringify(searchData).substring(0, 500));
     const results = searchData.influencers || [];
+    console.log("Featured: got", results.length, "influencers from search");
 
     // Map to featured format
     const influencers = results.map(inf => ({
