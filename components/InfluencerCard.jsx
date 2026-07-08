@@ -73,7 +73,7 @@ export default function InfluencerCard({
             style={{
               fontFamily: "'Instrument Sans',sans-serif",
               fontWeight: 700,
-              fontSize: compact ? 12 : 14,
+              fontSize: compact ? 14 : 18,
               color: "#111827",
               lineHeight: 1.4,
             }}
