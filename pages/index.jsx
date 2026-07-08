@@ -64,7 +64,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  const handleDiscoverySearch = async () => {
+  const handleDiscoverySearch = async (pageOffset = 0) => {
     setSearchLoading(true);
     try {
       const params = new URLSearchParams({
@@ -79,11 +79,20 @@ export default function Home() {
         maxPrice: maxPrice || "",
         sort: "reach-instagram",
         limit: "50",
-        offset: "0",
+        offset: String(pageOffset),
       });
       const res = await fetch(`/api/search-influencers?${params}`);
       const json = await res.json();
-      if (res.ok) setSearchResults(json);
+      if (res.ok) {
+        if (pageOffset === 0) {
+          setSearchResults(json);
+        } else {
+          setSearchResults(prev => ({
+            ...json,
+            influencers: [...(prev?.influencers || []), ...json.influencers],
+          }));
+        }
+      }
     } catch (err) {
       console.error("Discovery search failed:", err);
     } finally {
@@ -809,6 +818,41 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Load More Button */}
+                  {searchResults?.hasMore && (
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
+                      <button
+                        onClick={() => {
+                          const nextOffset = (searchResults?.offset || 0) + (searchResults?.limit || 50);
+                          handleDiscoverySearch(nextOffset);
+                        }}
+                        disabled={searchLoading}
+                        style={{
+                          padding: "12px 32px",
+                          borderRadius: 8,
+                          fontSize: 13,
+                          fontFamily: "'Instrument Sans',sans-serif",
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                          textTransform: "uppercase",
+                          border: "none",
+                          background: searchLoading ? "#d1d5db" : ACCENT,
+                          color: "#ffffff",
+                          cursor: searchLoading ? "not-allowed" : "pointer",
+                          transition: "all .2s",
+                        }}
+                        onMouseEnter={e => {
+                          if (!searchLoading) e.currentTarget.style.background = "#2563eb";
+                        }}
+                        onMouseLeave={e => {
+                          if (!searchLoading) e.currentTarget.style.background = ACCENT;
+                        }}
+                      >
+                        {searchLoading ? "Loading..." : "Load More"}
+                      </button>
+                    </div>
+                  )}
                 ) : (
                   <div style={{
                     background: "#ffffff",
