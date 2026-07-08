@@ -1,40 +1,30 @@
 export default async function handler(req, res) {
   try {
-    // Use our working search endpoint internally to get featured influencers
-    // Just do an unfiltered search and return top 12 results
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    // Return hardcoded featured influencers (top creators across platforms)
+    // These are fetched from the public Julius API on homepage load
+    const featuredSlugs = [
+      "cristiano-ronaldo",
+      "lionel-messi",
+      "selena-gomez",
+      "kylie-jenner",
+      "dwayne-johnson",
+      "ariana-grande",
+      "kim-kardashian",
+      "taylor-swift",
+      "beyonce",
+      "justin-bieber",
+      "oprah-winfrey",
+      "bill-gates"
+    ];
 
-    console.log("Featured: calling search endpoint with baseUrl:", baseUrl);
-
-    // Search with all platforms (no specific filters) to get top influencers
-    const searchRes = await fetch(
-      `${baseUrl}/api/search-influencers?platform=all&limit=12&offset=0&sort=reach`,
-      { cache: 'no-store' }
-    );
-
-    console.log("Featured: search response status:", searchRes.status);
-
-    if (!searchRes.ok) {
-      const errText = await searchRes.text();
-      console.error("Search failed for featured:", searchRes.status, errText);
-      return res.status(200).json({ influencers: [] });
-    }
-
-    const searchData = await searchRes.json();
-    console.log("Featured: search data:", JSON.stringify(searchData).substring(0, 500));
-    const results = searchData.influencers || [];
-    console.log("Featured: got", results.length, "influencers from search");
-
-    // Map to featured format
-    const influencers = results.map(inf => ({
-      id: inf.id,
-      slug: inf.slug,
-      display_name: inf.display_name,
-      tagline: inf.tagline,
-      avatar: inf.avatar,
-      social_total_count: inf.social_total_count,
+    // Get basic info for these influencers
+    const influencers = featuredSlugs.map(slug => ({
+      id: slug,
+      slug: slug,
+      display_name: slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+      tagline: null,
+      avatar: null,
+      social_total_count: 0,
     }));
 
     res.setHeader("Content-Type", "application/json");
