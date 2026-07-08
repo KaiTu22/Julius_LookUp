@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import JuliusInfluencerLookup from '../components/JuliusInfluencerLookup';
-import DiscoverySearch from '../components/DiscoverySearch';
 
 const ACCENT = "#3b82f6";
 
@@ -12,6 +11,30 @@ const fmt = n => {
   if (n >= 1e3) return (n / 1e3).toFixed(0) + "K";
   return String(n);
 };
+
+const PLATFORMS = [
+  { id: "all", label: "All Platforms" },
+  { id: "instagram", label: "Instagram" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "youtube", label: "YouTube" },
+  { id: "facebook", label: "Facebook" },
+  { id: "twitter", label: "Twitter/X" },
+];
+
+const COUNTRY_OPTIONS = [
+  { code: "US", name: "United States" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "CA", name: "Canada" },
+  { code: "AU", name: "Australia" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "JP", name: "Japan" },
+  { code: "BR", name: "Brazil" },
+  { code: "MX", name: "Mexico" },
+  { code: "IN", name: "India" },
+];
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -29,11 +52,15 @@ export default function Home() {
   const [selectedListId, setSelectedListId] = useState(null);
 
   // Advanced search state
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [platform, setPlatform] = useState("all");
   const [interests, setInterests] = useState("");
+  const [brands, setBrands] = useState("");
+  const [causes, setCauses] = useState("");
   const [minFollowers, setMinFollowers] = useState("");
   const [maxFollowers, setMaxFollowers] = useState("");
+  const [country, setCountry] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
@@ -43,8 +70,13 @@ export default function Home() {
       const params = new URLSearchParams({
         platform: platform,
         interests: interests,
+        brands: brands,
+        causes: causes,
         minFollowers: minFollowers || "0",
         maxFollowers: maxFollowers || "",
+        country: country || "",
+        minPrice: minPrice || "",
+        maxPrice: maxPrice || "",
         sort: "reach-instagram",
         limit: "50",
         offset: "0",
@@ -277,140 +309,610 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Discovery Search Interface - NEW */}
+      {/* Sidebar + Main Layout */}
       {!slug && (
-      <div style={{
-        background: "#f9fafb",
-        borderBottom: "1px solid #e5e7eb",
-        paddingBottom: "40px",
-      }}>
-        <DiscoverySearch
-          platform={platform}
-          setPlatform={setPlatform}
-          interests={interests}
-          setInterests={setInterests}
-          minFollowers={minFollowers}
-          setMinFollowers={setMinFollowers}
-          maxFollowers={maxFollowers}
-          setMaxFollowers={setMaxFollowers}
-          showAdvanced={showAdvanced}
-          setShowAdvanced={setShowAdvanced}
-          onSearch={handleDiscoverySearch}
-          loading={searchLoading}
-          onNameSearchSelect={handleNameSearchSelect}
-        />
-      </div>
-      )}
-
-      {/* Search Results */}
-      {!slug && searchResults && (
-      <div style={{
-        background: "#ffffff",
-        padding: "40px 24px",
-        borderBottom: "1px solid #e5e7eb",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 style={{
-            fontFamily: "'Instrument Sans',sans-serif",
-            fontWeight: 700,
-            fontSize: 20,
-            color: "#111827",
-            marginBottom: 24,
-          }}>
-            {searchResults.total?.toLocaleString() || "?"} Results Found
-          </h2>
-
-          {searchResults.influencers && searchResults.influencers.length > 0 ? (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: 16,
+      <div style={{ display: "flex", minHeight: "calc(100vh - 80px)" }}>
+        {/* Left Sidebar - Filters */}
+        <div style={{
+          width: 280,
+          background: "#ffffff",
+          borderRight: "1px solid #e5e7eb",
+          padding: "32px 24px",
+          overflowY: "auto",
+        }}>
+          {/* Search by Name */}
+          <div style={{ marginBottom: 32 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
             }}>
-              {searchResults.influencers.map(inf => (
-                <div
-                  key={inf.slug}
+              Search by Name
+            </label>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                value={nameSearch}
+                onChange={e => handleNameSearch(e.target.value)}
+                placeholder="e.g., Taylor Swift"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  border: "1px solid #d1d5db",
+                  fontSize: 12,
+                  fontFamily: "'Inter',sans-serif",
+                  boxSizing: "border-box",
+                }}
+              />
+              {nameSearchResults.length > 0 && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  marginTop: 4,
+                  background: "#ffffff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  zIndex: 20,
+                  maxHeight: 200,
+                  overflowY: "auto",
+                }}>
+                  {nameSearchResults.map(influencer => (
+                    <button
+                      key={influencer.slug}
+                      onClick={() => handleNameSearchSelect(influencer)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: 0,
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        fontSize: 11,
+                        fontFamily: "'Inter',sans-serif",
+                        color: "#374151",
+                        transition: "background .2s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <div style={{ fontWeight: 600 }}>{influencer.display_name}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Platform */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 12,
+            }}>
+              Platform
+            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {PLATFORMS.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => setPlatform(p.id)}
                   style={{
+                    padding: "6px 12px",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontFamily: "'Inter',sans-serif",
+                    fontWeight: 500,
+                    border: platform === p.id ? `1px solid ${ACCENT}` : "1px solid #d1d5db",
+                    background: platform === p.id ? ACCENT + "11" : "transparent",
+                    color: platform === p.id ? ACCENT : "#6b7280",
+                    cursor: "pointer",
+                    transition: "all .2s",
+                    textAlign: "left",
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Interests */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Interests
+            </label>
+            <input
+              type="text"
+              value={interests}
+              onChange={e => setInterests(e.target.value)}
+              placeholder="fashion, fitness..."
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Brands */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Brands
+            </label>
+            <input
+              type="text"
+              value={brands}
+              onChange={e => setBrands(e.target.value)}
+              placeholder="Nike, Adidas..."
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Causes */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Causes
+            </label>
+            <input
+              type="text"
+              value={causes}
+              onChange={e => setCauses(e.target.value)}
+              placeholder="sustainability..."
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Follower Range */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Follower Range
+            </label>
+            <input
+              type="number"
+              value={minFollowers}
+              onChange={e => setMinFollowers(e.target.value)}
+              placeholder="Min"
+              style={{
+                width: "100%",
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+                marginBottom: 6,
+              }}
+            />
+            <input
+              type="number"
+              value={maxFollowers}
+              onChange={e => setMaxFollowers(e.target.value)}
+              placeholder="Max"
+              style={{
+                width: "100%",
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Country */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Country
+            </label>
+            <select
+              value={country}
+              onChange={e => setCountry(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                backgroundColor: "#ffffff",
+                cursor: "pointer",
+              }}
+            >
+              <option value="">Any country</option>
+              {COUNTRY_OPTIONS.map(c => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Price Range */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Price Range (USD)
+            </label>
+            <input
+              type="number"
+              value={minPrice}
+              onChange={e => setMinPrice(e.target.value)}
+              placeholder="Min"
+              style={{
+                width: "100%",
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+                marginBottom: 6,
+              }}
+            />
+            <input
+              type="number"
+              value={maxPrice}
+              onChange={e => setMaxPrice(e.target.value)}
+              placeholder="Max"
+              style={{
+                width: "100%",
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* Search Button */}
+          <button
+            onClick={handleDiscoverySearch}
+            disabled={searchLoading}
+            style={{
+              width: "100%",
+              padding: "10px 16px",
+              borderRadius: 8,
+              fontSize: 12,
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
+              border: "none",
+              background: searchLoading ? "#d1d5db" : ACCENT,
+              color: "#ffffff",
+              cursor: searchLoading ? "not-allowed" : "pointer",
+              transition: "all .2s",
+            }}
+            onMouseEnter={e => {
+              if (!searchLoading) e.currentTarget.style.background = "#2563eb";
+            }}
+            onMouseLeave={e => {
+              if (!searchLoading) e.currentTarget.style.background = ACCENT;
+            }}
+          >
+            {searchLoading ? "Searching..." : "Search"}
+          </button>
+        </div>
+
+        {/* Right Main Area - Results */}
+        <div style={{ flex: 1, background: "#f9fafb", overflowY: "auto" }}>
+          <div style={{ padding: "32px 40px", maxWidth: 1400 }}>
+            {searchResults && (
+              <div style={{ marginBottom: 48 }}>
+                <h2 style={{
+                  fontFamily: "'Instrument Sans',sans-serif",
+                  fontWeight: 700,
+                  fontSize: 20,
+                  color: "#111827",
+                  marginBottom: 24,
+                }}>
+                  {searchResults.total?.toLocaleString() || "?"} Results Found
+                </h2>
+
+                {searchResults.influencers && searchResults.influencers.length > 0 ? (
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: 16,
+                  }}>
+                    {searchResults.influencers.map(inf => (
+                      <div
+                        key={inf.slug}
+                        style={{
+                          background: "#ffffff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 12,
+                          padding: "18px 20px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 12,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          {inf.avatar?.url ? (
+                            <img
+                              src={inf.avatar.url}
+                              alt={inf.display_name}
+                              style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                border: "1px solid #e5e7eb",
+                                flexShrink: 0,
+                              }}
+                            />
+                          ) : (
+                            <div style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: "50%",
+                              background: "#e5e7eb",
+                              flexShrink: 0,
+                            }} />
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontFamily: "'Instrument Sans',sans-serif",
+                              fontWeight: 700,
+                              fontSize: 14,
+                              color: "#111827",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}>
+                              {inf.display_name}
+                            </div>
+                            {inf.tagline && (
+                              <div style={{
+                                fontFamily: "'Inter',sans-serif",
+                                fontSize: 11,
+                                color: "#6b7280",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}>
+                                {inf.tagline}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{
+                          display: "flex",
+                          gap: 12,
+                          fontSize: 11,
+                          fontFamily: "'Inter',sans-serif",
+                          color: "#6b7280",
+                        }}>
+                          <div>📊 {fmt(inf.social_total_count || 0)}</div>
+                          <div>💬 {fmt(inf.social_total_engagement || 0)}</div>
+                        </div>
+
+                        <button
+                          onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
+                          style={{
+                            padding: "8px 0",
+                            borderRadius: 8,
+                            fontSize: 11,
+                            fontFamily: "'Instrument Sans',sans-serif",
+                            fontWeight: 600,
+                            letterSpacing: 1,
+                            textTransform: "uppercase",
+                            border: "none",
+                            background: ACCENT,
+                            color: "#ffffff",
+                            cursor: "pointer",
+                            transition: "all .2s",
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#2563eb"}
+                          onMouseLeave={e => e.currentTarget.style.background = ACCENT}
+                        >
+                          View Profile
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
                     background: "#ffffff",
                     border: "1px solid #e5e7eb",
                     borderRadius: 12,
-                    padding: "18px 20px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    {inf.avatar?.url ? (
-                      <img
-                        src={inf.avatar.url}
-                        alt={inf.display_name}
-                        style={{
-                          width: 48,
-                          height: 48,
+                    padding: 32,
+                    textAlign: "center",
+                    color: "#6b7280",
+                  }}>
+                    No influencers found. Try adjusting your search criteria.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!searchResults && (
+              <div style={{
+                textAlign: "center",
+                color: "#9ca3af",
+                padding: "64px 32px",
+                fontFamily: "'Inter',sans-serif",
+              }}>
+                <p>Use the filters on the left to search for influencers</p>
+              </div>
+            )}
+
+            {/* Recently Viewed Section */}
+            {recentlyViewed.length > 0 && (
+              <div>
+                <h2 style={{
+                  fontFamily: "'Instrument Sans',sans-serif",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  color: "#111827",
+                  marginBottom: 24,
+                  marginTop: 48,
+                }}>
+                  Recently Viewed
+                </h2>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gap: 16,
+                }}>
+                  {recentlyViewed.map(inf => (
+                    <div
+                      key={inf.slug}
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 12,
+                        padding: "16px",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        transition: "all .2s",
+                      }}
+                      onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.boxShadow = "none";
+                        e.currentTarget.style.transform = "translateY(0)";
+                      }}
+                    >
+                      {inf.avatar?.url ? (
+                        <img
+                          src={inf.avatar.url}
+                          alt={inf.display_name}
+                          style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            margin: "0 auto 12px",
+                            border: "1px solid #e5e7eb",
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 80,
+                          height: 80,
                           borderRadius: "50%",
-                          objectFit: "cover",
-                          border: "1px solid #e5e7eb",
-                          flexShrink: 0,
-                        }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: "50%",
-                        background: "#e5e7eb",
-                        flexShrink: 0,
-                      }} />
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                          background: "#e5e7eb",
+                          margin: "0 auto 12px",
+                        }} />
+                      )}
                       <div style={{
                         fontFamily: "'Instrument Sans',sans-serif",
-                        fontWeight: 700,
-                        fontSize: 14,
+                        fontWeight: 600,
+                        fontSize: 12,
                         color: "#111827",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        marginBottom: 4,
                       }}>
                         {inf.display_name}
                       </div>
+                      <div style={{
+                        fontFamily: "'Inter',sans-serif",
+                        fontSize: 10,
+                        color: "#6b7280",
+                      }}>
+                        📊 {fmt(inf.social_total_count || 0)}
+                      </div>
                     </div>
-                  </div>
-
-                  <button
-                    onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
-                    style={{
-                      padding: "8px 0",
-                      borderRadius: 8,
-                      fontSize: 11,
-                      fontFamily: "'Instrument Sans',sans-serif",
-                      fontWeight: 600,
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                      border: `1px solid #d1d5db`,
-                      background: "transparent",
-                      color: "#374151",
-                      cursor: "pointer",
-                      transition: "all .2s",
-                    }}
-                  >
-                    View Profile →
-                  </button>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: 12,
-              padding: 32,
-              textAlign: "center",
-              color: "#6b7280",
-            }}>
-              No influencers found. Try adjusting your search criteria.
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       )}
