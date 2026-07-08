@@ -671,7 +671,7 @@ export default function Home() {
 
           {/* Search Button */}
           <button
-            onClick={handleDiscoverySearch}
+            onClick={() => handleDiscoverySearch()}
             disabled={searchLoading}
             style={{
               width: "100%",
