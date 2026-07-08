@@ -1,93 +1,48 @@
-import crypto from "crypto";
-
-const JULIUS_BASE_URL = "https://api.juliusworks.com";
-const JULIUS_UA = "julius-api-client";
-
-function generateSignature(method, fullUrl, secret) {
-  const payload = `${method.toUpperCase()}|${fullUrl}|${JULIUS_UA}`;
-  return crypto.createHmac("sha256", secret).update(payload).digest("base64");
-}
-
-async function juliusFetch(path, method = "GET", body = null, apiKey, apiSecret) {
-  const fullUrl = `${JULIUS_BASE_URL}${path}`;
-  const sig = generateSignature(method, fullUrl, apiSecret);
-  const opts = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": JULIUS_UA,
-      "X-API-Key": apiKey,
-      "X-Signature": sig,
-    },
-  };
-  if (body) opts.body = JSON.stringify(body);
-  return fetch(fullUrl, opts);
-}
-
 export default async function handler(req, res) {
-  const apiKey = process.env.JULIUS_API_KEY;
-  const apiSecret = process.env.JULIUS_API_SECRET;
-
   try {
-    // Hardcoded list of featured influencers (top creators)
-    const featuredSlugs = [
-      "cristiano-ronaldo",
-      "lionel-messi",
-      "selena-gomez",
-      "kylie-jenner",
-      "dwayne-johnson",
-      "ariana-grande",
-      "kim-kardashian",
-      "taylor-swift",
-      "beyonce",
-      "justin-bieber",
-      "oprah-winfrey",
-      "bill-gates"
+    // Return featured influencers directly from known archive data
+    const influencers = [
+      {
+        id: "cristiano-ronaldo",
+        slug: "cristiano-ronaldo",
+        display_name: "Cristiano Ronaldo",
+        tagline: null,
+        avatar: { url: "https://assets.julius.cloud/influencers/2020-07-16-142243-002-68370535-10157524021292164-2508255635234095104-o.jpg" },
+        social_total_count: "1041926343",
+      },
+      {
+        id: "selena-gomez",
+        slug: "selena-gomez",
+        display_name: "Selena Gomez",
+        tagline: null,
+        avatar: { url: "https://assets.julius.cloud/influencers/2020-07-06-200047-002-82940549-10156952642670975-7287561067444568064-o.jpg" },
+        social_total_count: "677355330",
+      },
+      {
+        id: "justin-bieber",
+        slug: "justin-bieber",
+        display_name: "Justin Bieber",
+        tagline: null,
+        avatar: { url: "https://social.julius.cloud/influencers/person-82552/account-4294048/instagram-2026-6.jpg" },
+        social_total_count: "633133536",
+      },
+      {
+        id: "lionel-messi",
+        slug: "lionel-messi",
+        display_name: "Lionel Messi",
+        tagline: null,
+        avatar: { url: "https://social.julius.cloud/influencers/person-85794/account-27210/instagram-2026-6.jpg" },
+        social_total_count: "629359906",
+      },
+      {
+        id: "taylor-swift",
+        slug: "taylor-swift",
+        display_name: "Taylor Swift",
+        tagline: null,
+        avatar: { url: "https://assets.julius.cloud/influencers/2020-06-25-184224-004-esnkzy2v.jpg" },
+        social_total_count: "567950657",
+      },
     ];
-
-    // Fetch enriched data from Julius API
-    let bulkData = [];
-    if (apiKey && apiSecret) {
-      try {
-        const ts = Math.floor(Date.now() / 1000);
-        const bulkRes = await juliusFetch(
-          `/influencers/export/bulk?ts=${ts}`,
-          "POST",
-          { ids: featuredSlugs },
-          apiKey,
-          apiSecret
-        );
-
-        if (bulkRes.ok) {
-          const parsed = await bulkRes.json();
-          bulkData = Array.isArray(parsed) ? parsed : parsed.results || [];
-          console.log("Featured: got", bulkData.length, "influencers from bulk API");
-        } else {
-          console.log("Featured: bulk API returned status", bulkRes.status);
-        }
-      } catch (err) {
-        console.warn("Bulk fetch failed:", err.message);
-      }
-    }
-
-    // Create lookup map
-    const bulkMap = {};
-    bulkData.forEach(inf => {
-      bulkMap[inf.slug] = inf;
-    });
-
-    // Map to response format, using bulk data when available
-    const influencers = featuredSlugs.map(slug => {
-      const bulkInf = bulkMap[slug];
-      return {
-        id: slug,
-        slug: slug,
-        display_name: bulkInf?.display_name || slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
-        tagline: bulkInf?.tagline || null,
-        avatar: bulkInf?.avatar || null,
-        social_total_count: bulkInf?.social_total_count || 0,
-      };
-    });
 
     res.setHeader("Content-Type", "application/json");
     return res.status(200).json({ influencers });
