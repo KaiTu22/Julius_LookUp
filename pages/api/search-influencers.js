@@ -47,6 +47,7 @@ export default async function handler(req, res) {
   const interests = (url.searchParams.get("interests") || "").split(",").filter(Boolean).map(i => i.trim());
   const causes = (url.searchParams.get("causes") || "").split(",").filter(Boolean).map(c => c.trim());
   const genders = (url.searchParams.get("genders") || "").split(",").filter(Boolean).map(g => g.trim());
+  const ethnicities = (url.searchParams.get("ethnicities") || "").split(",").filter(Boolean).map(e => e.trim());
   const platform = url.searchParams.get("platform") || "instagram";
   const sort = url.searchParams.get("sort") || "reach-instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
@@ -97,6 +98,14 @@ export default async function handler(req, res) {
     queryFilters.push({
       type: "gender",
       values: genders,
+    });
+  }
+
+  // Add ethnicity filter - optional
+  if (ethnicities.length > 0) {
+    queryFilters.push({
+      type: "race",
+      values: ethnicities,
     });
   }
 

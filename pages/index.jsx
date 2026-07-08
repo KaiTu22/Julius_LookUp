@@ -62,6 +62,10 @@ export default function Home() {
   const [country, setCountry] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minAge, setMinAge] = useState("");
+  const [maxAge, setMaxAge] = useState("");
+  const [genders, setGenders] = useState([]);
+  const [ethnicities, setEthnicities] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
@@ -78,6 +82,10 @@ export default function Home() {
         country: country || "",
         minPrice: minPrice || "",
         maxPrice: maxPrice || "",
+        minAge: minAge || "",
+        maxAge: maxAge || "",
+        genders: genders.join(","),
+        ethnicities: ethnicities.join(","),
         sort: "reach-instagram",
         limit: "50",
         offset: String(pageOffset),
@@ -668,6 +676,118 @@ export default function Home() {
                 boxSizing: "border-box",
               }}
             />
+          </div>
+
+          {/* Age Range - Audience */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Audience Age
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {["<16", "17-19", "20-24", "25-29", "30-34", "35-39", "40-49", "50-59", "60+", "18+"].map(age => (
+                <label key={age} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontFamily: "'Inter',sans-serif" }}>
+                  <input
+                    type="checkbox"
+                    checked={minAge === age || maxAge === age}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        if (age === "18+") setMinAge("18");
+                        else if (age === "<16") setMaxAge("15");
+                        else {
+                          const parts = age.split("-");
+                          setMinAge(parts[0]);
+                          setMaxAge(parts[1] || parts[0]);
+                        }
+                      } else {
+                        setMinAge("");
+                        setMaxAge("");
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                  />
+                  {age}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Gender - Audience */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Audience Gender
+            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {["Male", "Female", "Non-binary"].map(gender => (
+                <label key={gender} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontFamily: "'Inter',sans-serif" }}>
+                  <input
+                    type="checkbox"
+                    checked={genders.includes(gender)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setGenders([...genders, gender]);
+                      } else {
+                        setGenders(genders.filter(g => g !== gender));
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                  />
+                  {gender}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Ethnicity - Audience */}
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block",
+              fontFamily: "'Instrument Sans',sans-serif",
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: "#6b7280",
+              marginBottom: 8,
+            }}>
+              Audience Ethnicity
+            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {["White", "Hispanic", "Black", "Asian"].map(ethnicity => (
+                <label key={ethnicity} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontFamily: "'Inter',sans-serif" }}>
+                  <input
+                    type="checkbox"
+                    checked={ethnicities.includes(ethnicity)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setEthnicities([...ethnicities, ethnicity]);
+                      } else {
+                        setEthnicities(ethnicities.filter(e => e !== ethnicity));
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                  />
+                  {ethnicity}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Search Button */}
