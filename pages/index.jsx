@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import JuliusInfluencerLookup from '../components/JuliusInfluencerLookup';
+import InfluencerCard from '../components/InfluencerCard';
 
 const ACCENT = "#3b82f6";
 
@@ -718,106 +719,18 @@ export default function Home() {
                   <>
                     <div style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
                       gap: 16,
                       marginBottom: 32,
                     }}>
                       {searchResults.influencers.map(inf => (
-                        <div
+                        <InfluencerCard
                           key={inf.slug}
-                          style={{
-                            background: "#ffffff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 12,
-                            padding: "18px 20px",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 12,
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            {inf.avatar?.url ? (
-                              <img
-                                src={inf.avatar.url}
-                                alt={inf.display_name}
-                                style={{
-                                  width: 48,
-                                  height: 48,
-                                  borderRadius: "50%",
-                                  objectFit: "cover",
-                                  border: "1px solid #e5e7eb",
-                                  flexShrink: 0,
-                                }}
-                              />
-                            ) : (
-                              <div style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: "50%",
-                                background: "#e5e7eb",
-                                flexShrink: 0,
-                              }} />
-                            )}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{
-                                fontFamily: "'Instrument Sans',sans-serif",
-                                fontWeight: 700,
-                                fontSize: 14,
-                                color: "#111827",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                              }}>
-                                {inf.display_name}
-                              </div>
-                              {inf.tagline && (
-                                <div style={{
-                                  fontFamily: "'Inter',sans-serif",
-                                  fontSize: 11,
-                                  color: "#6b7280",
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}>
-                                  {inf.tagline}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div style={{
-                            display: "flex",
-                            gap: 12,
-                            fontSize: 11,
-                            fontFamily: "'Inter',sans-serif",
-                            color: "#6b7280",
-                          }}>
-                            <div>📊 {fmt(inf.social_total_count || 0)}</div>
-                            <div>💬 {fmt(inf.social_total_engagement || 0)}</div>
-                          </div>
-
-                          <button
-                            onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
-                            style={{
-                              padding: "8px 0",
-                              borderRadius: 8,
-                              fontSize: 11,
-                              fontFamily: "'Instrument Sans',sans-serif",
-                              fontWeight: 600,
-                              letterSpacing: 1,
-                              textTransform: "uppercase",
-                              border: "none",
-                              background: ACCENT,
-                              color: "#ffffff",
-                              cursor: "pointer",
-                              transition: "all .2s",
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = "#2563eb"}
-                            onMouseLeave={e => e.currentTarget.style.background = ACCENT}
-                          >
-                            View Profile
-                          </button>
-                        </div>
+                          slug={inf.slug}
+                          displayName={inf.display_name}
+                          avatar={inf.avatar}
+                          followerCount={inf.social_total_count}
+                        />
                       ))}
                     </div>
 
@@ -895,95 +808,18 @@ export default function Home() {
                     </h2>
                     <div style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
                       gap: 16,
                     }}>
                       {featured.map(inf => (
-                        <div
+                        <InfluencerCard
                           key={inf.slug}
-                          style={{
-                            background: "#ffffff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 12,
-                            overflow: "hidden",
-                            display: "flex",
-                            flexDirection: "column",
-                            cursor: "pointer",
-                            transition: "all .2s",
-                          }}
-                          onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
-                            e.currentTarget.style.transform = "translateY(-4px)";
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.boxShadow = "none";
-                            e.currentTarget.style.transform = "translateY(0)";
-                          }}
-                        >
-                          {/* Image */}
-                          <div style={{
-                            aspectRatio: "1 / 1",
-                            background: "#e5e7eb",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            overflow: "hidden",
-                          }}>
-                            {inf.avatar?.url ? (
-                              <img
-                                src={inf.avatar.url}
-                                alt={inf.display_name}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                }}
-                              />
-                            ) : (
-                              <div style={{
-                                width: "100%",
-                                height: "100%",
-                                background: "#f3f4f6",
-                              }} />
-                            )}
-                          </div>
-
-                          {/* Info */}
-                          <div style={{ padding: 12 }}>
-                            <div style={{
-                              fontFamily: "'Instrument Sans',sans-serif",
-                              fontWeight: 700,
-                              fontSize: 13,
-                              color: "#111827",
-                              marginBottom: 4,
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}>
-                              {inf.display_name}
-                            </div>
-                            <div style={{
-                              fontFamily: "'Inter',sans-serif",
-                              fontSize: 10,
-                              color: "#6b7280",
-                              marginBottom: 8,
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}>
-                              {inf.tagline || "—"}
-                            </div>
-                            <div style={{
-                              fontFamily: "'DM Mono',monospace",
-                              fontSize: 11,
-                              fontWeight: 500,
-                              color: ACCENT,
-                            }}>
-                              {fmt(inf.social_total_count)} followers
-                            </div>
-                          </div>
-                        </div>
+                          slug={inf.slug}
+                          displayName={inf.display_name}
+                          avatar={inf.avatar}
+                          followerCount={inf.social_total_count}
+                          compact={true}
+                        />
                       ))}
                     </div>
                   </div>
@@ -1006,70 +842,18 @@ export default function Home() {
                 </h2>
                 <div style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
                   gap: 16,
                 }}>
                   {recentlyViewed.map(inf => (
-                    <div
+                    <InfluencerCard
                       key={inf.slug}
-                      style={{
-                        background: "#ffffff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: 12,
-                        padding: "16px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        transition: "all .2s",
-                      }}
-                      onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.boxShadow = "none";
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
-                    >
-                      {inf.avatar?.url ? (
-                        <img
-                          src={inf.avatar.url}
-                          alt={inf.display_name}
-                          style={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                            margin: "0 auto 12px",
-                            border: "1px solid #e5e7eb",
-                          }}
-                        />
-                      ) : (
-                        <div style={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: "50%",
-                          background: "#e5e7eb",
-                          margin: "0 auto 12px",
-                        }} />
-                      )}
-                      <div style={{
-                        fontFamily: "'Instrument Sans',sans-serif",
-                        fontWeight: 600,
-                        fontSize: 12,
-                        color: "#111827",
-                        marginBottom: 4,
-                      }}>
-                        {inf.display_name}
-                      </div>
-                      <div style={{
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: 10,
-                        color: "#6b7280",
-                      }}>
-                        📊 {fmt(inf.social_total_count || 0)}
-                      </div>
-                    </div>
+                      slug={inf.slug}
+                      displayName={inf.display_name}
+                      avatar={inf.avatar}
+                      followerCount={inf.social_total_count}
+                      compact={true}
+                    />
                   ))}
                 </div>
               </div>
