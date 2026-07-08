@@ -825,10 +825,8 @@ export default function Home() {
                       <div style={{ display: "flex", justifyContent: "center" }}>
                         <button
                           onClick={() => {
-                            const currentOffset = parseInt(searchResults?.offset) || 0;
-                            const limit = parseInt(searchResults?.limit) || 50;
-                            const nextOffset = currentOffset + limit;
-                            handleDiscoverySearch(nextOffset);
+                            const currentCount = searchResults.influencers?.length || 0;
+                            handleDiscoverySearch(currentCount);
                           }}
                           disabled={searchLoading}
                           style={{
