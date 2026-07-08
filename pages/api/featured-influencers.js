@@ -50,12 +50,15 @@ export default async function handler(req, res) {
     );
 
     if (!searchRes.ok) {
-      console.error("Julius search failed:", searchRes.status);
+      const errText = await searchRes.text();
+      console.error("Julius search failed:", searchRes.status, errText);
       return res.status(200).json({ influencers: [] });
     }
 
     const searchData = await searchRes.json();
+    console.log("Julius search response:", searchData);
     const results = searchData.results || [];
+    console.log("Search results count:", results.length);
 
     // Get bulk data for enrichment
     const slugs = results.map(r => r.slug).filter(Boolean);
