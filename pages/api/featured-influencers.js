@@ -8,8 +8,9 @@ export default async function handler(req, res) {
 
     console.log("Featured: calling search endpoint with baseUrl:", baseUrl);
 
+    // Search with all platforms (no specific filters) to get top influencers
     const searchRes = await fetch(
-      `${baseUrl}/api/search-influencers?platform=instagram&limit=12&offset=0`,
+      `${baseUrl}/api/search-influencers?platform=all&limit=12&offset=0&sort=reach`,
       { cache: 'no-store' }
     );
 
