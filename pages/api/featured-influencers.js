@@ -42,6 +42,38 @@ export default async function handler(req, res) {
         avatar: { url: "https://assets.julius.cloud/influencers/2020-06-25-184224-004-esnkzy2v.jpg" },
         social_total_count: "567950657",
       },
+      {
+        id: "kylie-jenner",
+        slug: "kylie-jenner",
+        display_name: "Kylie Jenner",
+        tagline: null,
+        avatar: null,
+        social_total_count: 0,
+      },
+      {
+        id: "dwayne-johnson",
+        slug: "dwayne-johnson",
+        display_name: "Dwayne Johnson",
+        tagline: null,
+        avatar: null,
+        social_total_count: 0,
+      },
+      {
+        id: "ariana-grande",
+        slug: "ariana-grande",
+        display_name: "Ariana Grande",
+        tagline: null,
+        avatar: null,
+        social_total_count: 0,
+      },
+      {
+        id: "kim-kardashian",
+        slug: "kim-kardashian",
+        display_name: "Kim Kardashian",
+        tagline: null,
+        avatar: null,
+        social_total_count: 0,
+      },
     ];
 
     res.setHeader("Content-Type", "application/json");
