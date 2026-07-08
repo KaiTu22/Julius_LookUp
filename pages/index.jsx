@@ -715,144 +715,146 @@ export default function Home() {
                 </h2>
 
                 {searchResults.influencers && searchResults.influencers.length > 0 ? (
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                    gap: 16,
-                  }}>
-                    {searchResults.influencers.map(inf => (
-                      <div
-                        key={inf.slug}
-                        style={{
-                          background: "#ffffff",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 12,
-                          padding: "18px 20px",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 12,
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          {inf.avatar?.url ? (
-                            <img
-                              src={inf.avatar.url}
-                              alt={inf.display_name}
-                              style={{
+                  <>
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: 16,
+                      marginBottom: 32,
+                    }}>
+                      {searchResults.influencers.map(inf => (
+                        <div
+                          key={inf.slug}
+                          style={{
+                            background: "#ffffff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 12,
+                            padding: "18px 20px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 12,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            {inf.avatar?.url ? (
+                              <img
+                                src={inf.avatar.url}
+                                alt={inf.display_name}
+                                style={{
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                  border: "1px solid #e5e7eb",
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : (
+                              <div style={{
                                 width: 48,
                                 height: 48,
                                 borderRadius: "50%",
-                                objectFit: "cover",
-                                border: "1px solid #e5e7eb",
+                                background: "#e5e7eb",
                                 flexShrink: 0,
-                              }}
-                            />
-                          ) : (
-                            <div style={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: "50%",
-                              background: "#e5e7eb",
-                              flexShrink: 0,
-                            }} />
-                          )}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{
-                              fontFamily: "'Instrument Sans',sans-serif",
-                              fontWeight: 700,
-                              fontSize: 14,
-                              color: "#111827",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}>
-                              {inf.display_name}
-                            </div>
-                            {inf.tagline && (
+                              }} />
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{
-                                fontFamily: "'Inter',sans-serif",
-                                fontSize: 11,
-                                color: "#6b7280",
+                                fontFamily: "'Instrument Sans',sans-serif",
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: "#111827",
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                               }}>
-                                {inf.tagline}
+                                {inf.display_name}
                               </div>
-                            )}
+                              {inf.tagline && (
+                                <div style={{
+                                  fontFamily: "'Inter',sans-serif",
+                                  fontSize: 11,
+                                  color: "#6b7280",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}>
+                                  {inf.tagline}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <div style={{
-                          display: "flex",
-                          gap: 12,
-                          fontSize: 11,
-                          fontFamily: "'Inter',sans-serif",
-                          color: "#6b7280",
-                        }}>
-                          <div>📊 {fmt(inf.social_total_count || 0)}</div>
-                          <div>💬 {fmt(inf.social_total_engagement || 0)}</div>
-                        </div>
-
-                        <button
-                          onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
-                          style={{
-                            padding: "8px 0",
-                            borderRadius: 8,
+                          <div style={{
+                            display: "flex",
+                            gap: 12,
                             fontSize: 11,
+                            fontFamily: "'Inter',sans-serif",
+                            color: "#6b7280",
+                          }}>
+                            <div>📊 {fmt(inf.social_total_count || 0)}</div>
+                            <div>💬 {fmt(inf.social_total_engagement || 0)}</div>
+                          </div>
+
+                          <button
+                            onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
+                            style={{
+                              padding: "8px 0",
+                              borderRadius: 8,
+                              fontSize: 11,
+                              fontFamily: "'Instrument Sans',sans-serif",
+                              fontWeight: 600,
+                              letterSpacing: 1,
+                              textTransform: "uppercase",
+                              border: "none",
+                              background: ACCENT,
+                              color: "#ffffff",
+                              cursor: "pointer",
+                              transition: "all .2s",
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#2563eb"}
+                            onMouseLeave={e => e.currentTarget.style.background = ACCENT}
+                          >
+                            View Profile
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {searchResults?.hasMore && (
+                      <div style={{ display: "flex", justifyContent: "center" }}>
+                        <button
+                          onClick={() => {
+                            const nextOffset = (searchResults?.offset || 0) + (searchResults?.limit || 50);
+                            handleDiscoverySearch(nextOffset);
+                          }}
+                          disabled={searchLoading}
+                          style={{
+                            padding: "12px 32px",
+                            borderRadius: 8,
+                            fontSize: 13,
                             fontFamily: "'Instrument Sans',sans-serif",
-                            fontWeight: 600,
+                            fontWeight: 700,
                             letterSpacing: 1,
                             textTransform: "uppercase",
                             border: "none",
-                            background: ACCENT,
+                            background: searchLoading ? "#d1d5db" : ACCENT,
                             color: "#ffffff",
-                            cursor: "pointer",
+                            cursor: searchLoading ? "not-allowed" : "pointer",
                             transition: "all .2s",
                           }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#2563eb"}
-                          onMouseLeave={e => e.currentTarget.style.background = ACCENT}
+                          onMouseEnter={e => {
+                            if (!searchLoading) e.currentTarget.style.background = "#2563eb";
+                          }}
+                          onMouseLeave={e => {
+                            if (!searchLoading) e.currentTarget.style.background = ACCENT;
+                          }}
                         >
-                          View Profile
+                          {searchLoading ? "Loading..." : "Load More"}
                         </button>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Load More Button */}
-                  {searchResults?.hasMore && (
-                    <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
-                      <button
-                        onClick={() => {
-                          const nextOffset = (searchResults?.offset || 0) + (searchResults?.limit || 50);
-                          handleDiscoverySearch(nextOffset);
-                        }}
-                        disabled={searchLoading}
-                        style={{
-                          padding: "12px 32px",
-                          borderRadius: 8,
-                          fontSize: 13,
-                          fontFamily: "'Instrument Sans',sans-serif",
-                          fontWeight: 700,
-                          letterSpacing: 1,
-                          textTransform: "uppercase",
-                          border: "none",
-                          background: searchLoading ? "#d1d5db" : ACCENT,
-                          color: "#ffffff",
-                          cursor: searchLoading ? "not-allowed" : "pointer",
-                          transition: "all .2s",
-                        }}
-                        onMouseEnter={e => {
-                          if (!searchLoading) e.currentTarget.style.background = "#2563eb";
-                        }}
-                        onMouseLeave={e => {
-                          if (!searchLoading) e.currentTarget.style.background = ACCENT;
-                        }}
-                      >
-                        {searchLoading ? "Loading..." : "Load More"}
-                      </button>
-                    </div>
-                  )}
+                    )}
+                  </>
                 ) : (
                   <div style={{
                     background: "#ffffff",
