@@ -819,13 +819,123 @@ export default function Home() {
             )}
 
             {!searchResults && (
-              <div style={{
-                textAlign: "center",
-                color: "#9ca3af",
-                padding: "64px 32px",
-                fontFamily: "'Inter',sans-serif",
-              }}>
-                <p>Use the filters on the left to search for influencers</p>
+              <div>
+                <div style={{
+                  textAlign: "center",
+                  color: "#9ca3af",
+                  padding: "32px 0",
+                  fontFamily: "'Inter',sans-serif",
+                }}>
+                  <p>Use the filters on the left to search for influencers</p>
+                </div>
+
+                {/* Featured Section - shown when no search results */}
+                {featured.length > 0 && !loading && (
+                  <div style={{ marginBottom: 48 }}>
+                    <h2 style={{
+                      fontFamily: "'Instrument Sans',sans-serif",
+                      fontWeight: 700,
+                      fontSize: 18,
+                      color: "#111827",
+                      marginBottom: 24,
+                    }}>
+                      Featured Influencers
+                    </h2>
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                      gap: 16,
+                    }}>
+                      {featured.map(inf => (
+                        <div
+                          key={inf.slug}
+                          style={{
+                            background: "#ffffff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 12,
+                            overflow: "hidden",
+                            display: "flex",
+                            flexDirection: "column",
+                            cursor: "pointer",
+                            transition: "all .2s",
+                          }}
+                          onClick={() => window.open(`/?slug=${encodeURIComponent(inf.slug)}`, '_blank')}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
+                            e.currentTarget.style.transform = "translateY(-4px)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.boxShadow = "none";
+                            e.currentTarget.style.transform = "translateY(0)";
+                          }}
+                        >
+                          {/* Image */}
+                          <div style={{
+                            aspectRatio: "1 / 1",
+                            background: "#e5e7eb",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                          }}>
+                            {inf.avatar?.url ? (
+                              <img
+                                src={inf.avatar.url}
+                                alt={inf.display_name}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: "100%",
+                                height: "100%",
+                                background: "#f3f4f6",
+                              }} />
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div style={{ padding: 12 }}>
+                            <div style={{
+                              fontFamily: "'Instrument Sans',sans-serif",
+                              fontWeight: 700,
+                              fontSize: 13,
+                              color: "#111827",
+                              marginBottom: 4,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}>
+                              {inf.display_name}
+                            </div>
+                            <div style={{
+                              fontFamily: "'Inter',sans-serif",
+                              fontSize: 10,
+                              color: "#6b7280",
+                              marginBottom: 8,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}>
+                              {inf.tagline || "—"}
+                            </div>
+                            <div style={{
+                              fontFamily: "'DM Mono',monospace",
+                              fontSize: 11,
+                              fontWeight: 500,
+                              color: ACCENT,
+                            }}>
+                              {fmt(inf.social_total_count)} followers
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
