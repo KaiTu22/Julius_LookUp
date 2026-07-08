@@ -61,6 +61,9 @@ export default async function handler(req, res) {
         if (bulkRes.ok) {
           const parsed = await bulkRes.json();
           bulkData = Array.isArray(parsed) ? parsed : parsed.results || [];
+          console.log("Featured: got", bulkData.length, "influencers from bulk API");
+        } else {
+          console.log("Featured: bulk API returned status", bulkRes.status);
         }
       } catch (err) {
         console.warn("Bulk fetch failed:", err.message);
@@ -84,7 +87,7 @@ export default async function handler(req, res) {
         avatar: bulkInf?.avatar || null,
         social_total_count: bulkInf?.social_total_count || 0,
       };
-    }).filter(inf => inf.avatar); // Only return ones with avatars
+    });
 
     res.setHeader("Content-Type", "application/json");
     return res.status(200).json({ influencers });
