@@ -35,11 +35,13 @@ export default async function handler(req, res) {
   try {
     const ts = Math.floor(Date.now() / 1000);
 
-    // Search Julius API with no filters to get top influencers by reach
+    // Search Julius API with generic sort to get top influencers
     const payload = {
       query: [],
       sort: ["reach", "desc"],
     };
+
+    console.log("Featured: sending payload:", JSON.stringify(payload));
 
     const searchRes = await juliusFetch(
       `/influencers/search?ts=${ts}&limit=12&offset=0`,
@@ -49,6 +51,8 @@ export default async function handler(req, res) {
       apiSecret
     );
 
+    console.log("Featured: response status:", searchRes.status);
+
     if (!searchRes.ok) {
       const errText = await searchRes.text();
       console.error("Julius search failed:", searchRes.status, errText);
@@ -56,7 +60,7 @@ export default async function handler(req, res) {
     }
 
     const searchData = await searchRes.json();
-    console.log("Julius search response:", searchData);
+    console.log("Julius search response:", JSON.stringify(searchData).substring(0, 500));
     const results = searchData.results || [];
     console.log("Search results count:", results.length);
 
