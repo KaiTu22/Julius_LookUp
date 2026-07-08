@@ -825,7 +825,9 @@ export default function Home() {
                       <div style={{ display: "flex", justifyContent: "center" }}>
                         <button
                           onClick={() => {
-                            const nextOffset = (searchResults?.offset || 0) + (searchResults?.limit || 50);
+                            const currentOffset = parseInt(searchResults?.offset) || 0;
+                            const limit = parseInt(searchResults?.limit) || 50;
+                            const nextOffset = currentOffset + limit;
                             handleDiscoverySearch(nextOffset);
                           }}
                           disabled={searchLoading}
