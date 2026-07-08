@@ -97,11 +97,16 @@ export default function Home() {
 
   useEffect(() => {
     const fetchFeatured = async () => {
+      console.log("Starting featured fetch...");
       try {
         const res = await fetch("/api/featured-influencers");
         const json = await res.json();
-        console.log("Featured response:", json);
-        if (res.ok) setFeatured(json.influencers || []);
+        console.log("Featured API response:", json);
+        console.log("Featured count:", json.influencers?.length || 0);
+        if (res.ok) {
+          setFeatured(json.influencers || []);
+          console.log("Featured set to:", json.influencers || []);
+        }
       } catch (err) {
         console.error("Failed to fetch featured:", err);
       } finally {
