@@ -234,6 +234,9 @@ export default async function handler(req, res) {
       status: searchRes.status,
       detail: text,
       brands,
+      interests,
+      platform,
+      payload: JSON.stringify(payload),
     });
     return res.status(searchRes.status).json({
       error: `Julius search failed (HTTP ${searchRes.status})`,
