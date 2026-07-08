@@ -1,7 +1,35 @@
+import crypto from "crypto";
+
+const JULIUS_BASE_URL = "https://api.juliusworks.com";
+const JULIUS_UA = "julius-api-client";
+
+function generateSignature(method, fullUrl, secret) {
+  const payload = `${method.toUpperCase()}|${fullUrl}|${JULIUS_UA}`;
+  return crypto.createHmac("sha256", secret).update(payload).digest("base64");
+}
+
+async function juliusFetch(path, method = "GET", body = null, apiKey, apiSecret) {
+  const fullUrl = `${JULIUS_BASE_URL}${path}`;
+  const sig = generateSignature(method, fullUrl, apiSecret);
+  const opts = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": JULIUS_UA,
+      "X-API-Key": apiKey,
+      "X-Signature": sig,
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(fullUrl, opts);
+}
+
 export default async function handler(req, res) {
+  const apiKey = process.env.JULIUS_API_KEY;
+  const apiSecret = process.env.JULIUS_API_SECRET;
+
   try {
-    // Return hardcoded featured influencers (top creators across platforms)
-    // These are fetched from the public Julius API on homepage load
+    // Hardcoded list of featured influencers (top creators)
     const featuredSlugs = [
       "cristiano-ronaldo",
       "lionel-messi",
@@ -17,15 +45,46 @@ export default async function handler(req, res) {
       "bill-gates"
     ];
 
-    // Get basic info for these influencers
-    const influencers = featuredSlugs.map(slug => ({
-      id: slug,
-      slug: slug,
-      display_name: slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
-      tagline: null,
-      avatar: null,
-      social_total_count: 0,
-    }));
+    // Fetch enriched data from Julius API
+    let bulkData = [];
+    if (apiKey && apiSecret) {
+      try {
+        const ts = Math.floor(Date.now() / 1000);
+        const bulkRes = await juliusFetch(
+          `/influencers/export/bulk?ts=${ts}`,
+          "POST",
+          { ids: featuredSlugs },
+          apiKey,
+          apiSecret
+        );
+
+        if (bulkRes.ok) {
+          const parsed = await bulkRes.json();
+          bulkData = Array.isArray(parsed) ? parsed : parsed.results || [];
+        }
+      } catch (err) {
+        console.warn("Bulk fetch failed:", err.message);
+      }
+    }
+
+    // Create lookup map
+    const bulkMap = {};
+    bulkData.forEach(inf => {
+      bulkMap[inf.slug] = inf;
+    });
+
+    // Map to response format, using bulk data when available
+    const influencers = featuredSlugs.map(slug => {
+      const bulkInf = bulkMap[slug];
+      return {
+        id: slug,
+        slug: slug,
+        display_name: bulkInf?.display_name || slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+        tagline: bulkInf?.tagline || null,
+        avatar: bulkInf?.avatar || null,
+        social_total_count: bulkInf?.social_total_count || 0,
+      };
+    }).filter(inf => inf.avatar); // Only return ones with avatars
 
     res.setHeader("Content-Type", "application/json");
     return res.status(200).json({ influencers });
