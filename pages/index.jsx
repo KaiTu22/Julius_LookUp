@@ -831,7 +831,7 @@ export default function Home() {
                 </div>
 
                 {/* Featured Section - shown when no search results */}
-                {featured.length > 0 && !loading && (
+                {featured.length > 0 && (
                   <div style={{ marginBottom: 48 }}>
                     <h2 style={{
                       fontFamily: "'Instrument Sans',sans-serif",

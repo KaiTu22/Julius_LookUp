@@ -1,34 +1,95 @@
-import { sql } from "@/lib/db";
+import crypto from "crypto";
+
+const JULIUS_BASE_URL = "https://api.juliusworks.com";
+const JULIUS_UA = "julius-api-client";
+
+function generateSignature(method, fullUrl, secret) {
+  const payload = `${method.toUpperCase()}|${fullUrl}|${JULIUS_UA}`;
+  return crypto.createHmac("sha256", secret).update(payload).digest("base64");
+}
+
+async function juliusFetch(path, method = "GET", body = null, apiKey, apiSecret) {
+  const fullUrl = `${JULIUS_BASE_URL}${path}`;
+  const sig = generateSignature(method, fullUrl, apiSecret);
+  const opts = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": JULIUS_UA,
+      "X-API-Key": apiKey,
+      "X-Signature": sig,
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(fullUrl, opts);
+}
 
 export default async function handler(req, res) {
-  if (!sql) {
-    return res.status(200).json({ influencers: [] });
+  const apiKey = process.env.JULIUS_API_KEY;
+  const apiSecret = process.env.JULIUS_API_SECRET;
+
+  if (!apiKey || !apiSecret) {
+    return res.status(500).json({ error: "Julius credentials not configured." });
   }
 
   try {
-    // Get 10 random influencers from archive, ordered by followers
-    const rows = await sql`
-      SELECT
-        slug,
-        display_name,
-        tagline,
-        avatar_url,
-        total_followers,
-        raw_data
-      FROM influencers
-      WHERE total_followers > 0
-      ORDER BY RANDOM()
-      LIMIT 10
-    `;
+    const ts = Math.floor(Date.now() / 1000);
 
-    const influencers = rows.map(r => ({
-      id: r.slug,
-      slug: r.slug,
-      display_name: r.display_name,
-      tagline: r.tagline,
-      avatar: r.avatar_url ? { url: r.avatar_url } : null,
-      social_total_count: r.total_followers,
-      current_location: null,
+    // Search Julius API with no filters to get top influencers by reach
+    const payload = {
+      query: [],
+      sort: ["reach", "desc"],
+    };
+
+    const searchRes = await juliusFetch(
+      `/influencers/search?ts=${ts}&limit=12&offset=0`,
+      "POST",
+      payload,
+      apiKey,
+      apiSecret
+    );
+
+    if (!searchRes.ok) {
+      console.error("Julius search failed:", searchRes.status);
+      return res.status(200).json({ influencers: [] });
+    }
+
+    const searchData = await searchRes.json();
+    const results = searchData.results || [];
+
+    // Get bulk data for enrichment
+    const slugs = results.map(r => r.slug).filter(Boolean);
+    const ts2 = Math.floor(Date.now() / 1000);
+
+    let bulkData = [];
+    if (slugs.length > 0) {
+      try {
+        const bulkRes = await juliusFetch(
+          `/influencers/export/bulk?ts=${ts2}`,
+          "POST",
+          { ids: slugs },
+          apiKey,
+          apiSecret
+        );
+
+        if (bulkRes.ok) {
+          const parsed = await bulkRes.json();
+          bulkData = Array.isArray(parsed) ? parsed : parsed.results || [];
+        }
+      } catch (err) {
+        console.warn("Bulk fetch failed:", err.message);
+        bulkData = results;
+      }
+    }
+
+    // Map to response format
+    const influencers = bulkData.map(inf => ({
+      id: inf.id,
+      slug: inf.slug,
+      display_name: inf.display_name,
+      tagline: inf.tagline,
+      avatar: inf.avatar,
+      social_total_count: inf.social_total_count,
     }));
 
     res.setHeader("Content-Type", "application/json");
