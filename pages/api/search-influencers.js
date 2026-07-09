@@ -51,10 +51,14 @@ export default async function handler(req, res) {
   const ethnicities = (url.searchParams.get("ethnicities") || "").split(",").filter(Boolean).map(e => e.trim());
   const ageRangesParam = (url.searchParams.get("ageRanges") || "").split(",").filter(Boolean);
   const platform = url.searchParams.get("platform") || "instagram";
-  const followerPlatform = url.searchParams.get("followerPlatform") || "instagram";
+  const platformFollowerFiltersParam = url.searchParams.get("platformFollowerFilters") || "{}";
+  let platformFollowerFilters = {};
+  try {
+    platformFollowerFilters = JSON.parse(platformFollowerFiltersParam);
+  } catch (e) {
+    platformFollowerFilters = {};
+  }
   const sort = url.searchParams.get("sort") || "reach-instagram";
-  const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
-  const maxFollowers = url.searchParams.get("maxFollowers") ? parseInt(url.searchParams.get("maxFollowers"), 10) : 0;
   const country = url.searchParams.get("country") || "";
   const minPrice = url.searchParams.get("minPrice") ? parseInt(url.searchParams.get("minPrice"), 10) : 0;
   const maxPrice = url.searchParams.get("maxPrice") ? parseInt(url.searchParams.get("maxPrice"), 10) : 0;
@@ -160,17 +164,22 @@ export default async function handler(req, res) {
     });
   }
 
-  // Add reach filter for the selected follower platform
-  if (minFollowers > 0 || maxFollowers > 0) {
-    queryFilters.push({
-      type: "reach",
-      platform: followerPlatform,
-      value: {
-        ...(minFollowers > 0 && { min: minFollowers }),
-        ...(maxFollowers > 0 && { max: maxFollowers }),
-      },
-    });
-  }
+  // Add reach filters for each platform with values
+  Object.entries(platformFollowerFilters).forEach(([plat, filters]) => {
+    const minFollowers = filters.min ? parseInt(filters.min, 10) : 0;
+    const maxFollowers = filters.max ? parseInt(filters.max, 10) : 0;
+
+    if (minFollowers > 0 || maxFollowers > 0) {
+      queryFilters.push({
+        type: "reach",
+        platform: plat,
+        value: {
+          ...(minFollowers > 0 && { min: minFollowers }),
+          ...(maxFollowers > 0 && { max: maxFollowers }),
+        },
+      });
+    }
+  });
 
   const ts = Math.floor(Date.now() / 1000);
 
@@ -262,7 +271,7 @@ export default async function handler(req, res) {
       total: responseTotal,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, ageRanges: ageRangesParam, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, platformFollowerFilters, ageRanges: ageRangesParam, country, minPrice, maxPrice },
       influencers: [],
       hasMore: false,
     });
@@ -288,7 +297,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, ageRanges: ageRangesParam, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, platformFollowerFilters, ageRanges: ageRangesParam, country, minPrice, maxPrice },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
@@ -335,7 +344,7 @@ export default async function handler(req, res) {
       total: responseTotal,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, ageRanges: ageRangesParam, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, platformFollowerFilters, ageRanges: ageRangesParam, country, minPrice, maxPrice },
       influencers: enriched,
       hasMore,
     });

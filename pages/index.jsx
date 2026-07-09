@@ -57,9 +57,13 @@ export default function Home() {
   const [interests, setInterests] = useState("");
   const [brands, setBrands] = useState("");
   const [causes, setCauses] = useState("");
-  const [followerPlatform, setFollowerPlatform] = useState("instagram");
-  const [minFollowers, setMinFollowers] = useState("");
-  const [maxFollowers, setMaxFollowers] = useState("");
+  const [platformFollowerFilters, setPlatformFollowerFilters] = useState({
+    instagram: { min: "", max: "" },
+    tiktok: { min: "", max: "" },
+    youtube: { min: "", max: "" },
+    facebook: { min: "", max: "" },
+    twitter: { min: "", max: "" },
+  });
   const [country, setCountry] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -77,9 +81,7 @@ export default function Home() {
         interests: interests,
         brands: brands,
         causes: causes,
-        followerPlatform: followerPlatform,
-        minFollowers: minFollowers || "0",
-        maxFollowers: maxFollowers || "",
+        platformFollowerFilters: JSON.stringify(platformFollowerFilters),
         country: country || "",
         minPrice: minPrice || "",
         maxPrice: maxPrice || "",
@@ -549,7 +551,7 @@ export default function Home() {
             />
           </div>
 
-          {/* Follower Range */}
+          {/* Platform-Specific Follower Ranges */}
           <div style={{ marginBottom: 28 }}>
             <label style={{
               display: "block",
@@ -559,63 +561,67 @@ export default function Home() {
               letterSpacing: 1,
               textTransform: "uppercase",
               color: "#6b7280",
-              marginBottom: 8,
+              marginBottom: 12,
             }}>
-              Follower Range
+              Follower Range by Platform
             </label>
-            <select
-              value={followerPlatform}
-              onChange={e => setFollowerPlatform(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "6px 12px",
-                borderRadius: 6,
-                border: "1px solid #d1d5db",
-                fontSize: 12,
-                fontFamily: "'Inter',sans-serif",
-                boxSizing: "border-box",
-                marginBottom: 8,
-                background: "#ffffff",
-                cursor: "pointer",
-              }}
-            >
-              <option value="instagram">Instagram</option>
-              <option value="tiktok">TikTok</option>
-              <option value="youtube">YouTube</option>
-              <option value="facebook">Facebook</option>
-              <option value="twitter">Twitter/X</option>
-            </select>
-            <input
-              type="number"
-              value={minFollowers}
-              onChange={e => setMinFollowers(e.target.value)}
-              placeholder="Min"
-              style={{
-                width: "100%",
-                padding: "6px 12px",
-                borderRadius: 6,
-                border: "1px solid #d1d5db",
-                fontSize: 12,
-                fontFamily: "'Inter',sans-serif",
-                boxSizing: "border-box",
-                marginBottom: 6,
-              }}
-            />
-            <input
-              type="number"
-              value={maxFollowers}
-              onChange={e => setMaxFollowers(e.target.value)}
-              placeholder="Max"
-              style={{
-                width: "100%",
-                padding: "6px 12px",
-                borderRadius: 6,
-                border: "1px solid #d1d5db",
-                fontSize: 12,
-                fontFamily: "'Inter',sans-serif",
-                boxSizing: "border-box",
-              }}
-            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {Object.entries(platformFollowerFilters).map(([plat, filters]) => (
+                <div key={plat} style={{
+                  background: "#f9fafb",
+                  padding: 12,
+                  borderRadius: 8,
+                  border: "1px solid #e5e7eb",
+                }}>
+                  <div style={{
+                    fontWeight: 600,
+                    fontSize: 11,
+                    color: "#374151",
+                    marginBottom: 8,
+                    textTransform: "capitalize",
+                  }}>
+                    {plat === "twitter" ? "Twitter/X" : plat.charAt(0).toUpperCase() + plat.slice(1)}
+                  </div>
+                  <input
+                    type="number"
+                    value={filters.min}
+                    onChange={e => setPlatformFollowerFilters({
+                      ...platformFollowerFilters,
+                      [plat]: { ...filters, min: e.target.value }
+                    })}
+                    placeholder="Min"
+                    style={{
+                      width: "100%",
+                      padding: "6px 8px",
+                      borderRadius: 4,
+                      border: "1px solid #d1d5db",
+                      fontSize: 11,
+                      fontFamily: "'Inter',sans-serif",
+                      boxSizing: "border-box",
+                      marginBottom: 6,
+                    }}
+                  />
+                  <input
+                    type="number"
+                    value={filters.max}
+                    onChange={e => setPlatformFollowerFilters({
+                      ...platformFollowerFilters,
+                      [plat]: { ...filters, max: e.target.value }
+                    })}
+                    placeholder="Max"
+                    style={{
+                      width: "100%",
+                      padding: "6px 8px",
+                      borderRadius: 4,
+                      border: "1px solid #d1d5db",
+                      fontSize: 11,
+                      fontFamily: "'Inter',sans-serif",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Country */}
@@ -867,8 +873,18 @@ export default function Home() {
                     if (interests) criteria.push(`Interests: ${interests}`);
                     if (brands) criteria.push(`Brands: ${brands}`);
                     if (causes) criteria.push(`Causes: ${causes}`);
-                    if (minFollowers) criteria.push(`Min ${PLATFORMS.find(p => p.id === followerPlatform)?.label || followerPlatform} Followers: ${fmt(parseInt(minFollowers))}`);
-                    if (maxFollowers) criteria.push(`Max ${PLATFORMS.find(p => p.id === followerPlatform)?.label || followerPlatform} Followers: ${fmt(parseInt(maxFollowers))}`);
+                    Object.entries(platformFollowerFilters).forEach(([plat, filters]) => {
+                      if (filters.min || filters.max) {
+                        const platLabel = plat === "twitter" ? "Twitter/X" : plat.charAt(0).toUpperCase() + plat.slice(1);
+                        if (filters.min && filters.max) {
+                          criteria.push(`${platLabel}: ${fmt(parseInt(filters.min))}-${fmt(parseInt(filters.max))}`);
+                        } else if (filters.min) {
+                          criteria.push(`Min ${platLabel}: ${fmt(parseInt(filters.min))}`);
+                        } else if (filters.max) {
+                          criteria.push(`Max ${platLabel}: ${fmt(parseInt(filters.max))}`);
+                        }
+                      }
+                    });
                     if (country) criteria.push(`Country: ${COUNTRY_OPTIONS.find(c => c.code === country)?.name || country}`);
                     if (minPrice) criteria.push(`Min Price: $${minPrice}`);
                     if (maxPrice) criteria.push(`Max Price: $${maxPrice}`);
