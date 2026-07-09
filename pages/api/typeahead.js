@@ -210,6 +210,26 @@ export default async function handler(req, res) {
       const data = await typeaheadRes.json();
       results = Array.isArray(data) ? data : data.results || [];
 
+      // Sort results by relevance: exact match first, then prefix matches, then others
+      const searchTermLower = term.toLowerCase();
+      results.sort((a, b) => {
+        const aName = (a.display_name || "").toLowerCase();
+        const bName = (b.display_name || "").toLowerCase();
+
+        // Exact match comes first
+        const aExact = aName === searchTermLower ? 0 : 1;
+        const bExact = bName === searchTermLower ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+
+        // Then prefix matches (starts with search term)
+        const aPrefix = aName.startsWith(searchTermLower) ? 0 : 1;
+        const bPrefix = bName.startsWith(searchTermLower) ? 0 : 1;
+        if (aPrefix !== bPrefix) return aPrefix - bPrefix;
+
+        // Finally, sort by follower count
+        return (b.social_total_count || 0) - (a.social_total_count || 0);
+      });
+
       // Add fuzzy matches from archive if exact results are sparse
       if (sql && results.length < 5) {
         try {
@@ -242,6 +262,28 @@ export default async function handler(req, res) {
               fuzzy: true, // Mark as fuzzy match
             });
           }
+
+          // Re-sort after adding fuzzy results to maintain relevance order
+          const searchTermLower = term.toLowerCase();
+          results.sort((a, b) => {
+            // Exact matches come first
+            const aName = (a.display_name || "").toLowerCase();
+            const bName = (b.display_name || "").toLowerCase();
+            const aExact = aName === searchTermLower ? 0 : 1;
+            const bExact = bName === searchTermLower ? 0 : 1;
+            if (aExact !== bExact) return aExact - bExact;
+
+            // Then prefix matches
+            const aPrefix = aName.startsWith(searchTermLower) ? 0 : 1;
+            const bPrefix = bName.startsWith(searchTermLower) ? 0 : 1;
+            if (aPrefix !== bPrefix) return aPrefix - bPrefix;
+
+            // Then exact results before fuzzy results
+            if (a.fuzzy !== b.fuzzy) return (a.fuzzy ? 1 : 0) - (b.fuzzy ? 1 : 0);
+
+            // Finally, by follower count
+            return (b.social_total_count || 0) - (a.social_total_count || 0);
+          });
         } catch (err) {
           console.warn("Fuzzy search failed:", err.message);
         }
