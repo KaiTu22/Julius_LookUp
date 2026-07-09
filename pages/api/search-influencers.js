@@ -241,12 +241,13 @@ export default async function handler(req, res) {
     juliusSort = "reach"; // Fall back to reach for all-platform searches
   }
 
-  const payload = {
-    query: queryFilters,
-    sort: [juliusSort, "desc"],
-  };
+  // Only include query if there are filters, otherwise Julius API expects different format
+  const payload = queryFilters.length > 0
+    ? { query: queryFilters, sort: [juliusSort, "desc"] }
+    : { sort: [juliusSort, "desc"] };
 
   console.log("Discovery search payload:", JSON.stringify(payload, null, 2));
+  console.log("Query filters count:", queryFilters.length);
 
   let searchRes;
   try {
