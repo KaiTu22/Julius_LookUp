@@ -851,6 +851,58 @@ export default function Home() {
                   {searchResults.total?.toLocaleString() || "?"} Results Found
                 </h2>
 
+                {/* Search Criteria Summary */}
+                <div style={{
+                  background: "#ffffff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  padding: "16px 20px",
+                  marginBottom: 24,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                }}>
+                  {(() => {
+                    const criteria = [];
+                    if (platform !== "all") criteria.push(`Platform: ${PLATFORMS.find(p => p.id === platform)?.label || platform}`);
+                    if (interests) criteria.push(`Interests: ${interests}`);
+                    if (brands) criteria.push(`Brands: ${brands}`);
+                    if (causes) criteria.push(`Causes: ${causes}`);
+                    if (minFollowers) criteria.push(`Min Followers: ${fmt(parseInt(minFollowers))}`);
+                    if (maxFollowers) criteria.push(`Max Followers: ${fmt(parseInt(maxFollowers))}`);
+                    if (country) criteria.push(`Country: ${COUNTRY_OPTIONS.find(c => c.code === country)?.name || country}`);
+                    if (minPrice) criteria.push(`Min Price: $${minPrice}`);
+                    if (maxPrice) criteria.push(`Max Price: $${maxPrice}`);
+                    if (minAge) criteria.push(`Min Age: ${minAge}`);
+                    if (maxAge) criteria.push(`Max Age: ${maxAge}`);
+                    if (genders.length > 0) criteria.push(`Genders: ${genders.join(", ")}`);
+                    if (ethnicities.length > 0) criteria.push(`Ethnicities: ${ethnicities.join(", ")}`);
+
+                    return criteria.length > 0 ? (
+                      criteria.map((crit, idx) => (
+                        <span key={idx} style={{
+                          fontSize: 12,
+                          fontFamily: "'Inter',sans-serif",
+                          color: "#6b7280",
+                          background: "#f3f4f6",
+                          padding: "4px 8px",
+                          borderRadius: 4,
+                        }}>
+                          {crit}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{
+                        fontSize: 12,
+                        fontFamily: "'Inter',sans-serif",
+                        color: "#9ca3af",
+                      }}>
+                        No filters applied
+                      </span>
+                    );
+                  })()}
+                </div>
+
                 {searchResults.influencers && searchResults.influencers.length > 0 ? (
                   <>
                     <div style={{
@@ -947,7 +999,7 @@ export default function Home() {
                       gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
                       gap: 16,
                     }}>
-                      {featured.map(inf => (
+                      {featured.slice(0, 10).map(inf => (
                         <InfluencerCard
                           key={inf.slug}
                           slug={inf.slug}
@@ -981,7 +1033,7 @@ export default function Home() {
                   gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
                   gap: 16,
                 }}>
-                  {recentlyViewed.map(inf => (
+                  {recentlyViewed.slice(0, 10).map(inf => (
                     <InfluencerCard
                       key={inf.slug}
                       slug={inf.slug}

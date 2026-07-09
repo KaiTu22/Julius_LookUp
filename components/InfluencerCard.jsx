@@ -85,7 +85,7 @@ export default function InfluencerCard({
         {/* Followers - secondary */}
         <div
           style={{
-            fontFamily: "'DM Mono',monospace",
+            fontFamily: "'Inter',sans-serif",
             fontSize: compact ? 11 : 13,
             fontWeight: 500,
             color: ACCENT,

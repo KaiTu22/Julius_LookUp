@@ -6,7 +6,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ influencers: [] });
     }
 
-    // Get top 12 influencers by follower count from archive
+    // Get top 10 influencers by follower count from archive
     const rows = await sql`
       SELECT
         slug,
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       FROM influencers
       WHERE avatar_url IS NOT NULL AND total_followers > 0
       ORDER BY total_followers DESC
-      LIMIT 12
+      LIMIT 10
     `;
 
     const influencers = rows.map(r => ({
