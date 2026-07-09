@@ -241,13 +241,20 @@ export default function Home() {
         position: "relative",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{
+          <h1
+            onClick={() => window.location.href = '/'}
+            style={{
             fontFamily: "'Instrument Sans',sans-serif",
             fontWeight: 800,
             fontSize: 24,
             color: "#111827",
             margin: 0,
-          }}>
+            cursor: "pointer",
+            transition: "opacity .2s",
+          }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+          >
             Julius Influencer Lookup
           </h1>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
