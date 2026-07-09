@@ -196,12 +196,8 @@ export default async function handler(req, res) {
     sort: [juliusSort, "desc"],
   };
 
-  console.log("Discovery search payload:", JSON.stringify(payload, null, 2));
-  console.log("About to call Julius API with payload:", payload);
-
   let searchRes;
   try {
-    console.log("Calling Julius API...");
     searchRes = await juliusFetch(
       `/influencers/search?ts=${ts}&limit=${limit}&offset=${offset}`,
       "POST",
@@ -236,32 +232,24 @@ export default async function handler(req, res) {
     });
   }
 
-  console.log("Julius API returned OK response");
   const searchData = await searchRes.json();
-  console.log("Julius response parsed:", searchData);
   let results = searchData.results || [];
   const total = searchData.total || 0;
-  console.log("Results count:", results.length, "Total:", total);
 
   // Combine archive and Julius results, removing duplicates
-  console.log("Before combining - Archive results:", archiveResults.length, "API results:", results.length);
   const archivedSlugs = new Set(archiveResults.map(r => r.slug));
   const apiOnlyResults = results.filter(r => !archivedSlugs.has(r.slug));
   let combinedResults = [...archiveResults, ...apiOnlyResults];
-  console.log("After combining - Combined results:", combinedResults.length);
 
   // Apply client-side filtering for "all" platform mode to ALL results (archive + API)
   if (platform === "all") {
     if (minFollowers > 0 || maxFollowers > 0) {
-      console.log("Filtering by followers - min:", minFollowers, "max:", maxFollowers);
-      const beforeFilter = combinedResults.length;
       combinedResults = combinedResults.filter(r => {
         const count = r.social_total_count || 0;
         if (minFollowers > 0 && count < minFollowers) return false;
         if (maxFollowers > 0 && count > maxFollowers) return false;
         return true;
       });
-      console.log("After follower filter:", beforeFilter, "->", combinedResults.length);
     }
   }
 
