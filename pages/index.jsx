@@ -81,7 +81,6 @@ export default function Home() {
         interests: interests,
         brands: brands,
         causes: causes,
-        platformFollowerFilters: JSON.stringify(platformFollowerFilters),
         country: country || "",
         minPrice: minPrice || "",
         maxPrice: maxPrice || "",
@@ -91,6 +90,12 @@ export default function Home() {
         sort: "reach-instagram",
         limit: "50",
         offset: String(pageOffset),
+      });
+
+      // Add platform-specific follower filters
+      Object.entries(platformFollowerFilters).forEach(([plat, filters]) => {
+        if (filters.min) params.append(`${plat}Min`, filters.min);
+        if (filters.max) params.append(`${plat}Max`, filters.max);
       });
       const res = await fetch(`/api/search-influencers?${params}`);
       const json = await res.json();

@@ -51,13 +51,31 @@ export default async function handler(req, res) {
   const ethnicities = (url.searchParams.get("ethnicities") || "").split(",").filter(Boolean).map(e => e.trim());
   const ageRangesParam = (url.searchParams.get("ageRanges") || "").split(",").filter(Boolean);
   const platform = url.searchParams.get("platform") || "instagram";
-  const platformFollowerFiltersParam = url.searchParams.get("platformFollowerFilters") || "{}";
-  let platformFollowerFilters = {};
-  try {
-    platformFollowerFilters = JSON.parse(platformFollowerFiltersParam);
-  } catch (e) {
-    platformFollowerFilters = {};
-  }
+
+  // Parse platform-specific follower filters from URL params
+  const platformFollowerFilters = {
+    instagram: {
+      min: url.searchParams.get("instagramMin") || "",
+      max: url.searchParams.get("instagramMax") || ""
+    },
+    tiktok: {
+      min: url.searchParams.get("tiktokMin") || "",
+      max: url.searchParams.get("tiktokMax") || ""
+    },
+    youtube: {
+      min: url.searchParams.get("youtubeMin") || "",
+      max: url.searchParams.get("youtubeMax") || ""
+    },
+    facebook: {
+      min: url.searchParams.get("facebookMin") || "",
+      max: url.searchParams.get("facebookMax") || ""
+    },
+    twitter: {
+      min: url.searchParams.get("twitterMin") || "",
+      max: url.searchParams.get("twitterMax") || ""
+    },
+  };
+
   const sort = url.searchParams.get("sort") || "reach-instagram";
   const country = url.searchParams.get("country") || "";
   const minPrice = url.searchParams.get("minPrice") ? parseInt(url.searchParams.get("minPrice"), 10) : 0;
