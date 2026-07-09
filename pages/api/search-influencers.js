@@ -123,25 +123,20 @@ export default async function handler(req, res) {
     });
   }
 
-  // Add age range filters (support multiple ranges)
+  // Add age range filters (combine multiple ranges into a single min-max span)
   if (ageRanges.length > 0) {
-    if (ageRanges.length === 1) {
-      // Single age range
-      queryFilters.push({
-        type: "age",
-        min: ageRanges[0].min,
-        max: ageRanges[0].max,
-      });
-    } else {
-      // Multiple age ranges - add each as a separate filter
-      ageRanges.forEach(range => {
-        queryFilters.push({
-          type: "age",
-          min: range.min,
-          max: range.max,
-        });
-      });
-    }
+    // Find the overall min and max across all selected ranges
+    const allMins = ageRanges.map(r => r.min).filter(m => m !== null);
+    const allMaxs = ageRanges.map(r => r.max).filter(m => m !== null);
+
+    const minAge = allMins.length > 0 ? Math.min(...allMins) : null;
+    const maxAge = allMaxs.length > 0 ? Math.max(...allMaxs) : null;
+
+    queryFilters.push({
+      type: "age",
+      min: minAge,
+      max: maxAge,
+    });
   }
 
   // Add location/country filter
