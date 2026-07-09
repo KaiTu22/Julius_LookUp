@@ -62,8 +62,7 @@ export default function Home() {
   const [country, setCountry] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [minAge, setMinAge] = useState("");
-  const [maxAge, setMaxAge] = useState("");
+  const [selectedAgeRanges, setSelectedAgeRanges] = useState([]);
   const [genders, setGenders] = useState([]);
   const [ethnicities, setEthnicities] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
@@ -82,8 +81,7 @@ export default function Home() {
         country: country || "",
         minPrice: minPrice || "",
         maxPrice: maxPrice || "",
-        minAge: minAge || "",
-        maxAge: maxAge || "",
+        ageRanges: selectedAgeRanges.join(","),
         genders: genders.join(","),
         ethnicities: ethnicities.join(","),
         sort: "reach-instagram",
@@ -693,46 +691,23 @@ export default function Home() {
               Audience Age
             </label>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {["<16", "17-19", "20-24", "25-29", "30-34", "35-39", "40-49", "50-59", "60+", "18+"].map(age => {
-                let isChecked = false;
-                if (age === "18+") {
-                  isChecked = minAge === "18" && maxAge === "";
-                } else if (age === "<16") {
-                  isChecked = minAge === "" && maxAge === "15";
-                } else {
-                  const parts = age.split("-");
-                  isChecked = minAge === parts[0] && maxAge === parts[1];
-                }
-
-                return (
-                  <label key={age} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontFamily: "'Inter',sans-serif" }}>
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={e => {
-                        if (e.target.checked) {
-                          if (age === "18+") {
-                            setMinAge("18");
-                            setMaxAge("");
-                          } else if (age === "<16") {
-                            setMinAge("");
-                            setMaxAge("15");
-                          } else {
-                            const parts = age.split("-");
-                            setMinAge(parts[0]);
-                            setMaxAge(parts[1]);
-                          }
-                        } else {
-                          setMinAge("");
-                          setMaxAge("");
-                        }
-                      }}
-                      style={{ cursor: "pointer" }}
-                    />
-                    {age}
-                  </label>
-                );
-              })}
+              {["<16", "17-19", "20-24", "25-29", "30-34", "35-39", "40-49", "50-59", "60+", "18+"].map(age => (
+                <label key={age} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontFamily: "'Inter',sans-serif" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedAgeRanges.includes(age)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedAgeRanges([...selectedAgeRanges, age]);
+                      } else {
+                        setSelectedAgeRanges(selectedAgeRanges.filter(a => a !== age));
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                  />
+                  {age}
+                </label>
+              ))}
             </div>
           </div>
 
@@ -873,8 +848,7 @@ export default function Home() {
                     if (country) criteria.push(`Country: ${COUNTRY_OPTIONS.find(c => c.code === country)?.name || country}`);
                     if (minPrice) criteria.push(`Min Price: $${minPrice}`);
                     if (maxPrice) criteria.push(`Max Price: $${maxPrice}`);
-                    if (minAge) criteria.push(`Min Age: ${minAge}`);
-                    if (maxAge) criteria.push(`Max Age: ${maxAge}`);
+                    if (selectedAgeRanges.length > 0) criteria.push(`Age: ${selectedAgeRanges.join(", ")}`);
                     if (genders.length > 0) criteria.push(`Genders: ${genders.join(", ")}`);
                     if (ethnicities.length > 0) criteria.push(`Ethnicities: ${ethnicities.join(", ")}`);
 

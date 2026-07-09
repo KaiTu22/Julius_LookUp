@@ -48,17 +48,29 @@ export default async function handler(req, res) {
   const causes = (url.searchParams.get("causes") || "").split(",").filter(Boolean).map(c => c.trim());
   const genders = (url.searchParams.get("genders") || "").split(",").filter(Boolean).map(g => g.trim());
   const ethnicities = (url.searchParams.get("ethnicities") || "").split(",").filter(Boolean).map(e => e.trim());
+  const ageRangesParam = (url.searchParams.get("ageRanges") || "").split(",").filter(Boolean);
   const platform = url.searchParams.get("platform") || "instagram";
   const sort = url.searchParams.get("sort") || "reach-instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
   const maxFollowers = url.searchParams.get("maxFollowers") ? parseInt(url.searchParams.get("maxFollowers"), 10) : 0;
-  const minAge = url.searchParams.get("minAge") ? parseInt(url.searchParams.get("minAge"), 10) : null;
-  const maxAge = url.searchParams.get("maxAge") ? parseInt(url.searchParams.get("maxAge"), 10) : null;
   const country = url.searchParams.get("country") || "";
   const minPrice = url.searchParams.get("minPrice") ? parseInt(url.searchParams.get("minPrice"), 10) : 0;
   const maxPrice = url.searchParams.get("maxPrice") ? parseInt(url.searchParams.get("maxPrice"), 10) : 0;
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 100);
+
+  // Parse age ranges into min/max pairs
+  const parseAgeRange = (range) => {
+    if (range === "<16") return { min: null, max: 15 };
+    if (range === "18+") return { min: 18, max: null };
+    if (range === "60+") return { min: 60, max: null };
+    const parts = range.split("-");
+    if (parts.length === 2) {
+      return { min: parseInt(parts[0], 10), max: parseInt(parts[1], 10) };
+    }
+    return null;
+  };
+  const ageRanges = ageRangesParam.map(parseAgeRange).filter(Boolean);
 
   // Build query filters for Julius API
   const queryFilters = [];
@@ -109,13 +121,25 @@ export default async function handler(req, res) {
     });
   }
 
-  // Add age range filter
-  if (minAge !== null || maxAge !== null) {
-    queryFilters.push({
-      type: "age",
-      min: minAge,
-      max: maxAge,
-    });
+  // Add age range filters (support multiple ranges)
+  if (ageRanges.length > 0) {
+    if (ageRanges.length === 1) {
+      // Single age range
+      queryFilters.push({
+        type: "age",
+        min: ageRanges[0].min,
+        max: ageRanges[0].max,
+      });
+    } else {
+      // Multiple age ranges - add each as a separate filter
+      ageRanges.forEach(range => {
+        queryFilters.push({
+          type: "age",
+          min: range.min,
+          max: range.max,
+        });
+      });
+    }
   }
 
   // Add location/country filter
@@ -297,7 +321,7 @@ export default async function handler(req, res) {
       total: responseTotal,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, ageRanges: ageRangesParam, country, minPrice, maxPrice },
       influencers: [],
       hasMore: false,
     });
@@ -323,7 +347,7 @@ export default async function handler(req, res) {
       total,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, ageRanges: ageRangesParam, country, minPrice, maxPrice },
       influencers: results.map(inf => ({
         id: inf.id,
         slug: inf.slug,
