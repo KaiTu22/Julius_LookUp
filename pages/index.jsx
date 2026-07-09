@@ -57,6 +57,7 @@ export default function Home() {
   const [interests, setInterests] = useState("");
   const [brands, setBrands] = useState("");
   const [causes, setCauses] = useState("");
+  const [followerPlatform, setFollowerPlatform] = useState("instagram");
   const [minFollowers, setMinFollowers] = useState("");
   const [maxFollowers, setMaxFollowers] = useState("");
   const [country, setCountry] = useState("");
@@ -76,6 +77,7 @@ export default function Home() {
         interests: interests,
         brands: brands,
         causes: causes,
+        followerPlatform: followerPlatform,
         minFollowers: minFollowers || "0",
         maxFollowers: maxFollowers || "",
         country: country || "",
@@ -561,6 +563,28 @@ export default function Home() {
             }}>
               Follower Range
             </label>
+            <select
+              value={followerPlatform}
+              onChange={e => setFollowerPlatform(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid #d1d5db",
+                fontSize: 12,
+                fontFamily: "'Inter',sans-serif",
+                boxSizing: "border-box",
+                marginBottom: 8,
+                background: "#ffffff",
+                cursor: "pointer",
+              }}
+            >
+              <option value="instagram">Instagram</option>
+              <option value="tiktok">TikTok</option>
+              <option value="youtube">YouTube</option>
+              <option value="facebook">Facebook</option>
+              <option value="twitter">Twitter/X</option>
+            </select>
             <input
               type="number"
               value={minFollowers}
@@ -843,8 +867,8 @@ export default function Home() {
                     if (interests) criteria.push(`Interests: ${interests}`);
                     if (brands) criteria.push(`Brands: ${brands}`);
                     if (causes) criteria.push(`Causes: ${causes}`);
-                    if (minFollowers) criteria.push(`Min Followers: ${fmt(parseInt(minFollowers))}`);
-                    if (maxFollowers) criteria.push(`Max Followers: ${fmt(parseInt(maxFollowers))}`);
+                    if (minFollowers) criteria.push(`Min ${PLATFORMS.find(p => p.id === followerPlatform)?.label || followerPlatform} Followers: ${fmt(parseInt(minFollowers))}`);
+                    if (maxFollowers) criteria.push(`Max ${PLATFORMS.find(p => p.id === followerPlatform)?.label || followerPlatform} Followers: ${fmt(parseInt(maxFollowers))}`);
                     if (country) criteria.push(`Country: ${COUNTRY_OPTIONS.find(c => c.code === country)?.name || country}`);
                     if (minPrice) criteria.push(`Min Price: $${minPrice}`);
                     if (maxPrice) criteria.push(`Max Price: $${maxPrice}`);

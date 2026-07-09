@@ -50,6 +50,7 @@ export default async function handler(req, res) {
   const ethnicities = (url.searchParams.get("ethnicities") || "").split(",").filter(Boolean).map(e => e.trim());
   const ageRangesParam = (url.searchParams.get("ageRanges") || "").split(",").filter(Boolean);
   const platform = url.searchParams.get("platform") || "instagram";
+  const followerPlatform = url.searchParams.get("followerPlatform") || "instagram";
   const sort = url.searchParams.get("sort") || "reach-instagram";
   const minFollowers = parseInt(url.searchParams.get("minFollowers") || "0", 10);
   const maxFollowers = url.searchParams.get("maxFollowers") ? parseInt(url.searchParams.get("maxFollowers"), 10) : 0;
@@ -162,11 +163,11 @@ export default async function handler(req, res) {
     });
   }
 
-  // Add reach filter (only for specific platforms)
-  if ((minFollowers > 0 || maxFollowers > 0) && platform !== "all") {
+  // Add reach filter for the selected follower platform
+  if (minFollowers > 0 || maxFollowers > 0) {
     queryFilters.push({
       type: "reach",
-      platform: platform,
+      platform: followerPlatform,
       value: {
         ...(minFollowers > 0 && { min: minFollowers }),
         ...(maxFollowers > 0 && { max: maxFollowers }),
