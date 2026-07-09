@@ -264,11 +264,14 @@ export default async function handler(req, res) {
   let combinedResults = [...archiveResults, ...apiOnlyResults];
 
   // Client-side filtering disabled - Julius API handles reach filtering
-  // Note: When platform="all", Julius reach filter still applies to the selected followerPlatform
+  // Note: When platform="all", Julius reach filter still applies to the selected platforms
+
+  // Check if any platform has follower filters
+  const hasFollowerFilters = Object.values(platformFollowerFilters).some(f => f.min || f.max);
 
   // Calculate proper total depending on whether we filtered
   let responseTotal;
-  if (platform === "all" && (minFollowers > 0 || maxFollowers > 0)) {
+  if (platform === "all" && hasFollowerFilters) {
     // For filtered queries, use count of filtered results
     responseTotal = combinedResults.length;
   } else {
