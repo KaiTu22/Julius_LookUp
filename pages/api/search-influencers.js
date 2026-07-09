@@ -241,17 +241,8 @@ export default async function handler(req, res) {
   const apiOnlyResults = results.filter(r => !archivedSlugs.has(r.slug));
   let combinedResults = [...archiveResults, ...apiOnlyResults];
 
-  // Apply client-side filtering for "all" platform mode to ALL results (archive + API)
-  if (platform === "all") {
-    if (minFollowers > 0 || maxFollowers > 0) {
-      combinedResults = combinedResults.filter(r => {
-        const count = r.social_total_count || 0;
-        if (minFollowers > 0 && count < minFollowers) return false;
-        if (maxFollowers > 0 && count > maxFollowers) return false;
-        return true;
-      });
-    }
-  }
+  // Client-side filtering disabled - Julius API handles reach filtering
+  // Note: When platform="all", Julius reach filter still applies to the selected followerPlatform
 
   // Calculate proper total depending on whether we filtered
   let responseTotal;
