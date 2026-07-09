@@ -35,12 +35,13 @@ function toBrandSlug(name) {
 }
 
 export default async function handler(req, res) {
-  const apiKey = process.env.JULIUS_API_KEY;
-  const apiSecret = process.env.JULIUS_API_SECRET;
+  try {
+    const apiKey = process.env.JULIUS_API_KEY;
+    const apiSecret = process.env.JULIUS_API_SECRET;
 
-  if (!apiKey || !apiSecret) {
-    return res.status(500).json({ error: "Julius credentials not configured." });
-  }
+    if (!apiKey || !apiSecret) {
+      return res.status(500).json({ error: "Julius credentials not configured." });
+    }
 
   const url = new URL(req.url, `http://${req.headers.host}`);
   const brands = (url.searchParams.get("brands") || "").split(",").filter(Boolean);
@@ -256,6 +257,7 @@ export default async function handler(req, res) {
       apiSecret
     );
   } catch (err) {
+    console.error("Julius API fetch error:", err);
     return res.status(502).json({
       error: "Failed to reach Julius API.",
       detail: err.message,
@@ -270,6 +272,9 @@ export default async function handler(req, res) {
       brands,
       interests,
       platform,
+      country,
+      ethnicities,
+      ageRanges: ageRangesParam,
       payload: JSON.stringify(payload),
     });
     return res.status(searchRes.status).json({
@@ -390,13 +395,20 @@ export default async function handler(req, res) {
   const archiveEnriched = combinedResults.filter(r => r._source === "archive");
   const enriched = [...archiveEnriched, ...enrichedApi];
 
-  res.setHeader("Content-Type", "application/json");
-  return res.status(200).json({
-    total: responseTotal,
-    offset,
-    limit,
-    filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
-    influencers: enriched,
-    hasMore,
-  });
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({
+      total: responseTotal,
+      offset,
+      limit,
+      filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      influencers: enriched,
+      hasMore,
+    });
+  } catch (err) {
+    console.error("Search API error:", err);
+    return res.status(500).json({
+      error: "Internal server error",
+      detail: err.message,
+    });
+  }
 }
