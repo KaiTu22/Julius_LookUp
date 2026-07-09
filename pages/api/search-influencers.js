@@ -197,9 +197,11 @@ export default async function handler(req, res) {
   };
 
   console.log("Discovery search payload:", JSON.stringify(payload, null, 2));
+  console.log("About to call Julius API with payload:", payload);
 
   let searchRes;
   try {
+    console.log("Calling Julius API...");
     searchRes = await juliusFetch(
       `/influencers/search?ts=${ts}&limit=${limit}&offset=${offset}`,
       "POST",
@@ -234,9 +236,12 @@ export default async function handler(req, res) {
     });
   }
 
+  console.log("Julius API returned OK response");
   const searchData = await searchRes.json();
+  console.log("Julius response parsed:", searchData);
   let results = searchData.results || [];
   const total = searchData.total || 0;
+  console.log("Results count:", results.length, "Total:", total);
 
   // Combine archive and Julius results, removing duplicates
   const archivedSlugs = new Set(archiveResults.map(r => r.slug));
@@ -351,7 +356,7 @@ export default async function handler(req, res) {
       total: responseTotal,
       offset,
       limit,
-      filters: { brands, interests, causes, genders, platform, minFollowers, minAge, maxAge, country, minPrice, maxPrice },
+      filters: { brands, interests, causes, genders, platform, minFollowers, maxFollowers, ageRanges: ageRangesParam, country, minPrice, maxPrice },
       influencers: enriched,
       hasMore,
     });
