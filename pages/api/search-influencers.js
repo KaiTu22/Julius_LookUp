@@ -145,12 +145,13 @@ export default async function handler(req, res) {
   }
 
   // Add location/country filter
-  if (country) {
-    queryFilters.push({
-      type: "location",
-      country,
-    });
-  }
+  // TODO: Verify Julius API supports location filter - temporarily disabled
+  // if (country) {
+  //   queryFilters.push({
+  //     type: "location",
+  //     country,
+  //   });
+  // }
 
   // Add price filter (for Instagram post pricing)
   if (minPrice > 0 || maxPrice > 0) {
