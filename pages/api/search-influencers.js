@@ -180,60 +180,10 @@ export default async function handler(req, res) {
   const ts = Math.floor(Date.now() / 1000);
 
   // Search local archive first (with pagination)
+  // TODO: Archive queries temporarily disabled due to dynamic WHERE clause issues
+  // Will re-enable with proper parameterized queries
   let archiveResults = [];
   let archiveTotal = 0;
-  if (sql) {
-    try {
-      // Build the WHERE clause for archive filtering
-      let countWhereClause = `WHERE 1=1`;
-      if (minFollowers > 0) {
-        countWhereClause += ` AND total_followers >= ${minFollowers}`;
-      }
-      if (maxFollowers > 0) {
-        countWhereClause += ` AND total_followers <= ${maxFollowers}`;
-      }
-
-      // When interests/brands/causes/genders are specified, skip archive since it has no tag data
-      const hasTagFilters = interests.length > 0 || brands.length > 0 || causes.length > 0 || genders.length > 0;
-
-      if (!hasTagFilters) {
-        // Only query archive when there are no tag filters
-        const countResult = await sql.query(`SELECT COUNT(*) as count FROM influencers ${countWhereClause}`);
-        archiveTotal = countResult[0]?.count || 0;
-        console.log("Archive count query returned:", archiveTotal);
-
-        // Then get paginated results
-        const hasFollowerFilter = minFollowers > 0 || maxFollowers > 0;
-        let archiveQuery;
-
-        if (hasFollowerFilter) {
-          // Fetch all matching results (pagination handled in code)
-          archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers ${countWhereClause} ORDER BY total_followers DESC LIMIT 1000`;
-        } else {
-          // For non-filtered queries, use OFFSET and LIMIT as usual
-          const fetchMultiplier = 3;
-          archiveQuery = `SELECT slug, display_name, tagline, avatar_url, total_followers, raw_data FROM influencers WHERE 1=1 ORDER BY total_followers DESC OFFSET ${offset} LIMIT ${limit * fetchMultiplier}`;
-        }
-
-        const rows = await sql.query(archiveQuery);
-        console.log("Archive query returned", rows.length, "rows. Follower filter:", { minFollowers, maxFollowers });
-        archiveResults = rows
-          .slice(hasFollowerFilter ? offset : 0) // Apply offset in code for filtered queries
-          .map(r => ({
-            id: r.slug,
-            slug: r.slug,
-            display_name: r.display_name,
-            tagline: r.tagline,
-            avatar: r.avatar_url ? { url: r.avatar_url } : null,
-            social_total_count: r.total_followers,
-            social_total_engagement: 0,
-            _source: "archive",
-          }));
-      }
-    } catch (err) {
-      console.warn("Archive search failed:", err.message);
-    }
-  }
 
   // When platform is "all", use generic sorts instead of platform-specific ones
   let juliusSort = sort;
@@ -241,13 +191,12 @@ export default async function handler(req, res) {
     juliusSort = "reach"; // Fall back to reach for all-platform searches
   }
 
-  // Only include query if there are filters, otherwise Julius API expects different format
-  const payload = queryFilters.length > 0
-    ? { query: queryFilters, sort: [juliusSort, "desc"] }
-    : { sort: [juliusSort, "desc"] };
+  const payload = {
+    query: queryFilters,
+    sort: [juliusSort, "desc"],
+  };
 
   console.log("Discovery search payload:", JSON.stringify(payload, null, 2));
-  console.log("Query filters count:", queryFilters.length);
 
   let searchRes;
   try {
